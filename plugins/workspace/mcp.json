@@ -1,0 +1,13 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "slack": {
+      "type": "streamable-http",
+      "url": "https://mcp.slack.com/mcp"
+    },
+    "notion": {
+      "type": "streamable-http",
+      "url": "https://mcp.notion.com/mcp"
+    }
+  }
+}

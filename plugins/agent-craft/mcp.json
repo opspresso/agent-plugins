@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "memory": {
+      "type": "streamable-http",
+      "url": "http://mcp-memory.agent-mcps.svc.cluster.local/mcp"
+    }
+  }
+}

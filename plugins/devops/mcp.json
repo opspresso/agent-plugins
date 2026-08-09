@@ -1,0 +1,21 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "argocd": {
+      "type": "streamable-http",
+      "url": "http://mcp-argocd.agent-mcps.svc.cluster.local/mcp"
+    },
+    "grafana": {
+      "type": "streamable-http",
+      "url": "http://mcp-grafana.agent-mcps.svc.cluster.local/mcp"
+    },
+    "kubernetes": {
+      "type": "streamable-http",
+      "url": "http://mcp-kubernetes.agent-mcps.svc.cluster.local/mcp"
+    },
+    "github": {
+      "type": "streamable-http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    }
+  }
+}
