@@ -137,9 +137,10 @@ Search the whole repository for a name before adding a component.
 Merge to main and run the sync on the installing side. **This repository is
 the source of truth**: in Agent Studio terms, whatever a plugin declares is
 applied automatically — new names are created, and an already-registered name
-that came from a repository is brought to this version, console edits
-included. Change content here, not in the console. An entry someone registered
-by hand (never synced) is the one thing the sync never touches.
+is brought to this version whatever its origin, console edits and pre-plugin
+hand registrations included. Change content here, not in the console. The one
+thing the sync never touches is a hand-registered entry whose name no plugin
+declares — the repository never claimed it.
 
 **Deleting a directory does not delete the entry.** What the repository no
 longer carries is reported as an orphan, and deleted only when named in the
