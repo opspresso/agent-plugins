@@ -134,12 +134,12 @@ Search the whole repository for a name before adding a component.
 
 ## How changes land
 
-Merge to main and run the sync on the installing side. In Agent Studio terms,
-**only names not yet registered** are created; **an already-registered name is
-left untouched.** Someone may have edited it in the console, and the sync
-cannot tell that apart from a document that simply moved on. What a document
-would change is only reported, and it is written only when the console names
-that entry for overwrite.
+Merge to main and run the sync on the installing side. **This repository is
+the source of truth**: in Agent Studio terms, whatever a plugin declares is
+applied automatically — new names are created, and an already-registered name
+that came from a repository is brought to this version, console edits
+included. Change content here, not in the console. An entry someone registered
+by hand (never synced) is the one thing the sync never touches.
 
 **Deleting a directory does not delete the entry.** What the repository no
 longer carries is reported as an orphan, and deleted only when named in the
