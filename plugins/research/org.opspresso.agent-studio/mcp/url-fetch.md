@@ -1,5 +1,5 @@
 ---
-description: "Fetch a URL as usable content: images as bytes, documents (HTML, PDF, CSV, JSON) as text."
+description: "Fetch a URL as usable content: images as bytes, web pages and data (HTML, CSV, JSON) as text — document files (PDF, DOCX, HWP) belong to document."
 ---
 
 # url-fetch

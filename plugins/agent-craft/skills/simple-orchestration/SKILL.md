@@ -1,9 +1,9 @@
 ---
 name: simple-orchestration
 description: >
-  여러 전문 영역의 결과를 결합하거나 충돌을 조정해야 하는 복잡한 요청에서 로드한다.
-  독립적인 일은 dispatch_agents로 한 번에 병렬 위임하고, 단일 요청은
-  transfer_to_agent로 넘긴 뒤 결과를 검증·통합한다.
+  여러 전문 영역의 결과를 결합·조정해야 하거나 한 결과가 다음 단계의 입력이 되는
+  요청을 서브에이전트에 나누기 전에 로드한다. 독립적인 일은 dispatch_agents로
+  한 번에 병렬 위임하고, 단일 요청은 transfer_to_agent로 넘긴 뒤 결과를 검증·통합한다.
 ---
 
 # 단순 오케스트레이션

@@ -1,9 +1,9 @@
 ---
 name: gitops-change
 description: >
-  클러스터에 떠 있는 것을 바꿔야 할 때 로드한다. 리소스·설정·복제 수·이미지 버전
-  변경을 클러스터가 아니라 GitOps 저장소의 chart values 변경으로 옮기고, 어느
-  파일을 고쳐 어떻게 PR을 올릴지 정한다.
+  클러스터에 떠 있는 것을 바꿔야 할 때 — kubernetes 도구로 직접 고치기 전에 —
+  로드한다. 리소스·설정·복제 수·이미지 버전 변경을 클러스터가 아니라 GitOps
+  저장소의 chart values 변경으로 옮기고, 어느 파일을 고쳐 어떻게 PR을 올릴지 정한다.
 ---
 
 # GitOps 변경
@@ -11,10 +11,10 @@ description: >
 **클러스터를 직접 바꾸지 않는다.** 변경은 저장소를 고치는 일이고, 반영은 Argo CD가
 한다.
 
-이유는 두 가지다. Argo Application이 `selfHeal: true`, `prune: true`로 돌고 있어서
-클러스터에 직접 넣은 변경은 곧 되돌려진다. 그리고 kubernetes 도구는 읽기 전용이라
-애초에 바꿀 수단이 없다. `kubectl apply`나 `edit`를 제안하는 건 둘 중 어느 쪽으로도
-답이 아니다.
+이유는 Argo Application이 `selfHeal: true`, `prune: true`로 돌고 있어서다.
+클러스터에 직접 넣은 변경은 저장소와 어긋나는 순간 다음 sync에 되돌려진다.
+kubernetes 도구에 워크로드 쓰기(create·update·patch)가 열려 있어도 마찬가지다 —
+`kubectl apply`든 도구 호출이든, 저장소를 거치지 않은 변경은 답이 아니다.
 
 ## 반드시 지킬 것
 

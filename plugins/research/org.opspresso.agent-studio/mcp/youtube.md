@@ -1,5 +1,5 @@
 ---
-description: "Read a YouTube video: the transcript as timestamped text, or its title, duration, description and available caption languages."
+description: "Read a YouTube video from a link or bare video id: the transcript as timestamped text, or its title, duration, description and available caption languages."
 ---
 
 # youtube

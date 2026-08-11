@@ -1,5 +1,5 @@
 ---
-description: "Search Slack and act in it: messages, threads, files, canvases, reactions and users."
+description: "Search Slack — messages, threads, files, canvases and users — and send messages, add reactions or create and update canvases."
 ---
 
 # slack

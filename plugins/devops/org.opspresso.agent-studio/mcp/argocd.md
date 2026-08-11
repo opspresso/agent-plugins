@@ -1,5 +1,5 @@
 ---
-description: "Work with Argo CD: applications and their resource tree, workload logs, events, clusters and projects — including create, sync and resource actions."
+description: "Work with Argo CD, the GitOps deployer for the Kubernetes cluster: applications and their resource tree, workload logs, events, clusters and projects — including create, sync and resource actions."
 ---
 
 # argocd

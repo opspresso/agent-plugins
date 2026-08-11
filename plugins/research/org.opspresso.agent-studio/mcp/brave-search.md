@@ -1,5 +1,5 @@
 ---
-description: "Web, image, video and news search on Brave's independent index, plus AI summaries."
+description: "Web, image, video, news and local search on Brave's independent index, plus AI summaries — for anything current, niche or beyond the model's knowledge."
 ---
 
 # brave-search

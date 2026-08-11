@@ -2,7 +2,7 @@
 description: >
   Remember and recall this project's durable knowledge — decisions, conventions
   and setup from earlier sessions. Call recall before asking the user to
-  re-explain anything.
+  re-explain anything, and remember a decision or convention as soon as it lands.
 ---
 
 # memory

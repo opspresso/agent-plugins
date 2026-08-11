@@ -1,5 +1,5 @@
 ---
-description: "Search AWS documentation and read it as markdown: service docs, API references, What's New posts and Well-Architected guidance."
+description: "Search AWS documentation and read it as markdown: service docs, API references, What's New posts and Well-Architected guidance — consult it before answering any AWS question from memory."
 ---
 
 # aws-knowledge

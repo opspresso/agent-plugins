@@ -1,5 +1,5 @@
 ---
-description: "Query Grafana: dashboards, datasources, Prometheus and Loki queries, alerting and incidents."
+description: "Query Grafana for the Kubernetes cluster's metrics and logs: dashboards, datasources, Prometheus and Loki queries, alerting and incidents."
 ---
 
 # grafana

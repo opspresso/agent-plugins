@@ -1,5 +1,5 @@
 ---
-description: "Search and edit a Notion workspace: pages, databases, comments and users."
+description: "Search and edit Notion pages, databases and comments, and look up workspace users."
 ---
 
 # notion

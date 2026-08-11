@@ -1,5 +1,5 @@
 ---
-description: "Inspect and change a Kubernetes cluster: resources, pod logs, events, nodes and namespaces, plus creating, updating and scaling workloads."
+description: "Inspect a Kubernetes cluster — resources, pod logs, events, nodes and namespaces. Workload writes (create, update, scale) are for temporary mitigation only; durable change goes through the GitOps repo."
 ---
 
 # kubernetes

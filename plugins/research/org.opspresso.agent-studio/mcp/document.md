@@ -1,7 +1,8 @@
 ---
 description: >
-  Read documents a link or upload cannot open — PDF, DOCX, HWP, HWPX — as text,
+  Read document files — PDF, DOCX, HWP, HWPX — as text, from a URL or an upload,
   and write Markdown out as a DOCX, PDF or HWPX file the user downloads by link.
+  Web pages belong to url-fetch.
 ---
 
 # document
