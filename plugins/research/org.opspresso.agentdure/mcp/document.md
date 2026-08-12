@@ -52,6 +52,18 @@ Consequences worth knowing when binding it:
   say "one heading per slide, a few bullets under each". Level 3 and below stay
   in the body, and content that does not fit continues on a slide titled
   `… (계속)`. A document written as prose renders as one long slide per section.
+- **Output carries AgentDure's own design system** since v0.5.0 — the console's
+  indigo-violet ramp, a brand-filled table header, a hairline under each heading,
+  a lavender cover slide. Colour, type scale and spacing are the server's to
+  decide, so a version must not prompt for them: a model that writes "make the
+  headings blue" is asking for something the renderer will ignore.
+- **A table column is aligned from the divider row.** `---:` sets it flush right
+  and `:---:` centres it. Worth putting in a version's prompt for anything with
+  figures in it — a column of numbers set left does not line up and nobody
+  checks it.
+- Every produced file records which release wrote it (PDF `Producer`, OOXML
+  `<Application>`, OWPML `application`), which is the first thing to look at when
+  a document renders oddly.
 - RTF is read here rather than as plain text on purpose: it *is* a text file, so
   without a parser it arrives as thousands of control words with the prose
   scattered through them.

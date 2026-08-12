@@ -33,7 +33,7 @@ plugins/
 | Plugin | Skills | MCP servers |
 |---|---|---|
 | **devops** — investigate the cluster, change it through GitOps | gitops-change, incident-triage | argocd, grafana, kubernetes, github |
-| **research** — bring in material the model cannot reach on its own | — | brave-search, youtube, document, aws-knowledge |
+| **research** — bring in material the model cannot reach on its own | document-authoring | brave-search, youtube, document, aws-knowledge |
 | **workspace** — write what moves around the company | korean-writing, tech-spec | slack, notion |
 | **design** — build what a person will look at | frontend-design, tufte-charts, image-generation | — |
 | **agent-craft** — build the agents themselves | prompt-writer, skill-writer, simple-orchestration, structured-output | memory |
@@ -131,6 +131,20 @@ distribution, not a namespace. `devops/skills/tech-spec` and
 `workspace/skills/tech-spec` cannot coexist; they collide at install time.
 
 Search the whole repository for a name before adding a component.
+
+## Validate before merging
+
+    python3 scripts/validate.py
+
+Checks every manifest against the 1.0.0 schemas, every `SKILL.md` against the
+[Agent Skills specification](https://agentskills.io/specification), and every
+name for the collision above. Standard library only, no network.
+
+It is worth running because **neither kind of mistake fails loudly**. A skill
+whose frontmatter breaks the spec is skipped by the client and loading carries
+on, so the only symptom is a skill that is never called; a duplicated name gets
+as far as the installing side before anything notices. CI runs this on every
+push and pull request.
 
 ## How changes land
 
