@@ -1,14 +1,14 @@
 ---
 name: skill-writer
 description: >
-  Agent Studio 스킬(SKILL.md)을 새로 만들거나 다듬을 때 사용한다. 모델이 이름과
+  AgentDure 스킬(SKILL.md)을 새로 만들거나 다듬을 때 사용한다. 모델이 이름과
   description만 보고 로드 여부를 판단하므로, "언제 쓰는지"가 드러나는 description
   작성법과 본문 구성, 스킬·서브에이전트가 유기적으로 호출되는 연결 규칙을 다룬다.
 ---
 
 # 스킬 작성 스킬
 
-Agent Studio의 스킬(SKILL.md)을 설계·작성·개선할 때 따르는 지침이다.
+AgentDure의 스킬(SKILL.md)을 설계·작성·개선할 때 따르는 지침이다.
 완성된 SKILL.md 초안을 산출물로 제공하고, 어떤 선택을 왜 했는지 짧게 설명한다.
 
 ## 스킬이 로드되는 방식 (전제)
@@ -24,7 +24,7 @@ Agent Studio의 스킬(SKILL.md)을 설계·작성·개선할 때 따르는 지�
 - `skill_name`에는 연결된 스킬 목록으로 enum이 걸려 있어서, 모델이 없는 이름을
   지어내지는 못한다. 반대로 **description이 약하면 있는 스킬도 안 부른다.**
 
-## Agent Studio 제약
+## AgentDure 제약
 
 - 이름은 **디렉터리 이름**이 정한다. frontmatter에서 실제로 읽는 건
   `description` 하나뿐이고, `name`은 파싱조차 하지 않는다.

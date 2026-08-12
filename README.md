@@ -10,8 +10,8 @@ same material by kind, so the skill and the servers that "investigate an
 incident" needs lived in different repositories. Here they arrive as one
 `devops` plugin.
 
-Agent Studio's plugin sync consumes this repository, but any spec-conformant
-client can install from it. Nothing here is Agent Studio-specific format.
+AgentDure's plugin sync consumes this repository, but any spec-conformant
+client can install from it. Nothing here is AgentDure-specific format.
 
 ## Layout
 
@@ -23,7 +23,7 @@ plugins/
     skills/
       <skill-name>/
         SKILL.md                       # frontmatter + markdown body
-    org.opspresso.agent-studio/        # optional: this org's client extension
+    org.opspresso.agentdure/        # optional: this org's client extension
       mcp/
         <server-name>.md
 ```
@@ -91,10 +91,10 @@ the client machine, which is a different kind of thing from the in-cluster
 servers declared here.
 
 A private address like `*.svc.cluster.local` registers only where the
-installing side allows that suffix. In Agent Studio that is
+installing side allows that suffix. In AgentDure that is
 `MCP_INTERNAL_HOST_SUFFIXES`; without it the SSRF guard refuses the URL.
 
-## org.opspresso.agent-studio/ — client extension
+## org.opspresso.agentdure/ — client extension
 
 This is the **reverse-domain client-extension namespace** the spec defines: the
 place for what the spec itself does not carry. **A client that does not know
@@ -135,7 +135,7 @@ Search the whole repository for a name before adding a component.
 ## How changes land
 
 Merge to main and run the sync on the installing side. **This repository is
-the source of truth**: in Agent Studio terms, whatever a plugin declares is
+the source of truth**: in AgentDure terms, whatever a plugin declares is
 applied automatically — new names are created, and an already-registered name
 is brought to this version whatever its origin, console edits and pre-plugin
 hand registrations included. Change content here, not in the console. The one
