@@ -1,8 +1,8 @@
 ---
 description: >
-  Read document files — PDF, DOCX, HWP, HWPX — as text, from a URL or an upload,
-  and write Markdown out as a DOCX, PDF or HWPX file the user downloads by link.
-  Web pages belong to url-fetch.
+  Read office documents — DOCX, XLSX, PPTX, HWP, HWPX, ODT/ODS/ODP, RTF — as
+  text, and write Markdown out as a DOCX, PDF or HWPX file the user receives.
+  PDFs, plain text and web pages are read by AgentDure itself, not here.
 ---
 
 # document
@@ -11,36 +11,48 @@ Cluster-internal (`agent-mcps` namespace, no ingress), so registering it at all
 depends on `MCP_INTERNAL_HOST_SUFFIXES` naming that suffix. No credential:
 nothing routes to the Service from outside the cluster.
 
-Two tools. `read_document` takes a `url` or base64 `content` and returns the
-text of a PDF, DOCX, HWP 5.x, HWPX or plain-text file. `write_document` takes
-Markdown and returns a presigned download link for a generated `.docx`, `.pdf`
-or `.hwpx` — the link, not the bytes, because a non-text blob cannot survive
-the MCP result path.
+Two tools. `read_document` takes base64 `content` and returns the text of a
+DOCX, XLSX, PPTX, HWP 5.x, HWPX, OpenDocument or RTF file. `render_document`
+takes Markdown and returns the generated `.docx`, `.pdf` or `.hwpx` **as
+bytes** — AgentDure stores it as an artifact and hands it to the user.
 
-## Writing is scoped by the `x-document-tenant` header
+## What it deliberately does not do
 
-**Set this per version.** Written files land in S3 under
-`documents/<tenant>/…`, so the header is what keeps one project's output out of
-another's prefix. It is deliberately a header and not a tool argument: a tool
-argument is chosen by the model, and a model that can name its own tenant can
-write into another project's space — including one talked into it by a document
-it just read.
+Since v0.2.0 this server fetches nothing, stores nothing, and reads no PDF.
+Each of those was a second copy of something AgentDure already had — the
+outbound SSRF boundary, the `unpdf` reader, an S3 bucket with its own retention
+window — so what is left is the parser, and only the parser.
 
-Sync creates the entry with no headers, so set `x-document-tenant` in the
-console before binding it to anything. Reading needs no tenant; a write without
-one fails with the header named in the error.
+Consequences worth knowing when binding it:
+
+- **No `url` parameter.** A model that has an address uses the `FetchUrl`
+  builtin, which a version has to opt into (`urlFetch` in its parameters). This
+  tool takes bytes the caller already holds.
+- **No download link, and no tenant header.** The bytes come back in the tool
+  result; the artifact row, the retention window and the delete button belong to
+  AgentDure. `x-document-tenant` is gone — remove it from any registry entry
+  that still carries it.
+- **PDF, plain text and HTML are refused by name**, pointing at the caller that
+  reads them. That refusal is the design, not a gap.
+- **The 97-2003 binaries (`.doc` `.xls` `.ppt`) stay refused.** They are record
+  streams rather than containers, and a half-right parse of one produces
+  something that *looks* like text — worse than saying no.
 
 ## Operating notes
 
-- Write needs the pod role: the ServiceAccount is bound to
-  `pod-role--mcp-document` (terraform-env-demo/demo/8-role), which grants
-  Get/Put on `agent-studio-document`. Until that role is applied, reads work
-  and writes fail with the S3 reason in the tool result.
-- Download links are presigned GETs valid for 7 days (SigV4's ceiling). The
-  bucket stays private; nothing in it expires on its own.
+- **No AWS role needed any more.** `pod-role--mcp-document` and its S3 grant
+  were for the upload path and can be retired.
+- A spreadsheet comes back as values, never formulas, one heading per sheet, and
+  the read is cut on a whole row so columns never come apart.
+- A deck comes back as slide text in deck order, numbered; speaker notes are
+  left out, being the presenter's script rather than the slide.
+- RTF is read here rather than as plain text on purpose: it *is* a text file, so
+  without a parser it arrives as thousands of control words with the prose
+  scattered through them.
 - Korean PDFs work: Nanum Gothic is embedded in the file, whole.
-- Boundaries the tools state themselves: web pages belong to url-fetch's
-  `fetch_document`; a scanned PDF is an error naming OCR, never empty text;
-  HWP 5.0 can be read but not written — writing offers HWPX instead.
+- A rendered document over ~1.4MB is refused with a reason rather than cut by
+  the transport, where it would surface as a parse failure saying nothing about
+  the document being large.
+- HWP 5.0 can be read but not written — writing offers HWPX instead.
 
 Source: https://github.com/opspresso/mcp-document

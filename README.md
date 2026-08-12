@@ -33,7 +33,7 @@ plugins/
 | Plugin | Skills | MCP servers |
 |---|---|---|
 | **devops** — investigate the cluster, change it through GitOps | gitops-change, incident-triage | argocd, grafana, kubernetes, github |
-| **research** — bring in material the model cannot reach on its own | — | brave-search, url-fetch, youtube, document, aws-knowledge |
+| **research** — bring in material the model cannot reach on its own | — | brave-search, youtube, document, aws-knowledge |
 | **workspace** — write what moves around the company | korean-writing, tech-spec | slack, notion |
 | **design** — build what a person will look at | frontend-design, tufte-charts, image-generation | — |
 | **agent-craft** — build the agents themselves | prompt-writer, skill-writer, simple-orchestration, structured-output | memory |
@@ -71,9 +71,9 @@ enter git. A declaration carries `type` and `url`, nothing else.
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
-    "url-fetch": {
+    "document": {
       "type": "streamable-http",
-      "url": "http://mcp-url-fetch.agent-mcps.svc.cluster.local/mcp"
+      "url": "http://mcp-document.agent-mcps.svc.cluster.local/mcp"
     }
   }
 }
@@ -81,8 +81,8 @@ enter git. A declaration carries `type` and `url`, nothing else.
 
 A server that needs a token gets it **on the installing side** — in Agent
 Studio, enter the header value in the console or connect via OAuth. The same
-goes for tenant-scoping headers (`X-Memory-Tenant`, `x-document-tenant`): they
-are set per version in the console, not in this repository. Why those are
+goes for tenant-scoping headers (`X-Memory-Tenant`): they are set per version
+in the console, not in this repository. Why those are
 headers rather than tool arguments is explained in each server's extension
 document.
 
@@ -106,10 +106,10 @@ schema **has no description field.**
 
 ```markdown
 ---
-description: "Fetch a URL as usable content: images as bytes, documents (HTML, PDF, CSV, JSON) as text."
+description: "Read office documents — DOCX, XLSX, PPTX, HWP, HWPX — as text."
 ---
 
-# url-fetch
+# document
 
 Operator notes, in markdown.
 ```

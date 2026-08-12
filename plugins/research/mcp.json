@@ -5,10 +5,6 @@
       "type": "streamable-http",
       "url": "http://mcp-brave-search.agent-mcps.svc.cluster.local/mcp"
     },
-    "url-fetch": {
-      "type": "streamable-http",
-      "url": "http://mcp-url-fetch.agent-mcps.svc.cluster.local/mcp"
-    },
     "youtube": {
       "type": "streamable-http",
       "url": "http://mcp-youtube.agent-mcps.svc.cluster.local/mcp"
