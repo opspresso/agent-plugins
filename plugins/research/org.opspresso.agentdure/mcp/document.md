@@ -61,26 +61,40 @@ Consequences worth knowing when binding it:
   `timeline`, `quote`) forces the layout. Overflow breaks at sub-headings and
   titles the continuation `제목 — 소제목`; `(계속)` appears only when there was
   no boundary to break at.
-- **Writing a report designs a report** since v0.6.0. In `docx` an opening `#`
-  is a cover page with the first paragraph as its subtitle, every later `#` a
-  numbered chapter opening on a fresh page, and a cover plus three or more
-  level 1-2 headings adds a contents page. The TOC is computed here *without
-  page numbers*, so it is complete as written — no `updateFields`, and no
-  "this document contains fields" dialog when Word opens it. Quotes render as
-  callout boxes; `:::metrics` becomes a key-figure strip and `:::comparison` a
-  two-column table, and only when asked — a page never transforms prose
-  unasked.
+- **Writing a report designs a report** since v0.6.0, and all three page
+  formats — `docx`, `pdf`, `hwpx` — share the same reading of the structure:
+  an opening `#` is a cover page with the first paragraph as its subtitle,
+  every later `#` a numbered chapter opening on a fresh page, and a cover plus
+  three or more level 1-2 headings adds a contents page. The DOCX and HWPX
+  contents are complete as written, page numbers omitted — no `updateFields`,
+  so Word opens with no "this document contains fields" dialog; the PDF is the
+  one format whose pages this server lays out itself, so its contents page
+  carries **real page numbers**. Quotes render as callout boxes everywhere;
+  `:::metrics` (key-figure strip) and `:::comparison` (two-column table) are
+  DOCX treatments, applied only when asked — a page never transforms prose
+  unasked — and the other formats render the fenced content as plain blocks.
+- **Korean documents state their language** without naming a font: DOCX
+  carries `themeFontLang eastAsia="ko-KR"` (and its Latin follows the same
+  east-Asian face, so 한글 and English sit in one font), PPTX labels runs
+  `ko-KR` — which is what stops a non-Korean Office from setting 한글 in a
+  Chinese or Japanese fallback face.
+- **HWPX passes rhwp's lineseg validation** (the engine behind web viewers
+  like hop): no paragraph over forty characters claims a single line segment,
+  which is the rule that viewer warns on.
 - **Images embed through `assets`** since v0.6.0, in `pptx` and `docx` only:
   PNG or JPEG bytes sent by name beside the Markdown and referenced as
   `![caption](asset://name)`. A slide or paragraph that is exactly one such
   image becomes a captioned, aspect-true figure; an image inside prose stays a
   link, and a plain `![alt](url)` is never fetched. Up to 12 assets and 6MB
   decoded per call; SVG is refused with the fix named — rasterise first.
-- **Output carries AgentDure's own design system** since v0.5.0 — the console's
-  indigo-violet ramp, a brand-filled table header, a hairline under each heading,
-  a lavender cover slide. Colour, type scale and spacing are the server's to
-  decide, so a version must not prompt for them: a model that writes "make the
-  headings blue" is asking for something the renderer will ignore.
+- **Output carries a designed, deliberately unbranded theme** — since v0.6.0 a
+  restrained corporate blue, neutral ink and quiet rules (v0.5.0 shipped
+  AgentDure's indigo-violet; it was retired because a document handed outward
+  should not arrive dressed in its tooling's colours). A filled table header,
+  a hairline under each heading, a tinted cover. Colour, type scale and spacing
+  are the server's to decide, so a version must not prompt for them: a model
+  that writes "make the headings green" is asking for something the renderer
+  will ignore.
 - **A table column is aligned from the divider row.** `---:` sets it flush right
   and `:---:` centres it. Worth putting in a version's prompt for anything with
   figures in it — a column of numbers set left does not line up and nobody
