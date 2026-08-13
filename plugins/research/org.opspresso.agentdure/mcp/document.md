@@ -47,11 +47,35 @@ Consequences worth knowing when binding it:
   the read is cut on a whole row so columns never come apart.
 - A deck comes back as slide text in deck order, numbered; speaker notes are
   left out, being the presenter's script rather than the slide.
-- **Writing a deck splits on headings.** In `pptx` every level 1 or 2 heading
-  starts a slide and becomes its title, so a version prompting for one should
-  say "one heading per slide, a few bullets under each". Level 3 and below stay
-  in the body, and content that does not fit continues on a slide titled
-  `… (계속)`. A document written as prose renders as one long slide per section.
+- **Writing a deck plans a deck** since v0.6.0. An opening `#` is the cover
+  (its first paragraph becomes the subtitle), every later `#` a numbered
+  section divider, every `##` a slide; level 3 and below stay in the body. A
+  slide whose shape says what it is gets a designed layout — two to four
+  `###`s with a short line each become cards, short numeric bullets
+  (`- 99.99% Availability`) become big-number metrics, a lone block quote with
+  `— author` a quote slide, two `###`s under an "A vs B" title a two-column
+  comparison, three to five short numbered steps a process flow with arrows,
+  date-led steps (`1. Q1 파일럿`) a timeline, and a final 감사합니다 /
+  Thank-you heading a closing slide. Recognition is conservative; wrapping one
+  such group in `:::cards` … `:::` (also `metrics`, `comparison`, `process`,
+  `timeline`, `quote`) forces the layout. Overflow breaks at sub-headings and
+  titles the continuation `제목 — 소제목`; `(계속)` appears only when there was
+  no boundary to break at.
+- **Writing a report designs a report** since v0.6.0. In `docx` an opening `#`
+  is a cover page with the first paragraph as its subtitle, every later `#` a
+  numbered chapter opening on a fresh page, and a cover plus three or more
+  level 1-2 headings adds a contents page. The TOC is computed here *without
+  page numbers*, so it is complete as written — no `updateFields`, and no
+  "this document contains fields" dialog when Word opens it. Quotes render as
+  callout boxes; `:::metrics` becomes a key-figure strip and `:::comparison` a
+  two-column table, and only when asked — a page never transforms prose
+  unasked.
+- **Images embed through `assets`** since v0.6.0, in `pptx` and `docx` only:
+  PNG or JPEG bytes sent by name beside the Markdown and referenced as
+  `![caption](asset://name)`. A slide or paragraph that is exactly one such
+  image becomes a captioned, aspect-true figure; an image inside prose stays a
+  link, and a plain `![alt](url)` is never fetched. Up to 12 assets and 6MB
+  decoded per call; SVG is refused with the fix named — rasterise first.
 - **Output carries AgentDure's own design system** since v0.5.0 — the console's
   indigo-violet ramp, a brand-filled table header, a hairline under each heading,
   a lavender cover slide. Colour, type scale and spacing are the server's to
