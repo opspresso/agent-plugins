@@ -34,7 +34,7 @@ plugins/
 |---|---|---|
 | **devops** — investigate the cluster, change it through GitOps | gitops-change, incident-triage | argocd, grafana, kubernetes, github |
 | **research** — bring in material the model cannot reach, and write documents back out | document-authoring | brave-search, youtube, document, aws-knowledge |
-| **workspace** — write what moves around the company | korean-writing, tech-spec | slack, notion |
+| **workspace** — write what moves around the company | korean-writing, tech-spec | notion |
 | **design** — build what a person will look at | frontend-design, tufte-charts, image-generation | — |
 | **agent-craft** — build the agents themselves | prompt-writer, skill-writer, simple-orchestration, structured-output | memory |
 

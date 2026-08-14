@@ -2,8 +2,8 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "workspace",
   "version": "1.0.0",
-  "description": "Write what a workplace runs on: Korean internal communication, implementable technical specifications, and MCP access to Slack and Notion.",
+  "description": "Write what a workplace runs on: Korean internal communication, implementable technical specifications, and MCP access to Notion.",
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
-  "keywords": ["workspace", "writing", "documentation", "slack", "notion"]
+  "keywords": ["workspace", "writing", "documentation", "notion"]
 }
