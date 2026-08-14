@@ -33,7 +33,7 @@ plugins/
 | Plugin | Skills | MCP servers |
 |---|---|---|
 | **devops** — investigate the cluster, change it through GitOps | gitops-change, incident-triage | argocd, grafana, kubernetes, github |
-| **research** — bring in material the model cannot reach on its own | document-authoring | brave-search, youtube, document, aws-knowledge |
+| **research** — bring in material the model cannot reach, and write documents back out | document-authoring | brave-search, youtube, document, aws-knowledge |
 | **workspace** — write what moves around the company | korean-writing, tech-spec | slack, notion |
 | **design** — build what a person will look at | frontend-design, tufte-charts, image-generation | — |
 | **agent-craft** — build the agents themselves | prompt-writer, skill-writer, simple-orchestration, structured-output | memory |
@@ -144,7 +144,7 @@ It is worth running because **neither kind of mistake fails loudly**. A skill
 whose frontmatter breaks the spec is skipped by the client and loading carries
 on, so the only symptom is a skill that is never called; a duplicated name gets
 as far as the installing side before anything notices. CI runs this on every
-push and pull request.
+pull request and on every push to main.
 
 ## How changes land
 
