@@ -3,15 +3,16 @@ name: incident-triage
 description: >
   AWS EKS에서 서비스 장애, 지연, 오류 증가, pod 재시작·Pending, 배포 실패,
   Argo CD OutOfSync, 노드·네트워크 이상을 조사할 때 로드한다. 증상에 맞춰 Kubernetes,
-  Grafana Prometheus·Loki, Argo CD의 증거를 시간축으로 연결해 원인을 판정하고 완화책과
-  근본 해결책을 제시한다.
+  Grafana Prometheus·Loki, AWS CloudWatch, Argo CD의 증거를 시간축으로 연결해 원인을
+  판정하고 완화책과 근본 해결책을 제시한다.
 ---
 
 # EKS 장애 조사
 
-증상에 맞는 관측 지점에서 시작해 Kubernetes의 현재 상태, Prometheus의 추세,
-Loki의 로그, Argo CD의 배포 상태를 하나의 시간축으로 연결한다. 조사 결과에는 원인
-판정뿐 아니라 안전한 완화책, 근본 해결책, 검증 방법과 롤백 조건까지 포함한다.
+증상에 맞는 관측 지점에서 시작해 Kubernetes의 현재 상태, Prometheus와 CloudWatch의
+추세, Loki와 CloudWatch Logs의 로그, Argo CD의 배포 상태를 하나의 시간축으로
+연결한다. 조사 결과에는 원인 판정뿐 아니라 안전한 완화책, 근본 해결책, 검증 방법과
+롤백 조건까지 포함한다.
 
 ## 반드시 지킬 것
 
@@ -29,7 +30,7 @@ Loki의 로그, Argo CD의 배포 상태를 하나의 시간축으로 연결한�
 - 증상: 무엇이 정상 기준에서 어떻게 달라졌는가
 - 영향: 사용자, 서비스, namespace, cluster, region 중 어디까지인가
 - 시간: 정상 확인 시각, 최초 이상 시각, 현재도 지속되는지
-- 대상: cluster, namespace, workload, Argo CD application, 주요 label
+- 대상: AWS account·region, cluster, namespace, workload, Argo CD application, 주요 label
 - 변경: 배포, 설정, 트래픽, 노드, 의존 서비스의 최근 변화
 
 시각은 ISO 8601과 timezone으로 기록한다. 최초 이상 시각을 모르면 최근 30분으로
@@ -47,11 +48,14 @@ baseline으로 비교한다.
 | 리소스 상태, rollout, pod, node, Service/Endpoint, Event | kubernetes | namespace, kind, name, label selector |
 | 오류율, 지연, 트래픽, saturation, 재시작·자원 추세 | grafana / Prometheus | PromQL, start, end, step |
 | 오류 문맥, 예외, request·trace ID, 재시작 직전 로그 | grafana / Loki | LogQL, start, end, direction, limit |
+| AWS alarm, managed metric, Container Insights, CloudWatch log | cloudwatch | region, namespace·log group, start, end, limit |
 | application health/sync, revision, resource tree, 배포 이벤트 | argocd | application, resource, revision |
 
 Grafana dashboard는 탐색용으로 쓰고, 결론의 근거는 패널이 실행한 PromQL·LogQL과
 명시적인 시간 범위로 남긴다. 로그는 전체를 붙이지 말고 판단에 필요한 줄과 전후
-문맥만 인용한다.
+문맥만 인용한다. CloudWatch는 Pod Identity의 기본 credential chain을 사용하므로
+`profile_name`을 지정하지 않는다. Logs Insights는 log group과 시간창을 먼저 좁히고
+query에 `limit`을 넣어 스캔 비용과 결과 크기를 제한한다.
 
 ## 증상별 시작점
 
@@ -62,9 +66,10 @@ Grafana dashboard는 탐색용으로 쓰고, 결론의 근거는 패널이 실�
 | Pending, scheduling 실패 | pod Event, node condition·taint, request와 allocatable | cluster 자원 추세 → 최근 node 변화 |
 | 배포 실패, 새 버전 이후 장애 | Argo health/sync·revision·resource tree·event | Kubernetes rollout → 신·구 pod 지표와 로그 비교 |
 | OutOfSync, 설정 불일치 | Argo desired/live 차이와 마지막 sync | 실제 리소스·rollout 시각 → 영향 지표 |
-| node 불안정, 광범위한 pod 영향 | node condition·pressure, pod 분포, cluster Event | node별 자원·재시작 추세 → workload 영향 |
+| node 불안정, 광범위한 pod 영향 | node condition·pressure, pod 분포, cluster Event | node별 자원 추세 → CloudWatch alarm·Container Insights → workload 영향 |
 | DNS, 연결, 의존 서비스 오류 | Loki의 timeout·name resolution·connection 오류 | Service/Endpoint·NetworkPolicy·Gateway → 양쪽 오류율 |
-| 알림만 있고 증상이 불명확 | alert label·조건·발생 시각과 해당 PromQL | 같은 시간의 workload 상태·로그·배포 변화 |
+| AWS 서비스·EKS 경계 이상 | CloudWatch alarm·metric·log | Kubernetes 영향 범위 → 필요한 AWS resource 상태 |
+| 알림만 있고 증상이 불명확 | alert source·label·조건·발생 시각과 원본 query | 같은 시간의 workload 상태·로그·배포 변화 |
 
 현재 snapshot만으로 정상 여부를 판단하지 않는다. 실패한 pod가 이미 교체됐을 수
 있으므로 종료된 상태, 이전 container 로그, Event와 시계열을 함께 본다.
@@ -90,20 +95,23 @@ Grafana dashboard는 탐색용으로 쓰고, 결론의 근거는 패널이 실�
 ## EKS에서 확인할 경계
 
 EKS control plane은 관리형이므로 Kubernetes 관측만으로 AWS 원인을 확정할 수 없는
-경우가 있다. 다음 징후가 보이면 관측된 cluster 증상과 필요한 AWS 측 확인을 분리해
-보고한다.
+경우가 있다. `cloudwatch`가 연결돼 있으면 같은 시간창의 alarm, metric, log를 먼저
+확인한다. 다음 징후가 보이면 관측된 cluster 증상, CloudWatch 증거, 남은 AWS resource
+상태 확인을 분리해 보고한다.
 
-| cluster에서 보이는 징후 | 가능한 AWS 경계 | 추가로 필요한 확인 |
-|---|---|---|
-| pod sandbox·IP 할당 실패, 특정 node/AZ 집중 | VPC CNI, subnet IP, ENI | CNI 지표·로그, subnet 가용 IP, ENI 한도 |
-| node join·scale 실패, Pending 확산 | EC2 capacity, Auto Scaling, quota | node group/ASG activity, capacity·quota event |
-| volume attach·mount timeout | EBS CSI, volume/AZ | CSI controller 로그, EBS attachment·volume 상태 |
-| LoadBalancer·target health 이상 | ELB/NLB/ALB, controller | controller 로그, target health, AWS event |
-| AccessDenied, credential 만료 | IRSA/Pod Identity, IAM | workload identity 설정, CloudTrail/IAM 평가 |
-| DNS 지연·실패 | CoreDNS, VPC DNS | CoreDNS 지표·로그, resolver·VPC 설정 |
+| cluster에서 보이는 징후 | 가능한 AWS 경계 | CloudWatch에서 확인 | 남는 확인 |
+|---|---|---|---|
+| pod sandbox·IP 할당 실패, 특정 node/AZ 집중 | VPC CNI, subnet IP, ENI | CNI·container 로그, node network metric·alarm | subnet 가용 IP, ENI 한도·상태 |
+| node join·scale 실패, Pending 확산 | EC2 capacity, Auto Scaling, quota | node 수·자원 metric, 관련 alarm·log | node group/ASG activity, capacity·quota event |
+| volume attach·mount timeout | EBS CSI, volume/AZ | EBS metric·alarm, CSI controller 로그 | attachment·volume 상태 |
+| LoadBalancer·target health 이상 | ELB/NLB/ALB, controller | request·target 오류 metric·alarm, controller 로그 | target health와 LB 설정 |
+| AccessDenied, credential 만료 | IRSA/Pod Identity, IAM | workload의 AccessDenied 로그 | CloudTrail event와 IAM policy 평가 |
+| DNS 지연·실패 | CoreDNS, VPC DNS | CoreDNS metric·log가 수집됐다면 오류 추세 | resolver·VPC DNS 설정 |
 
-AWS telemetry를 읽을 도구가 연결되지 않았으면 “AWS 원인”으로 확정하지 않는다.
-“cluster 증거가 이 경계를 가리킨다”는 잠정 결론과 정확한 추가 확인 항목을 남긴다.
+CloudWatch MCP는 metric, alarm, 수집된 log를 읽지만 EC2, EKS, Auto Scaling, EBS,
+ELB, IAM, CloudTrail의 resource 상태 API는 제공하지 않는다. 그 상태를 읽을 도구가
+연결되지 않았으면 “AWS 원인”으로 확정하지 않고, “증거가 이 경계를 가리킨다”는
+잠정 결론과 정확한 추가 확인 항목을 남긴다.
 
 ## 원인 판정 기준
 
@@ -144,7 +152,7 @@ mechanism을 확인한다.
 - [ISO 8601 시각] [관측 또는 변경] — [서버/조회, 시간 범위]
 
 ## 증거
-- 관측: [사실] — [Kubernetes | Prometheus | Loki | Argo CD]
+- 관측: [사실] — [Kubernetes | Prometheus | Loki | CloudWatch | Argo CD]
 - 해석: [이 사실이 지지하거나 반증하는 가설]
 
 ## 원인 분석

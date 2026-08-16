@@ -9,6 +9,10 @@
       "type": "streamable-http",
       "url": "http://mcp-grafana.agent-mcps.svc.cluster.local/mcp"
     },
+    "cloudwatch": {
+      "type": "streamable-http",
+      "url": "http://mcp-cloudwatch.agent-mcps.svc.cluster.local/mcp"
+    },
     "kubernetes": {
       "type": "streamable-http",
       "url": "http://mcp-kubernetes.agent-mcps.svc.cluster.local/mcp"
