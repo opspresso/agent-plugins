@@ -61,6 +61,12 @@ Consequences worth knowing when binding it:
   `timeline`, `quote`) forces the layout. Overflow breaks at sub-headings and
   titles the continuation `제목 — 소제목`; `(계속)` appears only when there was
   no boundary to break at.
+- **Writing accepts a purpose profile independently of the file format.**
+  `executive` (the default) is the restrained leadership style; `consulting`
+  strengthens the strategy-deck accent; `formal` is square and print-first;
+  `technical` uses restrained teal and light table headers; `standard` keeps
+  the classic corporate-blue treatment. The profile changes palette, cover
+  proportion, table contrast and card geometry, never the words or slide plan.
 - **Writing a report designs a report** since v0.6.0, and all three page
   formats — `docx`, `pdf`, `hwpx` — share the same reading of the structure:
   an opening `#` is a cover page with the first paragraph as its subtitle,
@@ -87,14 +93,12 @@ Consequences worth knowing when binding it:
   image becomes a captioned, aspect-true figure; an image inside prose stays a
   link, and a plain `![alt](url)` is never fetched. Up to 12 assets and 6MB
   decoded per call; SVG is refused with the fix named — rasterise first.
-- **Output carries a designed, deliberately unbranded theme** — since v0.6.0 a
-  restrained corporate blue, neutral ink and quiet rules (v0.5.0 shipped
-  AgentDure's indigo-violet; it was retired because a document handed outward
-  should not arrive dressed in its tooling's colours). A filled table header,
-  a hairline under each heading, a tinted cover. Colour, type scale and spacing
-  are the server's to decide, so a version must not prompt for them: a model
-  that writes "make the headings green" is asking for something the renderer
-  will ignore.
+- **Output carries a designed, deliberately unbranded profile.** Every profile
+  uses neutral ink, quiet rules and accessible contrast; none borrows the
+  product's colours. Colour, type scale and spacing are the server's to decide,
+  so a version chooses the purpose profile rather than prompting for arbitrary
+  colours or fonts: "make the headings green" is ignored, `profile="technical"`
+  is actionable.
 - **A table column is aligned from the divider row.** `---:` sets it flush right
   and `:---:` centres it. Worth putting in a version's prompt for anything with
   figures in it — a column of numbers set left does not line up and nobody
