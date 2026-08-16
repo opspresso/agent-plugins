@@ -15,7 +15,7 @@
     },
     "aws-knowledge": {
       "type": "streamable-http",
-      "url": "https://knowledge-mcp.global.api.aws"
+      "url": "https://knowledge-mcp.global.api.aws/mcp"
     }
   }
 }
