@@ -34,7 +34,7 @@ plugins/
 |---|---|---|
 | **devops** — investigate the cluster, change it through GitOps | gitops-change, incident-triage | argocd, cloudwatch, grafana, kubernetes, github |
 | **research** — bring in material the model cannot reach, and write documents back out | document-authoring | brave-search, youtube, document, aws-knowledge |
-| **workspace** — write what moves around the company | korean-writing, tech-spec | notion |
+| **workspace** — write what moves around the company | korean-writing, korean-humanize, tech-spec | notion |
 | **design** — build what a person will look at | frontend-design, tufte-charts, image-generation | — |
 | **agent-craft** — build the agents themselves | prompt-writer, skill-writer, simple-orchestration, structured-output | memory |
 
@@ -61,6 +61,14 @@ guidance lives in
 A skill directory may carry reference files alongside `SKILL.md`. Use them for
 material too large for the body (bulk mapping tables, a full style guide), not
 to split a few dozen lines of body.
+
+Skills that hand Korean prose to a person (korean-writing, document-authoring,
+tech-spec, incident-triage, gitops-change, simple-orchestration) carry a short,
+genre-tuned rule set against AI-sounding Korean in their own body, because a
+plugin is the install unit and a skill can only load files from its own
+directory. The full pattern catalog with before/after examples is
+[`plugins/workspace/skills/korean-humanize/ai-tell-catalog.md`](plugins/workspace/skills/korean-humanize/ai-tell-catalog.md);
+when an inline rule and the catalog disagree, the catalog wins.
 
 ## mcp.json carries no credentials
 
