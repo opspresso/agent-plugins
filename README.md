@@ -37,6 +37,7 @@ plugins/
 | **workspace** — write what moves around the company | korean-writing, korean-humanize, tech-spec | notion |
 | **design** — build what a person will look at | frontend-design, tufte-charts, image-generation | — |
 | **agent-craft** — build the agents themselves | prompt-writer, skill-writer, simple-orchestration, structured-output | memory |
+| **saju** — read a birth chart school by school | saju-analysis | — |
 
 A plugin with no skills has no `skills/` directory, and one with no MCP servers
 has no `mcp.json`. Do not create empty directories or empty manifests.
@@ -63,7 +64,7 @@ material too large for the body (bulk mapping tables, a full style guide), not
 to split a few dozen lines of body.
 
 Skills that hand Korean prose to a person (korean-writing, document-authoring,
-tech-spec, incident-triage, gitops-change, simple-orchestration) carry a short,
+tech-spec, incident-triage, gitops-change, simple-orchestration, saju-analysis) carry a short,
 genre-tuned rule set against AI-sounding Korean in their own body, because a
 plugin is the install unit and a skill can only load files from its own
 directory. The full pattern catalog with before/after examples is
