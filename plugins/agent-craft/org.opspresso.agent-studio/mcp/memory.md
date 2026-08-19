@@ -13,7 +13,7 @@ nothing routes to the Service from outside.
 
 ## Memories are scoped per project, with no header to set
 
-AgentDure stamps `X-Tenant-Id: <project name>` on every MCP request a run
+Agent Studio stamps `X-Tenant-Id: <project name>` on every MCP request a run
 makes, and this server reads it as the tenant when no explicit `X-Memory-Tenant`
 is present. **Binding the server is enough**: each project gets its own memory,
 and two projects cannot see each other's at all. Nothing needs to be configured

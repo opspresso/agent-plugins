@@ -1,14 +1,14 @@
 ---
 name: skill-writer
 description: >
-  AgentDure 스킬(SKILL.md)을 새로 만들거나 다듬을 때 사용한다. 모델이 이름과
+  Agent Studio 스킬(SKILL.md)을 새로 만들거나 다듬을 때 사용한다. 모델이 이름과
   description만 보고 로드 여부를 판단하므로, "언제 쓰는지"가 드러나는 description
   작성법과 본문 구성, 스킬·서브에이전트가 유기적으로 호출되는 연결 규칙을 다룬다.
 ---
 
 # 스킬 작성 스킬
 
-AgentDure의 스킬(SKILL.md)을 설계·작성·개선할 때 따르는 지침이다.
+Agent Studio의 스킬(SKILL.md)을 설계·작성·개선할 때 따르는 지침이다.
 완성된 SKILL.md 초안을 산출물로 제공하고, 어떤 선택을 왜 했는지 짧게 설명한다.
 
 ## 스킬이 로드되는 방식 (전제)
@@ -40,10 +40,10 @@ AgentDure의 스킬(SKILL.md)을 설계·작성·개선할 때 따르는 지침�
 - 스킬은 `plugins/<plugin>/skills/<skill>/SKILL.md` 한 단계에서만 발견된다. 더 깊이
   둔 디렉터리는 스캔되지 않는다.
 
-AgentDure가 `name`을 읽지 않는다고 해서 빼면 안 된다. 이 저장소는 AgentDure 전용
+Agent Studio가 `name`을 읽지 않는다고 해서 빼면 안 된다. 이 저장소는 Agent Studio 전용
 포맷이 아니라 스펙 준수를 목표로 하고, 다른 클라이언트는 그 스킬을 버린다.
 
-## AgentDure 제약
+## Agent Studio 제약
 
 - frontmatter는 완전한 YAML이 아니다. 평평한 `key: value`와 `>`·`|` 폴딩
   스칼라만 읽고 나머지는 조용히 무시한다. `description` 하나만 실제로 쓰고

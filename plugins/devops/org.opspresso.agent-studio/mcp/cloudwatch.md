@@ -5,7 +5,7 @@ description: "Query AWS CloudWatch metrics, alarms, PromQL and Logs Insights for
 # cloudwatch
 
 Runs the AWS Labs CloudWatch MCP server in `agent-mcps`, with no ingress.
-AgentDure reaches it through
+Agent Studio reaches it through
 `mcp-cloudwatch.agent-mcps.svc.cluster.local`, and the pod reaches AWS through
 the EKS Pod Identity associated with the `mcp-cloudwatch` ServiceAccount.
 There is no credential or caller header on this entry.

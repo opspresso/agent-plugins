@@ -2,7 +2,7 @@
 description: >
   Read office documents — DOCX, PPTX, XLSX, HWP, HWPX, ODT/ODS/ODP, RTF — as
   text, and write Markdown out as a DOCX, PPTX, PDF or HWPX file the user
-  receives. PDFs, plain text and web pages are read by AgentDure itself, not
+  receives. PDFs, plain text and web pages are read by Agent Studio itself, not
   here.
 ---
 
@@ -15,12 +15,12 @@ nothing routes to the Service from outside the cluster.
 Two tools. `read_document` takes base64 `content` and returns the text of a
 DOCX, PPTX, XLSX, HWP 5.x, HWPX, OpenDocument or RTF file. `render_document`
 takes Markdown and returns the generated `.docx`, `.pptx`, `.pdf` or `.hwpx`
-**as bytes** — AgentDure stores it as an artifact and hands it to the user.
+**as bytes** — Agent Studio stores it as an artifact and hands it to the user.
 
 ## What it deliberately does not do
 
 Since v0.2.0 this server fetches nothing, stores nothing, and reads no PDF.
-Each of those was a second copy of something AgentDure already had — the
+Each of those was a second copy of something Agent Studio already had — the
 outbound SSRF boundary, the `unpdf` reader, an S3 bucket with its own retention
 window — so what is left is the parser, and only the parser.
 
@@ -31,7 +31,7 @@ Consequences worth knowing when binding it:
   tool takes bytes the caller already holds.
 - **No download link, and no tenant header.** The bytes come back in the tool
   result; the artifact row, the retention window and the delete button belong to
-  AgentDure. `x-document-tenant` is gone — remove it from any registry entry
+  Agent Studio. `x-document-tenant` is gone — remove it from any registry entry
   that still carries it.
 - **PDF, plain text and HTML are refused by name**, pointing at the caller that
   reads them. That refusal is the design, not a gap.
