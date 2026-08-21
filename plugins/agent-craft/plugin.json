@@ -5,5 +5,6 @@
   "description": "Build the agents themselves: writing system prompts and skills, delegating across subagents, holding output to a schema, and recalling what earlier sessions decided.",
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
+  "license": "MIT",
   "keywords": ["prompts", "skills", "agents", "orchestration", "memory"]
 }

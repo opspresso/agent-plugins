@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "engineering",
+  "version": "1.0.0",
+  "description": "Get a change reviewed and out the door: a review that reads the diff instead of the repository and runs only the lenses its signals call for, PR descriptions built around intent rather than a file list, and the plain voice both of them are written in.",
+  "author": { "name": "opspresso" },
+  "repository": "https://github.com/opspresso/agent-plugins",
+  "license": "MIT",
+  "keywords": ["code-review", "pull-request", "diff", "git", "writing"]
+}

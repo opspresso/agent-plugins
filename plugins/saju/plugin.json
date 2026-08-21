@@ -5,5 +5,6 @@
   "description": "Read a birth chart the way a myeongri researcher would: calculate the four pillars and luck cycles from solar terms with the working shown, then analyse the chart school by school — Ziping Zhenquan, Ditian Sui, Qiongtong Baojian, strength-balance, modern ten-gods psychology — and compare where they agree and where they do not.",
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
+  "license": "MIT",
   "keywords": ["saju", "bazi", "myeongri", "four-pillars", "fortune"]
 }

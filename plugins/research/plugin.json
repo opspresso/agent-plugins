@@ -5,5 +5,6 @@
   "description": "Gather source material an agent cannot reach on its own: web search, document reading and writing, YouTube transcripts, and AWS documentation.",
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
+  "license": "MIT",
   "keywords": ["research", "search", "documents", "web", "aws"]
 }
