@@ -49,6 +49,16 @@ MAX_DESCRIPTION = 1024
 MAX_COMPATIBILITY = 500
 MAX_BODY_LINES = 500
 
+# What the sync carries out of a skill directory besides SKILL.md. Anything else
+# is left behind silently — an executable script or a bundled asset is still in
+# git, still passes every other check, and simply is not there at run time, so a
+# body that tells the model to run or copy it gives an instruction that cannot be
+# followed. These numbers are the same ones skill-writer documents.
+SKILL_FILE_SUFFIXES = {".md", ".txt", ".json", ".yaml", ".yml", ".csv"}
+MAX_FILE_BYTES = 64 * 1024
+MAX_SKILL_FILES = 20
+MAX_SKILL_BYTES = 200 * 1024
+
 problems: list[str] = []
 
 
@@ -157,9 +167,29 @@ def check_skill(skill: Path) -> None:
     for extra in sorted(set(fields) - SKILL_FIELDS):
         fail(skill, f"{extra!r} is not a frontmatter field the spec defines")
 
-    lines = text.count("\n") + 1
+    lines = len(text.splitlines())
     if lines > MAX_BODY_LINES:
         fail(skill, f"{lines} lines, over the {MAX_BODY_LINES} the spec recommends")
+
+    check_bundle(skill.parent)
+
+
+def check_bundle(directory: Path) -> None:
+    """Every file the skill ships, against what the sync will actually carry."""
+    files = sorted(path for path in directory.rglob("*") if path.is_file())
+    total = 0
+    for path in files:
+        size = path.stat().st_size
+        total += size
+        if path.suffix not in SKILL_FILE_SUFFIXES:
+            allowed = " ".join(sorted(SKILL_FILE_SUFFIXES))
+            fail(path, f"{path.suffix or 'no suffix'} is not carried by the sync — only {allowed}")
+        if size > MAX_FILE_BYTES:
+            fail(path, f"{size} bytes, over the {MAX_FILE_BYTES} limit per file")
+    if len(files) > MAX_SKILL_FILES:
+        fail(directory, f"{len(files)} files, over the {MAX_SKILL_FILES} a skill may carry")
+    if total > MAX_SKILL_BYTES:
+        fail(directory, f"{total} bytes in total, over the {MAX_SKILL_BYTES} a skill may carry")
 
 
 def check_unique(root: Path, plugins: list[Path]) -> None:
