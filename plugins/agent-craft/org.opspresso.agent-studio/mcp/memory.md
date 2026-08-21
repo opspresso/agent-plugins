@@ -1,8 +1,9 @@
 ---
 description: >
   Remember and recall this project's durable knowledge — decisions, conventions
-  and setup from earlier sessions. Call recall before asking the user to
-  re-explain anything, and remember a decision or convention as soon as it lands.
+  and setup from earlier sessions — and search the shared documentation library.
+  Call recall before asking the user to re-explain anything, and remember a
+  decision or convention as soon as it lands.
 ---
 
 # memory
@@ -44,6 +45,22 @@ version that turns on **Recall memory before each run** has the run call it
 first, with the newest user turn, and adds the answer to the system prompt.
 That option asks only the servers the version has bound — bind this one, or
 the run warns on every turn that nothing could answer.
+
+## The documentation library
+
+`search_docs` answers from a Bedrock Knowledge Base rather than from memories,
+and the two are not the same store. Memories are what a run decided; the library
+is what someone wrote down — documentation, runbooks, conventions — uploaded to
+`s3://agent-studio-kb` and indexed by the knowledge base's own ingestion.
+
+**It is shared across projects.** A tenant header is still required, but it does
+not filter documents: two projects searching the same phrase get the same
+excerpts. Memories remain strictly per-tenant.
+
+Nothing ingests on a schedule. A document added to the bucket is invisible to
+`search_docs` until an ingestion job runs, and the tool is offered at all only
+where `KNOWLEDGE_BASE_ID` is set — alpha today, since prod has no knowledge base
+of its own yet.
 
 ## Storage
 
