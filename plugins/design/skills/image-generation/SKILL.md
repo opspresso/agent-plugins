@@ -4,6 +4,9 @@ description: >
   사용자가 그림을 요청하거나 이미 있는 이미지를 고쳐 달라고 할 때 로드한다.
   아이디어를 영어 프롬프트로 다듬어 GenerateImage로 새로 그리거나, 기존 이미지를
   id로 지목해 EditImage로 고친다.
+compatibility: >
+  GenerateImage·EditImage 빌트인이 제시된 런에서만 동작한다. 두 툴은 그 능력이 실제로
+  있는 런에만 나타나므로, 목록에 없으면 이미지를 만들 수 없다고 밝힌다.
 ---
 
 # 이미지 생성 스킬
