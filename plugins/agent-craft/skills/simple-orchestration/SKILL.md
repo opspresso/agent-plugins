@@ -4,6 +4,9 @@ description: >
   여러 전문 영역의 결과를 결합·조정해야 하거나 한 결과가 다음 단계의 입력이 되는
   요청을 서브에이전트에 나누기 전에 로드한다. 독립적인 일은 dispatch_agents로
   한 번에 병렬 위임하고, 단일 요청은 transfer_to_agent로 넘긴 뒤 결과를 검증·통합한다.
+compatibility: >
+  서브에이전트가 연결된 런에서만 쓸모가 있다. dispatch_agents 는 최상위 런에만 제시되고,
+  서브에이전트로 실행 중이면 transfer_to_agent 만 남는다.
 ---
 
 # 단순 오케스트레이션
@@ -98,3 +101,7 @@ description: >
   출처를 밝혀야 하면 문장 안에 한 번 적는다.
 - "단순히 A가 아니라 B" 대구, "~것으로 보입니다" 남발, "-고,"·"-지만," 뒤 쉼표를 쓰지
   않는다. 확인된 것은 단언하고 확인 못 한 것은 그렇다고 적는다.
+
+전체 패턴 목록과 전후 예시는 이 저장소의
+`plugins/workspace/skills/korean-humanize/ai-tell-catalog.md` 가 source 다. 인라인 규칙과
+카탈로그가 어긋나면 카탈로그가 이긴다.

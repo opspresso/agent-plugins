@@ -10,8 +10,15 @@ same material by kind, so the skill and the servers that "investigate an
 incident" needs lived in different repositories. Here they arrive as one
 `devops` plugin.
 
-Agent Studio's plugin sync consumes this repository, but any spec-conformant
-client can install from it. Nothing here is Agent Studio-specific format.
+**This repository targets Agent Studio.** The manifests and `SKILL.md` files
+follow the published specs, so another conformant client can read them, but the
+skills are written against Agent Studio's runtime and stop making sense outside
+it — see [What the skills assume](#what-the-skills-assume). Anything that would
+have to change for a second runtime is a change to this repository, not a
+compatibility shim inside a skill.
+
+Everything here is MIT-licensed ([`LICENSE`](LICENSE)), and every `plugin.json`
+declares it.
 
 ## Layout
 
@@ -35,7 +42,8 @@ plugins/
 | **devops** — investigate the cluster, change it through GitOps | gitops-change, incident-triage | argocd, cloudwatch, grafana, kubernetes, github |
 | **research** — bring in material the model cannot reach, and write documents back out | document-authoring | brave-search, youtube, document, aws-knowledge |
 | **workspace** — write what moves around the company | korean-writing, korean-humanize, tech-spec | notion |
-| **design** — build what a person will look at | frontend-design, tufte-charts, image-generation | — |
+| **design** — build what a person will look at | frontend-design, tufte-charts, html-report, image-generation | — |
+| **engineering** — get a change reviewed and out the door | code-review, pr-description, engineering-writing | — |
 | **agent-craft** — build the agents themselves | prompt-writer, skill-writer, simple-orchestration, structured-output | memory |
 | **saju** — read a birth chart school by school | saju-analysis | — |
 
@@ -63,13 +71,50 @@ A skill directory may carry reference files alongside `SKILL.md`. Use them for
 material too large for the body (bulk mapping tables, a full style guide), not
 to split a few dozen lines of body.
 
-Skills that hand Korean prose to a person (korean-writing, document-authoring,
-tech-spec, incident-triage, gitops-change, simple-orchestration, saju-analysis) carry a short,
-genre-tuned rule set against AI-sounding Korean in their own body, because a
-plugin is the install unit and a skill can only load files from its own
-directory. The full pattern catalog with before/after examples is
-[`plugins/workspace/skills/korean-humanize/ai-tell-catalog.md`](plugins/workspace/skills/korean-humanize/ai-tell-catalog.md);
-when an inline rule and the catalog disagree, the catalog wins.
+**Only some of those files reach the model.** The sync carries `.md` `.txt`
+`.json` `.yaml` `.yml` `.csv`, up to 64KB each and 20 files or 200KB per skill,
+and it leaves everything else behind — an executable script or a bundled asset
+stays in git and is simply not there at run time. A body that tells the model to
+run or copy such a file gives an instruction that cannot be followed, and nothing
+reports it. `scripts/validate.py` fails the build on it; a template belongs in a
+`.md` file as a fenced block, and work that would need a script belongs in an MCP
+server instead.
+
+## What the skills assume
+
+The runtime is Agent Studio, and the skills are written to it rather than to a
+generic client. Three assumptions run through them, and a skill that depends on
+one says so in its `compatibility` frontmatter:
+
+- **No shell, no filesystem, no network of its own.** A skill cannot run `git`,
+  execute a script, or fetch a URL. Anything a run touches outside the
+  conversation arrives through a bound MCP server or through the user.
+- **Builtins appear only when the run has them.** `GenerateImage`, `EditImage`,
+  `dispatch_agents` and `transfer_to_agent` are offered per run, so
+  image-generation and simple-orchestration state what they do when the tool is
+  absent from the list.
+- **A plugin is the install unit.** A skill loads files only from its own
+  directory, and a skill that instructs an MCP server ships in the plugin that
+  declares it. Where that is genuinely impossible — code-review and
+  pr-description read PRs through devops's `github` — the skill says in its body
+  what it does when the server is not bound.
+
+Ten skills hand Korean prose to a person, and each carries a short, genre-tuned
+rule set against AI-sounding Korean in its own body — korean-writing,
+korean-humanize, document-authoring, tech-spec, incident-triage, gitops-change,
+simple-orchestration, saju-analysis, prompt-writer and engineering-writing. The
+duplication is deliberate: a plugin is the install unit and a skill can only load
+files from its own directory, so a rule that lives elsewhere is a rule that never
+arrives.
+
+The full pattern catalog with before/after examples is
+[`plugins/workspace/skills/korean-humanize/ai-tell-catalog.md`](plugins/workspace/skills/korean-humanize/ai-tell-catalog.md),
+and when an inline rule and the catalog disagree the catalog wins. **Every inline
+block must name it**, or a run that loaded only that skill has no way to know the
+catalog exists. Inside the **engineering** plugin the block lives in
+[`engineering-writing`](plugins/engineering/skills/engineering-writing/SKILL.md);
+code-review and pr-description point there rather than restating it, because it
+installs alongside them.
 
 ## mcp.json carries no credentials
 
