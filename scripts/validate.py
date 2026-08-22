@@ -22,10 +22,12 @@ on agent-plugins.org being up.
 
 from __future__ import annotations
 
+import ipaddress
 import json
 import re
 import sys
 from pathlib import Path
+from urllib.parse import urlsplit
 
 PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 MCP_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"
@@ -60,10 +62,15 @@ MAX_SKILL_FILES = 20
 MAX_SKILL_BYTES = 200 * 1024
 
 problems: list[str] = []
+deployment_exceptions: list[str] = []
 
 
 def fail(where: Path, message: str) -> None:
     problems.append(f"{where}: {message}")
+
+
+def deployment_exception(where: Path, message: str) -> None:
+    deployment_exceptions.append(f"{where}: {message}")
 
 
 def parse_frontmatter(text: str) -> dict[str, str] | None:
@@ -123,12 +130,41 @@ def check_mcp(manifest: Path) -> None:
         fail(manifest, "mcpServers is required")
     for extra in sorted(set(data) - {"$schema", "mcpServers"}):
         fail(manifest, f"{extra!r} is not a field the schema allows")
-    for name, server in (data.get("mcpServers") or {}).items():
+    servers = data.get("mcpServers") or {}
+    for name, server in servers.items():
         kind = server.get("type")
         if kind == "stdio":
             required, allowed = {"type", "command"}, {"type", "command", "args", "env", "cwd"}
         elif kind in ("streamable-http", "sse"):
             required, allowed = {"type", "url"}, {"type", "url", "headers"}
+            if "headers" in server:
+                fail(
+                    manifest,
+                    f"{name}: headers are forbidden by repository policy; configure them after install",
+                )
+            url = server.get("url")
+            if not isinstance(url, str):
+                fail(manifest, f"{name}: url must be a string")
+            else:
+                parsed = urlsplit(url)
+                if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+                    fail(manifest, f"{name}: url must be an absolute HTTP or HTTPS URL")
+                elif parsed.username or parsed.password or parsed.fragment:
+                    fail(manifest, f"{name}: url must not contain user information or a fragment")
+                elif parsed.scheme == "http":
+                    try:
+                        loopback = ipaddress.ip_address(parsed.hostname).is_loopback
+                    except ValueError:
+                        loopback = parsed.hostname == "localhost"
+                    if not loopback:
+                        if parsed.hostname.endswith(".agent-mcps.svc.cluster.local"):
+                            deployment_exception(
+                                manifest,
+                                f"{name}: private HTTP is an Agent Studio deployment exception; "
+                                "portable Agent Plugins requires HTTPS",
+                            )
+                        else:
+                            fail(manifest, f"{name}: a non-loopback endpoint must use HTTPS")
         else:
             fail(manifest, f"{name}: type must be stdio, streamable-http or sse (got {kind!r})")
             continue
@@ -136,6 +172,20 @@ def check_mcp(manifest: Path) -> None:
             fail(manifest, f"{name}: {missing} is required for a {kind} server")
         for extra in sorted(set(server) - allowed):
             fail(manifest, f"{name}: {extra!r} is not allowed on a {kind} server")
+
+    extension = manifest.parent / "org.opspresso.agent-studio" / "mcp"
+    docs = {path.stem: path for path in extension.glob("*.md")} if extension.is_dir() else {}
+    for name in sorted(servers):
+        doc = docs.get(name)
+        if doc is None:
+            fail(manifest, f"{name}: missing org.opspresso.agent-studio/mcp/{name}.md")
+            continue
+        fields = parse_frontmatter(doc.read_text())
+        if fields is None or not fields.get("description"):
+            fail(doc, "description is required in frontmatter for Agent Studio sync")
+    for name, doc in sorted(docs.items()):
+        if name not in servers:
+            fail(doc, f"no matching {name!r} server in mcp.json")
 
 
 def check_skill(skill: Path) -> None:
@@ -248,9 +298,15 @@ def main() -> int:
 
     for problem in problems:
         print(f"  {problem}")
+    for exception in deployment_exceptions:
+        print(f"  warning: {exception}")
     print(
         f"\n{len(plugins)} plugins, {skills} skills — "
-        + ("conform to Agent Plugins 1.0.0" if not problems else f"{len(problems)} problems")
+        + ("pass repository checks for Agent Plugins 1.0.0" if not problems else f"{len(problems)} problems")
+        + (
+            f" ({len(deployment_exceptions)} private-HTTP deployment exceptions)"
+            if deployment_exceptions else ""
+        )
     )
     return 1 if problems else 0
 

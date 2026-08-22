@@ -148,6 +148,12 @@ A private address like `*.svc.cluster.local` registers only where the
 installing side allows that suffix. In Agent Studio that is
 `MCP_INTERNAL_HOST_SUFFIXES`; without it the SSRF guard refuses the URL.
 
+Agent Plugins 1.0.0 requires HTTPS for every non-loopback remote URL. The
+cluster-local `http://*.agent-mcps.svc.cluster.local` entries are an explicit
+Agent Studio deployment exception: they are reachable only inside the cluster
+and are not portable to a strictly conformant client. The validator reports
+every such entry; removing the exception requires TLS at the Service boundary.
+
 ## org.opspresso.agent-studio/ — client extension
 
 This is the **reverse-domain client-extension namespace** the spec defines: the
@@ -192,7 +198,10 @@ Search the whole repository for a name before adding a component.
 
 Checks every manifest against the 1.0.0 schemas, every `SKILL.md` against the
 [Agent Skills specification](https://agentskills.io/specification), and every
-name for the collision above. Standard library only, no network.
+name for the collision above. It also enforces this repository's no-header rule,
+checks that every MCP declaration has exactly one Agent Studio extension document
+with a description, and reports the private-HTTP exceptions above. Standard
+library only, no network.
 
 It is worth running because **neither kind of mistake fails loudly**. A skill
 whose frontmatter breaks the spec is skipped by the client and loading carries

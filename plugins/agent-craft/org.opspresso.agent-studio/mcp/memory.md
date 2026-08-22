@@ -24,14 +24,14 @@ the intended state.
 The tenant is deliberately a header and not a tool argument: a tool argument is
 chosen by the model, and a model that can name its own tenant can read another
 project's memories by asking — including one talked into it by text it just
-retrieved. The platform applies its header last, so neither the entry nor a
-version's overrides can impersonate another project.
+retrieved. The platform supplies `X-Tenant-Id` outside the model's control.
 
 Set `X-Memory-Tenant` only to name the bucket yourself — for instance so
 several projects share one memory. It wins over the stamped project name. A
-request carrying neither header is refused (including `tools/list`), which is
-why **Test connection** and the catalog probe, which carry no project, report
-the refusal rather than an empty tool list; a bound run is unaffected.
+request carrying neither header may still discover the server and list its
+tools, so **Test connection** and the catalog probe work without a project. The
+tenant is resolved when a tool runs; an unscoped call is refused, while a bound
+run carries the stamped project header.
 
 When the run is in a conversation (a chat, a Slack thread, an A2A context, an
 API caller that declared one) the platform also sends `X-Conversation-Id`, and
