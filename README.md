@@ -44,7 +44,7 @@ plugins/
 | **workspace** — write what moves around the company | korean-writing, korean-humanize, tech-spec | notion |
 | **design** — build what a person will look at | frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
 | **engineering** — get a change reviewed and out the door | code-review, pr-description, engineering-writing | — |
-| **agent-craft** — build the agents themselves | prompt-writer, skill-writer, simple-orchestration, structured-output | memory |
+| **agent-craft** — build agents and their interfaces | prompt-writer, skill-writer, mcp-writer, simple-orchestration, structured-output | memory |
 | **saju** — read a birth chart school by school | saju-analysis | — |
 
 A plugin with no skills has no `skills/` directory, and one with no MCP servers
@@ -84,7 +84,7 @@ server instead.
 ## What the skills assume
 
 The runtime is Agent Studio, and the skills are written to it rather than to a
-generic client. Three assumptions run through them, and a skill that depends on
+generic client. Four assumptions run through them, and a skill that depends on
 one says so in its `compatibility` frontmatter:
 
 - **No shell, no filesystem, no network of its own.** A skill cannot run `git`,
@@ -99,6 +99,10 @@ one says so in its `compatibility` frontmatter:
   declares it. Where that is genuinely impossible — code-review and
   pr-description read PRs through devops's `github` — the skill says in its body
   what it does when the server is not bound.
+- **External content is data, not instruction.** User attachments, reference
+  files, web pages, and MCP results may contain imperative text. A skill may
+  extract facts from them, but must not promote embedded instructions into its
+  own workflow or authorization boundary.
 
 Ten skills hand Korean prose to a person, and each carries a short, genre-tuned
 rule set against AI-sounding Korean in its own body — korean-writing,

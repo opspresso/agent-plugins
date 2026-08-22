@@ -43,6 +43,7 @@ SKILL_FIELDS = {"name", "description", "license", "compatibility", "metadata", "
 PLUGIN_NAME = re.compile(r"^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$")
 # Agent Skills is stricter: no dots, and no consecutive hyphens.
 SKILL_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+MCP_CWD = re.compile(r"^(?:\./|\$\{PLUGIN_ROOT\}(?:/|$)|\$\{PLUGIN_DATA\}(?:/|$))")
 
 FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.S)
 KEY = re.compile(r"^([A-Za-z0-9_-]+):\s*(.*)$")
@@ -107,20 +108,48 @@ def check_plugin(manifest: Path) -> None:
     except json.JSONDecodeError as error:
         fail(manifest, f"not valid JSON — {error}")
         return
+    if not isinstance(data, dict):
+        fail(manifest, "manifest must be a JSON object")
+        return
     if data.get("$schema") != PLUGIN_SCHEMA:
         fail(manifest, "$schema is required and must be the 1.0.0 plugin schema")
     if "name" not in data:
         fail(manifest, "name is required")
+    elif not isinstance(data["name"], str):
+        fail(manifest, "name must be a string")
     elif not PLUGIN_NAME.match(data["name"]) or not 1 <= len(data["name"]) <= 64:
         fail(manifest, f"name {data['name']!r} breaks the schema pattern")
     elif data["name"] != directory:
         fail(manifest, f"name {data['name']!r} does not match its directory {directory!r}")
     for extra in sorted(set(data) - PLUGIN_FIELDS):
         fail(manifest, f"{extra!r} is not a field the schema allows")
+
+    for field in ("version", "description", "homepage", "repository", "license"):
+        if field in data and not isinstance(data[field], str):
+            fail(manifest, f"{field} must be a string")
+
     author = data.get("author")
-    if isinstance(author, dict):
+    if author is not None and not isinstance(author, dict):
+        fail(manifest, "author must be an object")
+    elif isinstance(author, dict):
         for extra in sorted(set(author) - AUTHOR_FIELDS):
             fail(manifest, f"author.{extra} is not a field the schema allows")
+        for field, value in author.items():
+            if field in AUTHOR_FIELDS and not isinstance(value, str):
+                fail(manifest, f"author.{field} must be a string")
+
+    keywords = data.get("keywords")
+    if keywords is not None and (
+        not isinstance(keywords, list) or any(not isinstance(value, str) for value in keywords)
+    ):
+        fail(manifest, "keywords must be an array of strings")
+
+    extensions = data.get("extensions")
+    if extensions is not None and (
+        not isinstance(extensions, dict)
+        or any(not isinstance(value, dict) for value in extensions.values())
+    ):
+        fail(manifest, "extensions must be an object whose values are objects")
 
 
 def check_mcp(manifest: Path) -> None:
@@ -129,17 +158,57 @@ def check_mcp(manifest: Path) -> None:
     except json.JSONDecodeError as error:
         fail(manifest, f"not valid JSON — {error}")
         return
+    if not isinstance(data, dict):
+        fail(manifest, "manifest must be a JSON object")
+        return
     if data.get("$schema") != MCP_SCHEMA:
         fail(manifest, "$schema is required and must be the 1.0.0 mcp schema")
     if "mcpServers" not in data:
         fail(manifest, "mcpServers is required")
     for extra in sorted(set(data) - {"$schema", "mcpServers"}):
         fail(manifest, f"{extra!r} is not a field the schema allows")
-    servers = data.get("mcpServers") or {}
+
+    servers = data.get("mcpServers")
+    if not isinstance(servers, dict):
+        if "mcpServers" in data:
+            fail(manifest, "mcpServers must be an object")
+        return
+
     for name, server in servers.items():
+        if not isinstance(server, dict):
+            fail(manifest, f"{name}: server must be an object")
+            continue
         kind = server.get("type")
+        if kind in {"stdio", "sse"}:
+            fail(
+                manifest,
+                f"{name}: repository policy requires streamable-http for Agent Studio",
+            )
         if kind == "stdio":
             required, allowed = {"type", "command"}, {"type", "command", "args", "env", "cwd"}
+            command = server.get("command")
+            if "command" in server and (not isinstance(command, str) or not command):
+                fail(manifest, f"{name}: command must be a non-empty string")
+            args = server.get("args")
+            if args is not None and (
+                not isinstance(args, list) or any(not isinstance(value, str) for value in args)
+            ):
+                fail(manifest, f"{name}: args must be an array of strings")
+            env = server.get("env")
+            if env is not None:
+                if not isinstance(env, dict) or any(
+                    not isinstance(key, str) or not isinstance(value, str)
+                    for key, value in env.items()
+                ):
+                    fail(manifest, f"{name}: env must be an object of string values")
+                elif set(env) & {"PLUGIN_ROOT", "PLUGIN_DATA"}:
+                    fail(manifest, f"{name}: env must not override PLUGIN_ROOT or PLUGIN_DATA")
+            cwd = server.get("cwd")
+            if cwd is not None and (not isinstance(cwd, str) or not MCP_CWD.match(cwd)):
+                fail(
+                    manifest,
+                    f"{name}: cwd must start with ./, ${{PLUGIN_ROOT}} or ${{PLUGIN_DATA}}",
+                )
         elif kind in ("streamable-http", "sse"):
             required, allowed = {"type", "url"}, {"type", "url", "headers"}
             if "headers" in server:
@@ -267,10 +336,12 @@ def check_unique(root: Path, plugins: list[Path]) -> None:
         manifest = plugin / "mcp.json"
         if manifest.is_file():
             try:
-                servers = json.loads(manifest.read_text()).get("mcpServers") or {}
+                data = json.loads(manifest.read_text())
             except json.JSONDecodeError:
-                servers = {}
-            names += [(name, f"{plugin.name}/mcp.json") for name in sorted(servers)]
+                data = {}
+            servers = data.get("mcpServers") if isinstance(data, dict) else {}
+            if isinstance(servers, dict):
+                names += [(name, f"{plugin.name}/mcp.json") for name in sorted(servers)]
         for name, where in names:
             if name in seen:
                 fail(root, f"name {name!r} is used by both {seen[name]} and {where}")
@@ -279,6 +350,10 @@ def check_unique(root: Path, plugins: list[Path]) -> None:
 
 
 def main() -> int:
+    problems.clear()
+    recommendations.clear()
+    deployment_exceptions.clear()
+
     root = Path(__file__).resolve().parent.parent
     plugins = sorted(p for p in (root / "plugins").iterdir() if p.is_dir())
     if not plugins:

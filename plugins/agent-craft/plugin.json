@@ -2,9 +2,9 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "agent-craft",
   "version": "1.0.0",
-  "description": "Build the agents themselves: writing system prompts and skills, delegating across subagents, holding output to a schema, and recalling what earlier sessions decided.",
+  "description": "Build agents and their interfaces: write prompts, skills, and MCP servers, delegate across subagents, enforce output schemas, and recall earlier decisions.",
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
   "license": "MIT",
-  "keywords": ["prompts", "skills", "agents", "orchestration", "memory"]
+  "keywords": ["prompts", "skills", "agents", "mcp", "orchestration", "memory"]
 }
