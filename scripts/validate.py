@@ -62,11 +62,16 @@ MAX_SKILL_FILES = 20
 MAX_SKILL_BYTES = 200 * 1024
 
 problems: list[str] = []
+recommendations: list[str] = []
 deployment_exceptions: list[str] = []
 
 
 def fail(where: Path, message: str) -> None:
     problems.append(f"{where}: {message}")
+
+
+def recommend(where: Path, message: str) -> None:
+    recommendations.append(f"{where}: {message}")
 
 
 def deployment_exception(where: Path, message: str) -> None:
@@ -219,14 +224,18 @@ def check_skill(skill: Path) -> None:
 
     lines = len(text.splitlines())
     if lines > MAX_BODY_LINES:
-        fail(skill, f"{lines} lines, over the {MAX_BODY_LINES} the spec recommends")
+        recommend(skill, f"{lines} lines, over the {MAX_BODY_LINES} the spec recommends")
 
     check_bundle(skill.parent)
 
 
 def check_bundle(directory: Path) -> None:
-    """Every file the skill ships, against what the sync will actually carry."""
-    files = sorted(path for path in directory.rglob("*") if path.is_file())
+    """Every attachment the sync carries alongside SKILL.md."""
+    skill = directory / "SKILL.md"
+    files = sorted(
+        path for path in directory.rglob("*")
+        if path.is_file() and path != skill
+    )
     total = 0
     for path in files:
         size = path.stat().st_size
@@ -237,9 +246,9 @@ def check_bundle(directory: Path) -> None:
         if size > MAX_FILE_BYTES:
             fail(path, f"{size} bytes, over the {MAX_FILE_BYTES} limit per file")
     if len(files) > MAX_SKILL_FILES:
-        fail(directory, f"{len(files)} files, over the {MAX_SKILL_FILES} a skill may carry")
+        fail(directory, f"{len(files)} attachments, over the {MAX_SKILL_FILES} a skill may carry")
     if total > MAX_SKILL_BYTES:
-        fail(directory, f"{total} bytes in total, over the {MAX_SKILL_BYTES} a skill may carry")
+        fail(directory, f"{total} attachment bytes, over the {MAX_SKILL_BYTES} a skill may carry")
 
 
 def check_unique(root: Path, plugins: list[Path]) -> None:
@@ -298,6 +307,8 @@ def main() -> int:
 
     for problem in problems:
         print(f"  {problem}")
+    for recommendation in recommendations:
+        print(f"  warning: {recommendation}")
     for exception in deployment_exceptions:
         print(f"  warning: {exception}")
     print(

@@ -72,8 +72,9 @@ material too large for the body (bulk mapping tables, a full style guide), not
 to split a few dozen lines of body.
 
 **Only some of those files reach the model.** The sync carries `.md` `.txt`
-`.json` `.yaml` `.yml` `.csv`, up to 64KB each and 20 files or 200KB per skill,
-and it leaves everything else behind — an executable script or a bundled asset
+`.json` `.yaml` `.yml` `.csv`, up to 64KB each and 20 attachments or 200KB of
+attachments per skill. `SKILL.md` is not part of those attachment limits. The
+sync leaves everything else behind — an executable script or a bundled asset
 stays in git and is simply not there at run time. A body that tells the model to
 run or copy such a file gives an instruction that cannot be followed, and nothing
 reports it. `scripts/validate.py` fails the build on it; a template belongs in a
