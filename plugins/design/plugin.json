@@ -2,9 +2,9 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "design",
   "version": "1.0.0",
-  "description": "Produce what a person looks at: frontend layouts and components, Tufte-style charts that carry the data rather than decorate it, and generated or edited images.",
+  "description": "Produce frontend layouts, technical diagrams, evidence-led charts, HTML reports, and generated or edited images.",
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
   "license": "MIT",
-  "keywords": ["design", "frontend", "charts", "images", "ui"]
+  "keywords": ["design", "frontend", "diagrams", "svg", "charts", "images", "ui"]
 }
