@@ -1,9 +1,10 @@
 ---
 description: >
   Read office documents — DOCX, PPTX, XLSX, HWP, HWPX, ODT/ODS/ODP, RTF — as
-  text; inspect XLSX formulas without executing them; and create new XLSX,
-  DOCX, PPTX, PDF or HWPX files the user receives. PDFs, plain text and web
-  pages are read by Agent Studio itself, not here.
+  Markdown that keeps their headings, tables and lists; inspect a document's
+  structure or an XLSX workbook's formulas without executing anything; and
+  create new XLSX, DOCX, PPTX, PDF or HWPX files the user receives. PDFs, plain
+  text and web pages are read by Agent Studio itself, not here.
 ---
 
 # document
@@ -12,11 +13,17 @@ Cluster-internal (`agent-mcps` namespace, no ingress), so registering it at all
 depends on `MCP_INTERNAL_HOST_SUFFIXES` naming that suffix. No credential:
 nothing routes to the Service from outside the cluster.
 
-Four tools. `read_document` extracts text from a DOCX, PPTX, XLSX, HWP 5.x,
-HWPX, OpenDocument or RTF file. `inspect_spreadsheet` returns addressed XLSX
-values and formulas without executing them. `render_spreadsheet` creates a new
-XLSX workbook from named rows and explicit formula cells. `render_document`
-takes Markdown and returns a generated `.docx`, `.pptx`, `.pdf` or `.hwpx`.
+Five tools. `read_document` extracts a DOCX, PPTX, XLSX, HWP 5.x, HWPX,
+OpenDocument or RTF file as Markdown that keeps the document's shape — real
+tables with their column alignment, lists that count, headings at their level,
+links with their targets, a mark where a picture stood. `inspect_document`
+describes that shape instead of writing it: one line per block, with merged
+cells, which row the document itself called a header, list depth, style names
+and slide positions — the things Markdown has no syntax for. It refuses XLSX by
+name, because `inspect_spreadsheet` is the tool for a workbook: addressed values
+and formulas, without executing them. `render_spreadsheet` creates a new XLSX
+workbook from named rows and explicit formula cells. `render_document` takes
+Markdown and returns a generated `.docx`, `.pptx`, `.pdf` or `.hwpx`.
 Both renderers return the file **as bytes** — Agent Studio stores it as an
 artifact and hands it to the user.
 
@@ -53,11 +60,31 @@ Consequences worth knowing when binding it:
   not executed. `render_spreadsheet` creates a new workbook; it does not edit or
   preserve styles, charts, macros, comments or links from an input workbook.
 - A document read is content extraction, not original-preserving editing.
-  Machine-readable `complete` and `omissions` state the boundary. Re-rendering
-  extracted text creates a new package and may not preserve headers, footers,
-  comments, tracked changes, notes, formatting, charts or relationships.
-- A deck comes back as slide text in deck order, numbered; speaker notes are
-  left out, being the presenter's script rather than the slide.
+  Machine-readable `complete` and `omissions` state the boundary, and
+  `omissions` is now static *plus observed*: the format's own list of what is
+  never read, followed by what **this** document actually lost — a merged cell,
+  a picture inside a table, a deck reordered after its slides were named.
+  Re-rendering extracted text creates a new package and may not preserve
+  headers, footers, comments, tracked changes, notes, charts or relationships.
+- **Structure is recovered, never guessed.** A heading's level comes from what
+  the format states — `w:outlineLvl` and `styles.xml` in DOCX, `hh:heading` in
+  HWPX, `text:outline-level` in ODF, `p:ph/@type` in a deck — so `제목 1` and
+  `Überschrift 1` work where matching `Heading1` never did. When the part that
+  would say so is missing, the paragraph stays a paragraph. HWP 5.x gets no
+  heading levels at all and says so in `omissions`: the record layouts are not
+  verified against the spec, and a wrong offset answers confidently with the
+  wrong level.
+- **Ask `inspect_document` when the shape is the question** — which cells a
+  table merges, whether a paragraph is a heading or just bold, how deep a list
+  nests, where a picture sat. It returns previews rather than prose, so
+  `read_document` is still what to call for the words. `from` and `to` page
+  through a long document; at most 500 blocks come back per call.
+- A deck comes back in the order `presentation.xml` states rather than the order
+  its slides were named, numbered, with each slide's title as a heading; speaker
+  notes are left out, being the presenter's script rather than the slide. Shape
+  *order* on the page is still not recoverable and is reported in `omissions` —
+  `inspect_document` carries each shape's position for a model that wants to
+  reason about it.
 - **Writing a deck plans a deck.** An opening `#` is the cover
   (its first paragraph becomes the subtitle), every later `#` a numbered
   section divider, every `##` a slide; level 3 and below stay in the body. A
@@ -113,7 +140,9 @@ Consequences worth knowing when binding it:
 - **A table column is aligned from the divider row.** `---:` sets it flush right
   and `:---:` centres it. Worth putting in a version's prompt for anything with
   figures in it — a column of numbers set left does not line up and nobody
-  checks it.
+  checks it. The alignment survives a read as well: `read_document` writes a
+  real GFM table and takes each column's setting from the document, when every
+  cell holding text in that column agrees.
 - Every produced file records which release wrote it (PDF `Producer`, OOXML
   `<Application>`, OWPML `application`), which is the first thing to look at when
   a document renders oddly.
