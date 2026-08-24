@@ -121,6 +121,15 @@ catalog exists. Inside the **engineering** plugin the block lives in
 code-review and pr-description point there rather than restating it, because it
 installs alongside them.
 
+The **design** plugin runs the same pattern against AI-looking *visuals* rather
+than prose. The catalog is
+[`plugins/design/skills/frontend-design/references/ai-visual-tells.md`](plugins/design/skills/frontend-design/references/ai-visual-tells.md)
+— palette, type, layout, ornament, motion, and copy tells, each with a
+replacement — and html-report, diagram-design and tufte-charts point at
+frontend-design rather than restating it. Where a skill has deliberately decided
+otherwise for its genre, the skill wins: html-report is single-theme on a white
+ground because the same report also leaves as a PDF.
+
 ## mcp.json carries no credentials
 
 **Never use `headers`.** The point is to leave no path by which a secret could

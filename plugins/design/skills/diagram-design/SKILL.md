@@ -55,6 +55,10 @@ description: >
 - 중요 요소는 1~2개만 색으로 강조한다. 모두 중요하면 아무것도 강조되지 않는다.
 - 범례가 길어지면 시각 문법이 과한 것이다. 직접 label이나 구조 자체로 설명한다.
 
+장식 클리셰의 전체 카탈로그는 같은 플러그인의 `frontend-design` 스킬이
+`references/ai-visual-tells.md`로 갖고 있다. 다이어그램의 색·형태 판단은
+`references/design-system.md`가 먼저다.
+
 ## 산출
 
 기본 산출물은 외부 의존성이 없는 HTML 한 개다. CSS와 SVG를 모두 inline으로 넣고,
