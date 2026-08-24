@@ -188,10 +188,10 @@ schema **has no description field.**
 
 ```markdown
 ---
-description: "Read office documents — DOCX, XLSX, PPTX, HWP, HWPX — as text."
+description: "Search and edit Notion pages, databases and comments, and look up workspace users."
 ---
 
-# document
+# notion
 
 Operator notes, in markdown.
 ```
@@ -225,10 +225,16 @@ checks that every MCP declaration has exactly one Agent Studio extension documen
 with a description, and reports the private-HTTP exceptions above. Standard
 library only, no network.
 
+`scripts/test_validate.py` pins the checker's own edges — where a limit stops
+being a pass, which findings are recommendations rather than failures, and the
+name collision — so a change to `validate.py` cannot loosen them unnoticed:
+
+    python3 -m unittest discover -s scripts -p 'test_*.py'
+
 It is worth running because **neither kind of mistake fails loudly**. A skill
 whose frontmatter breaks the spec is skipped by the client and loading carries
 on, so the only symptom is a skill that is never called; a duplicated name gets
-as far as the installing side before anything notices. CI runs this on every
+as far as the installing side before anything notices. CI runs both on every
 pull request and on every push to main.
 
 ## How changes land
