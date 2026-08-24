@@ -3,7 +3,8 @@ name: tufte-charts
 description: >
   차트·그래프를 고르거나 지표를 시각화해 HTML/SVG·React 코드로 만들 때 로드한다.
   데이터와 질문에 맞는 차트 유형을 고르고 불필요한 장식을 줄여 정확하고 읽기 쉽게
-  표현한다. 화면 레이아웃과 컴포넌트 구조는 frontend-design이 맡는다.
+  표현한다. 화면 레이아웃과 컴포넌트 구조는 frontend-design이, 구조 탐색은
+  html-wireframe이, 눌러보는 목업은 html-prototype이 맡는다.
 ---
 
 # Tufte 차트
@@ -45,8 +46,9 @@ pie, donut, 3D chart와 dual-axis는 기본값으로 사용하지 않는다. 사
 - 제목은 주제명이 아니라 차트가 보여주는 결론을 담게 한다.
 - 출처, 기간, 표본, 변환과 중요한 caveat를 가까이에 적는다.
 
-차트를 감싼 지면의 시각 클리셰는 같은 플러그인의 `frontend-design` 스킬이
-`references/ai-visual-tells.md`로 갖고 있다. 차트 자체의 판단은 이 절이 먼저다.
+차트를 감싼 지면의 시각 클리셰는 같은 플러그인의 `frontend-design` 스킬 안에 있다 — **그
+스킬을 열면 그 디렉터리의** `references/ai-visual-tells.md`다. 차트 자체의 판단은 이 절이
+먼저다.
 
 ## 구현
 

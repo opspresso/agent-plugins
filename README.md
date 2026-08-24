@@ -91,9 +91,9 @@ one says so in its `compatibility` frontmatter:
   execute a script, or fetch a URL. Anything a run touches outside the
   conversation arrives through a bound MCP server or through the user.
 - **Builtins appear only when the run has them.** `GenerateImage`, `EditImage`,
-  `dispatch_agents` and `transfer_to_agent` are offered per run, so
-  image-generation and simple-orchestration state what they do when the tool is
-  absent from the list.
+  `SaveFile`, `dispatch_agents` and `transfer_to_agent` are offered per run, so
+  image-generation, simple-orchestration and the four HTML-producing design
+  skills state what they do when the tool is absent from the list.
 - **A plugin is the install unit.** A skill loads files only from its own
   directory, and a skill that instructs an MCP server ships in the plugin that
   declares it. Where that is genuinely impossible — code-review and
@@ -125,10 +125,17 @@ The **design** plugin runs the same pattern against AI-looking *visuals* rather
 than prose. The catalog is
 [`plugins/design/skills/frontend-design/references/ai-visual-tells.md`](plugins/design/skills/frontend-design/references/ai-visual-tells.md)
 — palette, type, layout, ornament, motion, and copy tells, each with a
-replacement — and html-report, diagram-design and tufte-charts point at
-frontend-design rather than restating it. Where a skill has deliberately decided
-otherwise for its genre, the skill wins: html-report is single-theme on a white
-ground because the same report also leaves as a PDF.
+replacement. html-report, diagram-design, tufte-charts, html-wireframe and
+html-prototype each keep the genre-tuned rules they need inline and point at
+frontend-design for the rest, naming the owning skill because a skill cannot
+read another's directory.
+
+Unlike the prose catalog, this one states its own precedence: it is a **default**,
+and a skill that has deliberately decided otherwise for its genre wins — html-report
+is single-theme on a white ground because the same report also leaves as a PDF, and
+html-wireframe stays deliberately unfinished. Accessibility rows are outside that
+ordering entirely. That rule lives in the catalog file rather than here, because
+this README never reaches the model.
 
 ## mcp.json carries no credentials
 

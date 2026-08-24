@@ -3,7 +3,8 @@ name: diagram-design
 description: >
   시스템 구조, 처리 흐름, 상태 전이, 시퀀스, 데이터 모델, 조직도와 의존 관계 같은
   기술·제품 다이어그램을 설계해 self-contained HTML과 inline SVG로 만들 때 로드한다.
-  정량 데이터 차트는 tufte-charts가, 화면 UI는 frontend-design이, 전체 리포트 구성은
+  정량 데이터 차트는 tufte-charts가, 화면 구조 탐색은 html-wireframe이, 목업과
+  프로토타입은 html-prototype이, 제품 UI 코드는 frontend-design이, 전체 리포트 구성은
   html-report가 맡는다.
 ---
 
@@ -15,7 +16,8 @@ description: >
 ## 경계
 
 - 수치의 비교·추세·분포·상관관계가 중심이면 `tufte-charts`를 사용한다.
-- 앱 화면이나 컴포넌트 배치가 중심이면 `frontend-design`을 사용한다.
+- 앱 화면이나 컴포넌트 배치가 중심이면 `frontend-design`을, 구조가 아직 미정이면
+  `html-wireframe`을, 눌러보는 목업이면 `html-prototype`을 사용한다.
 - 여러 절, 표, 차트를 묶은 문서가 필요하면 `html-report`를 사용한다.
 - 한두 관계만 보여 주면 표, 목록이나 짧은 텍스트 다이어그램이 더 낫다.
 
@@ -55,9 +57,9 @@ description: >
 - 중요 요소는 1~2개만 색으로 강조한다. 모두 중요하면 아무것도 강조되지 않는다.
 - 범례가 길어지면 시각 문법이 과한 것이다. 직접 label이나 구조 자체로 설명한다.
 
-장식 클리셰의 전체 카탈로그는 같은 플러그인의 `frontend-design` 스킬이
-`references/ai-visual-tells.md`로 갖고 있다. 다이어그램의 색·형태 판단은
-`references/design-system.md`가 먼저다.
+장식 클리셰의 전체 카탈로그는 같은 플러그인의 `frontend-design` 스킬 안에 있다 — **그
+스킬을 열면 그 디렉터리의** `references/ai-visual-tells.md`다. 다이어그램의 색·형태
+판단은 **이 스킬의** `references/design-system.md`가 먼저다.
 
 ## 산출
 
