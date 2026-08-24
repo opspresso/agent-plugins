@@ -6,6 +6,9 @@ description: >
   정량 데이터 차트는 tufte-charts가, 화면 구조 탐색은 html-wireframe이, 목업과
   프로토타입은 html-prototype이, 제품 UI 코드는 frontend-design이, 전체 리포트 구성은
   html-report가, 단계로 나눠 만져 보며 이해하는 설명 지면은 html-explainer가 맡는다.
+compatibility: >
+  SaveFile 빌트인이 제시된 런에서는 HTML 파일로 남기고, 없으면 코드 블록으로 낸다.
+  브라우저가 없어 렌더링을 직접 확인하지 못하므로 확인하지 못한 항목을 밝힌다.
 ---
 
 # 다이어그램 디자인
