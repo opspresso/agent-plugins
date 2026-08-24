@@ -5,7 +5,7 @@ description: >
   기술·제품 다이어그램을 설계해 self-contained HTML과 inline SVG로 만들 때 로드한다.
   정량 데이터 차트는 tufte-charts가, 화면 구조 탐색은 html-wireframe이, 목업과
   프로토타입은 html-prototype이, 제품 UI 코드는 frontend-design이, 전체 리포트 구성은
-  html-report가 맡는다.
+  html-report가, 단계로 나눠 만져 보며 이해하는 설명 지면은 html-explainer가 맡는다.
 ---
 
 # 다이어그램 디자인
@@ -19,6 +19,8 @@ description: >
 - 앱 화면이나 컴포넌트 배치가 중심이면 `frontend-design`을, 구조가 아직 미정이면
   `html-wireframe`을, 눌러보는 목업이면 `html-prototype`을 사용한다.
 - 여러 절, 표, 차트를 묶은 문서가 필요하면 `html-report`를 사용한다.
+- 그 주제를 모르는 사람에게 단계로 나눠 보여 주며 설명해야 하면 `html-explainer`를
+  사용한다. 한 장에 다 담는 것이 이 스킬이고, 순서대로 드러내는 것이 그 스킬이다.
 - 한두 관계만 보여 주면 표, 목록이나 짧은 텍스트 다이어그램이 더 낫다.
 
 ## 작업 흐름

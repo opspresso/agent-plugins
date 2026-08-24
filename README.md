@@ -42,7 +42,7 @@ plugins/
 | **devops** — investigate the cluster, change it through GitOps | gitops-change, incident-triage | argocd, cloudwatch, grafana, kubernetes, github |
 | **research** — bring in material the model cannot reach, and write documents back out | document-authoring, spreadsheet-authoring | brave-search, youtube, document, aws-knowledge |
 | **workspace** — write what moves around the company | korean-writing, korean-humanize, tech-spec | notion |
-| **design** — build what a person will look at | html-wireframe, html-prototype, frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
+| **design** — build what a person will look at | html-wireframe, html-prototype, html-explainer, frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
 | **engineering** — get a change reviewed and out the door | code-review, pr-description, engineering-writing | — |
 | **agent-craft** — build agents and their interfaces | prompt-writer, skill-writer, mcp-writer, simple-orchestration, structured-output | memory |
 | **saju** — read a birth chart school by school | saju-analysis | — |
@@ -92,7 +92,7 @@ one says so in its `compatibility` frontmatter:
   conversation arrives through a bound MCP server or through the user.
 - **Builtins appear only when the run has them.** `GenerateImage`, `EditImage`,
   `SaveFile`, `dispatch_agents` and `transfer_to_agent` are offered per run, so
-  image-generation, simple-orchestration and the four HTML-producing design
+  image-generation, simple-orchestration and the five HTML-producing design
   skills state what they do when the tool is absent from the list.
 - **A plugin is the install unit.** A skill loads files only from its own
   directory, and a skill that instructs an MCP server ships in the plugin that
@@ -125,17 +125,18 @@ The **design** plugin runs the same pattern against AI-looking *visuals* rather
 than prose. The catalog is
 [`plugins/design/skills/frontend-design/references/ai-visual-tells.md`](plugins/design/skills/frontend-design/references/ai-visual-tells.md)
 — palette, type, layout, ornament, motion, and copy tells, each with a
-replacement. html-report, diagram-design, tufte-charts, html-wireframe and
-html-prototype each keep the genre-tuned rules they need inline and point at
-frontend-design for the rest, naming the owning skill because a skill cannot
-read another's directory.
+replacement. html-report, diagram-design, tufte-charts, html-wireframe,
+html-prototype and html-explainer each keep the genre-tuned rules they need
+inline and point at frontend-design for the rest, naming the owning skill because
+a skill cannot read another's directory.
 
 Unlike the prose catalog, this one states its own precedence: it is a **default**,
 and a skill that has deliberately decided otherwise for its genre wins — html-report
-is single-theme on a white ground because the same report also leaves as a PDF, and
-html-wireframe stays deliberately unfinished. Accessibility rows are outside that
-ordering entirely. That rule lives in the catalog file rather than here, because
-this README never reaches the model.
+is single-theme on a white ground because the same report also leaves as a PDF,
+html-wireframe stays deliberately unfinished, and html-explainer keeps motion
+because in an explainer the movement is the explanation. Accessibility rows are
+outside that ordering entirely. That rule lives in the catalog file rather than
+here, because this README never reaches the model.
 
 ## mcp.json carries no credentials
 

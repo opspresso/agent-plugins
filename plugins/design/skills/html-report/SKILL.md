@@ -5,7 +5,8 @@ description: >
   없이 혼자 열리는 HTML 한 개를 만들고, 편집 지면처럼 여백과 활자로 읽히게 한다. "리포트 만들어줘", "HTML로 뽑아줘", "결과를 보기 좋게 정리해줘"가
   트리거다. DOCX·PPTX·PDF·HWPX 파일로 건네야 하면 document-authoring이, 차트의 데이터
   표현 원칙은 tufte-charts가, 화면 구조 탐색은 html-wireframe이, 눌러보는 목업과
-  프로토타입은 html-prototype이, 제품에 들어갈 UI 코드는 frontend-design이 맡는다.
+  프로토타입은 html-prototype이, 제품에 들어갈 UI 코드는 frontend-design이, 개념을 처음
+  접하는 사람에게 큰 그림으로 설명하는 지면은 html-explainer가 맡는다.
 compatibility: >
   SaveFile 빌트인이 제시된 런에서는 리포트를 파일로 남기고, 없으면 코드 블록으로 낸다.
   둘 다 같은 HTML 이고 산출 방법만 다르다.
