@@ -4,7 +4,8 @@ description: >
   데이터·메모·조사 결과를 브라우저에서 읽을 리포트로 내보낼 때 로드한다. 외부 파일
   없이 혼자 열리는 HTML 한 개를 만들고, 편집 지면처럼 여백과 활자로 읽히게 한다. "리포트 만들어줘", "HTML로 뽑아줘", "결과를 보기 좋게 정리해줘"가
   트리거다. DOCX·PPTX·PDF·HWPX 파일로 건네야 하면 document-authoring이, 차트의 데이터
-  표현 원칙은 tufte-charts가, 화면·앱 UI 설계는 frontend-design이 맡는다.
+  표현 원칙은 tufte-charts가, 화면 구조 탐색은 html-wireframe이, 눌러보는 목업과
+  프로토타입은 html-prototype이, 제품에 들어갈 UI 코드는 frontend-design이 맡는다.
 compatibility: >
   SaveFile 빌트인이 제시된 런에서는 리포트를 파일로 남기고, 없으면 코드 블록으로 낸다.
   둘 다 같은 HTML 이고 산출 방법만 다르다.
@@ -110,9 +111,10 @@ DOCX·PPTX·PDF·HWPX 파일로 건네야 하는 문서는 이 스킬이 아니�
 - 데이터가 없는 자리를 채우려고 스톡 이미지나 장식 도형을 넣지 않는다.
 - 3D, 그라데이션 채움, 도넛 가운데 총합 같은 차트 장식을 넣지 않는다.
 
-이 목록은 리포트에 해당하는 부분만 추린 것이다. 시각 클리셰의 전체 카탈로그는 같은
-플러그인의 `frontend-design` 스킬이 `references/ai-visual-tells.md`로 갖고 있다. 다크
-모드와 지면 색처럼 리포트가 일부러 다르게 정한 항목은 이 절이 이긴다.
+이 목록은 리포트에 해당하는 부분만 추린 것이다. 나머지는 같은 플러그인의
+`frontend-design` 스킬 안에 있다 — **그 스킬을 열면 그 디렉터리의**
+`references/ai-visual-tells.md`다. 이 스킬의 `references/`가 아니다. 다크 모드와 지면
+색처럼 리포트가 일부러 다르게 정한 항목은 이 절이 이긴다.
 
 ## 문장
 
