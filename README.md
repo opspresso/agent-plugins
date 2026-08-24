@@ -42,7 +42,7 @@ plugins/
 | **devops** — investigate the cluster, change it through GitOps | gitops-change, incident-triage | argocd, cloudwatch, grafana, kubernetes, github |
 | **research** — bring in material the model cannot reach, and write documents back out | document-authoring, spreadsheet-authoring | brave-search, youtube, document, aws-knowledge |
 | **workspace** — write what moves around the company | korean-writing, korean-humanize, tech-spec | notion |
-| **design** — build what a person will look at | frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
+| **design** — build what a person will look at | html-wireframe, html-prototype, frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
 | **engineering** — get a change reviewed and out the door | code-review, pr-description, engineering-writing | — |
 | **agent-craft** — build agents and their interfaces | prompt-writer, skill-writer, mcp-writer, simple-orchestration, structured-output | memory |
 | **saju** — read a birth chart school by school | saju-analysis | — |

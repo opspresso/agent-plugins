@@ -3,7 +3,8 @@ name: frontend-design
 description: >
   웹 페이지, 랜딩 페이지, 화면 레이아웃이나 React·Vue 컴포넌트를 설계하고 완성된
   코드를 작성할 때 로드한다. 목적에 맞는 시각 방향과 반응형·접근성을 함께 다룬다.
-  화면 안에 들어갈 차트의 데이터 표현은 tufte-charts가 맡는다.
+  구조가 아직 안 정해졌으면 html-wireframe이, 결정을 검증할 목업과 프로토타입은
+  html-prototype이, 화면 안에 들어갈 차트의 데이터 표현은 tufte-charts가 맡는다.
 ---
 
 # 프론트엔드 디자인
