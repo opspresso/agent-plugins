@@ -1,36 +1,36 @@
 ---
 description: >
-  Investigate AWS/EKS telemetry through CloudWatch metrics, alarms, PromQL and
-  Logs Insights. Narrow log groups, time windows and query limits; scans incur
-  cost. Use the deployment's default credentials without profile_name. This
-  reads telemetry, not EC2/subnet/ENI state, ELB target health, IAM evaluation
-  or CloudTrail events; AWS documentation belongs to aws-knowledge.
+  Investigate AWS/EKS metrics, alarms and logs through CloudWatch, PromQL and
+  Logs Insights using the deployment's default credentials without profile_name.
+  Query scans incur cost; this provides telemetry, not EC2/subnet/ENI state,
+  ELB target health, IAM evaluation or CloudTrail events.
 ---
 
 # cloudwatch
 
-Runs the AWS Labs CloudWatch MCP server in `agent-mcps`, with no ingress.
-Agent Studio reaches it through
-`mcp-cloudwatch.agent-mcps.svc.cluster.local`, and the pod reaches AWS through
-the EKS Pod Identity associated with the `mcp-cloudwatch` ServiceAccount.
-There is no credential or caller header on this entry.
+## Connection and AWS access
 
-Upstream `0.1.8` starts as stdio and exposes no transport flag. The chart in
-argocd-env-demo pins that image and replaces its command with a small Python
-launcher that imports the same registered tool object and runs it as stateless
-streamable HTTP. Changing the image version therefore requires an import and
-Helm render check, not just a tag bump.
+The service runs in `agent-mcps` without ingress. Its internal suffix must
+be allowed by `MCP_INTERNAL_HOST_SUFFIXES`. No caller credential is configured;
+the `mcp-cloudwatch` ServiceAccount uses EKS Pod Identity to access AWS.
 
-`pod-role--mcp-cloudwatch` is declared in terraform-env-demo. Its policy is
-limited to `ap-northeast-2` and to alarm reads, metric reads and discovery, log
-group and anomaly discovery, and the start/get/stop calls that implement Logs
-Insights queries. Start and stop do not mutate log data, but query scans incur
-CloudWatch cost; callers should keep log groups, time windows and result limits
-narrow.
+Terraform's `pod-role--mcp-cloudwatch` policy is limited to `ap-northeast-2`:
+alarm and metric reads, log-group and anomaly discovery, and Logs Insights
+start/get/stop operations. Queries do not mutate log data but incur scan costs.
+Narrow log groups and time windows to reduce scanned data. Query limits reduce
+returned rows; they do not cap scan cost.
 
-This server sees CloudWatch telemetry, not arbitrary AWS resource state. It can
-correlate AWS metrics, alarms and shipped logs with a cluster incident, but it
-cannot by itself confirm an EC2 capacity event, subnet or ENI state, EBS
-attachment state, ELB target health, IAM evaluation or CloudTrail event.
+## Deployment and verification
+
+The argocd-env-demo chart pins upstream `0.1.8`, whose entrypoint is stdio.
+A Python launcher imports its registered tools and exposes stateless streamable
+HTTP. Image upgrades require an import check and Helm render check.
+
+Verify an actual permitted AWS read after changing the image, identity or IAM
+policy. A working MCP connection does not establish AWS authorization.
+
+This integration covers CloudWatch telemetry, not arbitrary AWS resource state.
+EC2 capacity events, subnet/ENI state, EBS attachments, ELB target health, IAM
+evaluation and CloudTrail events require separate access.
 
 Upstream: https://github.com/awslabs/mcp/tree/main/src/cloudwatch-mcp-server

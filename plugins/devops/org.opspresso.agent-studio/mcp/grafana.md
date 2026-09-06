@@ -1,21 +1,22 @@
 ---
-description: "Query Grafana for the Kubernetes cluster's metrics and logs: dashboards, datasources, Prometheus and Loki queries, alerting and incidents."
+description: >
+  Investigate Kubernetes metrics and logs with Grafana dashboards, datasources,
+  Prometheus and Loki queries, alerting and incidents.
+  Available operations depend on the deployment's enabled tool categories.
 ---
 
 # grafana
 
-Cluster-internal (`agent-mcps` namespace, no ingress), so registering it at all
-depends on `MCP_INTERNAL_HOST_SUFFIXES` naming that suffix. Without it the sync
-reports this entry as `invalid-url` and moves on.
+The bundled service is internal to `agent-mcps` with no ingress.
+`MCP_INTERNAL_HOST_SUFFIXES` must allow its suffix or sync reports `invalid-url`.
+There is no registry credential; the pod authenticates to Grafana with
+`GRAFANA_USERNAME` and `GRAFANA_PASSWORD` from its environment.
 
-No credential on the entry: nothing routes to the Service from outside the
-cluster, and upstream authenticates to Grafana itself with basic auth from the
-pod's environment (`GRAFANA_USERNAME`/`GRAFANA_PASSWORD`) rather than from the
-caller.
+The pod's `--enabled-tools` controls exposed categories. The description reflects
+dashboards, datasources, Prometheus/Loki queries, alerting and incidents.
+Keep it synchronized with deployment flags.
 
-What the entry actually exposes is a deployment question, not a repository one:
-upstream ships far more tool categories than it enables, and the rest come from
-`--enabled-tools` on the pod. The description above names what this deployment
-turns on — change one without the other and it goes stale.
+After credential or datasource changes, verify a representative query.
+Successful MCP discovery does not establish Grafana or datasource access.
 
 Upstream: https://github.com/grafana/mcp-grafana

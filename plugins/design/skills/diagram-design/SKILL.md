@@ -1,14 +1,12 @@
 ---
 name: diagram-design
 description: >
-  시스템 구조, 처리 흐름, 상태 전이, 시퀀스, 데이터 모델, 조직도와 의존 관계 같은
-  기술·제품 다이어그램을 설계해 self-contained HTML과 inline SVG로 만들 때 로드한다.
-  정량 데이터 차트는 tufte-charts가, 화면 구조 탐색은 html-wireframe이, 목업과
-  프로토타입은 html-prototype이, 제품 UI 코드는 frontend-design이, 전체 리포트 구성은
-  html-report가, 단계로 나눠 만져 보며 이해하는 설명 지면은 html-explainer가 맡는다.
+  시스템 구조·처리 흐름·상태 전이·시퀀스·데이터 모델·조직도·의존 관계를 정적
+  다이어그램으로 설계하고 HTML·인라인 SVG로 만든다. 정량 데이터 차트는 tufte-charts,
+  조작하며 원리를 배우는 설명 페이지는 html-explainer를 쓴다.
 compatibility: >
   SaveFile 빌트인이 제시된 런에서는 HTML 파일로 남기고, 없으면 코드 블록으로 낸다.
-  브라우저가 없어 렌더링을 직접 확인하지 못하므로 확인하지 못한 항목을 밝힌다.
+  브라우저 도구가 있으면 렌더링을 확인하고, 없으면 미검증 항목을 밝힌다.
 ---
 
 # 다이어그램 디자인

@@ -103,6 +103,11 @@ collision, rather than repeating the plugin's whole catalog. Keep prerequisites
 that change whether a call can succeed in the description: an XLSX inspection
 needs bytes, and an image edit needs both the builtin and an image id. Describe
 observable limits without copying the full procedure into every run's prompt.
+Two or three sentences usually suffice. Keep each sentence focused, but do not
+remove a necessary capability or limit to meet a fixed count. Skill bodies carry
+the executable workflow; MCP bodies carry connection, authentication, limits and
+operator troubleshooting. Preserve user intent and existing authorization, and
+avoid arbitrary question counts, output quotas or repeated approval steps.
 
 Check descriptions alone against realistic requests and similar out-of-scope
 requests. For example, distinguish a numeric chart from a dependency graph, an
@@ -161,18 +166,15 @@ messages; absent metadata is not proof that an extraction is complete. Server
 authors must include model-critical metadata in text until the client carries
 both representations.
 
-Ten skills hand Korean prose to a person, and each carries a short, genre-tuned
-rule set against AI-sounding Korean in its own body — korean-writing,
-korean-humanize, document-authoring, tech-spec, incident-triage, gitops-change,
-simple-orchestration, saju-analysis, prompt-writer and engineering-writing. The
-duplication is deliberate: a plugin is the install unit and a skill can only load
-files from its own directory, so a rule that lives elsewhere is a rule that never
-arrives.
+Writing skills carry the genre-specific rules needed to produce their own
+results. Preserve facts, uncertainty, user templates and the intended audience.
+Detailed prose guidance is optional; a missing companion skill must not prevent
+the requested draft from being completed.
 
 The full pattern catalog with before/after examples is
 [`plugins/workspace/skills/korean-humanize/ai-tell-catalog.md`](plugins/workspace/skills/korean-humanize/ai-tell-catalog.md),
-and when an inline rule and a loaded catalog disagree the catalog wins. Inline
-blocks identify its owning skill. Load it only when `korean-humanize` is bound,
+which supplies editing defaults, not an AI-authorship test. The user's style and
+the original meaning take precedence. Load it only when `korean-humanize` is bound,
 using `Skill(skill_name="korean-humanize", file_path="ai-tell-catalog.md")`;
 otherwise follow the inline rules. Repository paths cannot be used as runtime
 `file_path` values. Inside the **engineering** plugin the block lives in
@@ -189,7 +191,7 @@ html-prototype and html-explainer each keep the genre-tuned rules they need
 inline and point at frontend-design for the rest, naming the owning skill because
 a skill cannot read another's directory.
 
-Unlike the prose catalog, this one states its own precedence: it is a **default**,
+The visual catalog is also a **default**,
 and a skill that has deliberately decided otherwise for its genre wins — html-report
 is single-theme on a white ground because the same report also leaves as a PDF,
 html-wireframe stays deliberately unfinished, and html-explainer keeps motion

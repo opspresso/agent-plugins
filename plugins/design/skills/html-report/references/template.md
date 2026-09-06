@@ -116,11 +116,12 @@ th[aria-sort="ascending"]::after { content: " ▴"; }
 sup a { color: var(--brand-light); text-decoration: none; padding: 0 .1em; }
 
 /* 등장 ------------------------------------------------------------------- */
-.reveal { opacity: 0; transform: translateY(8px); transition: opacity .4s ease, transform .4s ease; }
+.reveal { opacity: 1; transform: none; }
+.reveal.pending { opacity: 0; transform: translateY(8px); transition: opacity .4s ease, transform .4s ease; }
 .reveal.shown { opacity: 1; transform: none; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .reveal, .reveal.shown { opacity: 1; transform: none; transition: none; }
+  .reveal, .reveal.pending, .reveal.shown { opacity: 1; transform: none; transition: none; }
 }
 
 /* 인쇄 ------------------------------------------------------------------- */
@@ -128,6 +129,7 @@ sup a { color: var(--brand-light); text-decoration: none; padding: 0 .1em; }
   .toc, .no-print { display: none; }
   body { font-size: 10.5pt; }
   .layout { display: block; }
+  .reveal, .reveal.pending, .reveal.shown { opacity: 1; transform: none; transition: none; }
   header.title { background: none; padding: 0; }
   h2, h3, figure, table, .callout { break-inside: avoid; }
   a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 8pt; color: #555; }
@@ -283,7 +285,7 @@ sup a { color: var(--brand-light); text-decoration: none; padding: 0 .1em; }
       observer.unobserve(entry.target);
     });
   }, { rootMargin: '0px 0px -10% 0px' });
-  items.forEach(function (el) { observer.observe(el); });
+  items.forEach(function (el) { observer.observe(el); el.classList.add('pending'); });
 })();
 
 // 표 정렬. 행이 스무 개를 넘을 때만 헤더에 data-sort 를 남긴다.

@@ -1,49 +1,44 @@
 ---
 description: >
-  Read a YouTube link or video id as timestamped captions or metadata. Use
-  get_transcript for spoken content; metadata is not evidence of what was said.
-  State transcript truncation when reported, and summarize only the returned part.
-  No continuation or time-range input is supported. Caption languages marked
-  "could not be listed" mean discovery failed, not that captions are absent.
+  Read YouTube videos as timestamped captions for summaries and quotations, or
+  retrieve video metadata and caption languages. Metadata does not establish
+  spoken content; transcripts may be truncated and have no continuation input.
+  A language lookup failure does not mean captions are absent.
 ---
 
 # youtube
 
-Turns a YouTube link into something a model can read — `get_transcript` for
-the captions as `[m:ss] line` rows (human track preferred, auto-generated
-fallback, language selectable), `get_video_info` for metadata and which
-transcript languages exist. The `url` argument accepts watch, youtu.be, shorts,
-embed and live links, or a bare 11-character video id. It extracts the id and
-does not fetch arbitrary caller-supplied URLs.
+## Connection and authentication
 
-Cluster-internal (`agent-mcps` namespace, no ingress), so registering it at all
-depends on `MCP_INTERNAL_HOST_SUFFIXES` naming that suffix. Without it the sync
-reports this entry as `invalid-url` and moves on.
+The internal `agent-mcps.svc.cluster.local` suffix must be allowed by
+`MCP_INTERNAL_HOST_SUFFIXES`; the bundled deployment has no ingress.
+With `MCP_API_KEY` unset, the network boundary controls access. When it is set,
+register the matching Bearer credential outside this repository.
 
-With `MCP_API_KEY` unset, callers are trusted through the deployment's network
-boundary. If that key is set, supply its matching Bearer credential in the
-registry settings, not in this repository.
+## Capabilities and provider access
 
-## Metadata and transcript availability
+`get_transcript` returns timestamped captions, preferring human tracks and
+falling back to labeled automatic tracks. Language selection is supported.
+`get_video_info` returns metadata and available caption languages. Both accept
+watch, youtu.be, shorts, embed and live links or an 11-character video id.
+The server extracts the id and does not fetch arbitrary caller-supplied URLs.
 
-The optional server environment variable `YOUTUBE_API_KEY` moves
-`get_video_info` to the official YouTube Data API. It is separate from
-`MCP_API_KEY` and does not unlock transcripts: `get_transcript` still uses
-YouTube's player and caption endpoints, which can reject datacenter traffic
-or require tokens. Missing tracks, unavailable videos and provider refusals
-return tool errors; metadata success does not imply transcript access.
+The optional server setting `YOUTUBE_API_KEY` uses the official Data API for
+metadata. It is separate from `MCP_API_KEY` and does not unlock captions.
+Transcript requests still use YouTube's player and caption endpoints, which
+may reject datacenter traffic or require tokens. Verify a transcript call
+separately from metadata success.
 
-When the requested caption language is unavailable, the error lists available
-languages. A failed Data API caption-language lookup can leave valid video
-metadata with languages marked `could not be listed`; that is not evidence
-that no captions exist.
-
-## Returned content
+## Limits and troubleshooting
 
 Transcript text is capped at 90,000 characters on complete line boundaries.
-Its truncation note identifies the retained lines and ending timestamp; the
-tools offer no continuation or time-range argument. Descriptions are capped
-at 2,000 characters with a truncation note. Auto-generated tracks are labeled.
-Results mark third-party text as untrusted data, never instructions.
+The truncation note reports retained lines and the ending timestamp; no
+continuation or time-range parameter exists. Descriptions are capped at
+2,000 characters. Returned third-party text is marked as untrusted data.
+
+Missing videos, tracks and provider refusals return tool errors. An unavailable
+requested language produces a list of alternatives. A Data API language lookup
+failure can leave valid metadata with languages marked `could not be listed`;
+this is distinct from an empty caption list.
 
 Source: https://github.com/opspresso/mcp-youtube

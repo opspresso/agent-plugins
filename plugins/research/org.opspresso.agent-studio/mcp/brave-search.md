@@ -1,30 +1,31 @@
 ---
 description: >
-  Find current or niche information, source URLs, images, videos and news with
-  Brave search. Search snippets and AI summaries are discovery evidence;
-  read source pages with FetchUrl when available before attributing detailed
-  claims. Local search and summarizer may be unavailable on the configured
-  plan; do not repeatedly call a plan-restricted tool.
+  Search the web, news, images and videos for current information and source
+  URLs with Brave. Snippets and AI summaries support discovery; detailed claims
+  need source-page verification with FetchUrl when available.
+  Local search and summarization depend on the configured API plan.
 ---
 
 # brave-search
 
-Cluster-internal (`agent-mcps` namespace, no ingress), so registering it at all
-depends on `MCP_INTERNAL_HOST_SUFFIXES` naming that suffix. Without it the sync
-reports this entry as `invalid-url` and moves on.
+## Connection and credentials
 
-No credential on the entry: nothing routes to the Service from outside the
-cluster, and upstream authenticates to the Brave Search API with `BRAVE_API_KEY`
-from the pod's environment (External Secrets, parameter-store) rather than from
-the caller. Brave has no hosted MCP endpoint — self-hosting is the only
-official path, which is why this runs in-cluster.
+The internal `agent-mcps.svc.cluster.local` suffix must be allowed by
+`MCP_INTERNAL_HOST_SUFFIXES`; otherwise sync reports `invalid-url`.
+The bundled service has no ingress or registry credential. It authenticates
+to Brave with `BRAVE_API_KEY` from the pod environment through External Secrets
+and parameter store.
 
-What the entry exposes is a deployment question, not a repository one: the
-deployment runs upstream's default tool set — all eight, verified against the
-running pod: web, image, video, news, local and place search, summarizer, and
-LLM context — and trimming it is `BRAVE_MCP_ENABLED_TOOLS`/`DISABLED_TOOLS` on
-the pod. Plan matters more than the list: local search and summarizer are gated
-by the API key's Brave plan, and on a Free key they still list but fail at call
-time — that shows up as tool errors, not a registration problem.
+## Tool availability
+
+The deployment enables upstream's eight default tools: web, image, video,
+news, local and place search, summarizer, and LLM context.
+`BRAVE_MCP_ENABLED_TOOLS` and `BRAVE_MCP_DISABLED_TOOLS` control the pod's tool
+selection. Keep the registry description consistent with deployed capabilities.
+
+Local search and summarizer access depend on the Brave plan. A tool can appear
+in discovery and fail when called with a Free key. Verify representative calls
+after changing the key or plan; plan rejection is a tool-access issue rather
+than a registration failure.
 
 Upstream: https://github.com/brave/brave-search-mcp-server

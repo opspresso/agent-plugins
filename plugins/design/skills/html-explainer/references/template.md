@@ -4,8 +4,8 @@
 축소, 인쇄 배관이 이미 들어 있으니 다시 짜지 않는다. 장치를 더 붙일 때는 같은
 디렉터리의 `interaction-patterns.md`를 본다.
 
-세 자리만 바꾸면 된다 — `<header class="intro">`의 제목과 한 줄, `<li class="step">`
-블록(단계 수만큼 복제), 각 단계 안의 `<svg>`. 나머지는 그대로 둔다.
+제목과 단계·그림을 채운 뒤 필요한 컨트롤만 남긴다. 슬라이더의 `draw`에 값과 SVG를
+연결하는 코드를 작성한다. 추가한 조작도 초기화에 포함하고 `id`·`for`를 고유하게 맞춘다.
 
 ```html
 <!doctype html>
@@ -70,7 +70,7 @@ output { font-variant-numeric: tabular-nums; font-weight: 600; }
            background: var(--bg); border: 1px solid var(--rule); border-radius: 999px;
            cursor: pointer; }
 .hotspot[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent); }
-.stage[data-focus] svg > *:not([data-part]) { opacity: .25; }
+.stage svg .dimmed { opacity: .25; }
 
 /* 단계 이동 ------------------------------------------------------------- */
 .stepper { position: sticky; bottom: 0; display: flex; align-items: center;
@@ -87,7 +87,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
          text-decoration: underline; text-underline-offset: .2em; }
 
 /* 모션 — 끄는 게 아니라 최종 상태를 즉시 보여 준다 ---------------------- */
-.movable { transition: transform 260ms ease, opacity 260ms ease; }
+.movable { transition: transform 260ms ease; }
 @media (prefers-reduced-motion: reduce) { .movable { transition: none; } }
 
 /* 인쇄 — 만지지 않고도 전체를 볼 수 있는 경로 --------------------------- */
@@ -95,6 +95,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   :root { color-scheme: light; }
   .stepper, .controls, .hotspot { display: none; }
   .step[hidden] { display: block !important; }
+  .stage svg .dimmed { opacity: 1; }
   .step { break-inside: avoid; margin-bottom: var(--s-6); }
 }
 </style>
@@ -195,7 +196,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
         other.setAttribute('aria-pressed', 'false');
       });
       spot.setAttribute('aria-pressed', on ? 'false' : 'true');
-      if (on) { delete stage.dataset.focus; } else { stage.dataset.focus = spot.dataset.part; }
+      stage.querySelectorAll('svg [data-part]').forEach(function (part) {
+        part.classList.toggle('dimmed', !on && part.dataset.part !== spot.dataset.part);
+      });
     });
   });
 
@@ -208,7 +211,9 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
     document.querySelectorAll('.hotspot').forEach(function (spot) {
       spot.setAttribute('aria-pressed', 'false');
     });
-    document.querySelectorAll('.stage').forEach(function (stage) { delete stage.dataset.focus; });
+    document.querySelectorAll('.stage svg .dimmed').forEach(function (part) {
+      part.classList.remove('dimmed');
+    });
     show(0, true);
   });
 
@@ -229,3 +234,6 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 4. `.say`를 두 문장 안에 맞춘다. 넘치면 단계를 쪼갠다.
 5. 필요한 단계에만 `.controls`를 남긴다. 쓰지 않는 슬라이더 블록은 지운다.
 6. 그림 위 조작이 없으면 `.hotspot` 관련 CSS와 스크립트를 지운다.
+7. 조작 대상은 `data-part`가 있는 SVG 그룹으로 묶고 각 버튼 값과 일치시킨다.
+   추가한 토글·선택 문제의 상태도 초기화 함수에서 복원한다.
+8. 처음·마지막 단계, 키보드 조작, 입력 최솟값·최댓값, 초기화와 인쇄를 확인한다.

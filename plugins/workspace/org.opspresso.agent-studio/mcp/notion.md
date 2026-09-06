@@ -1,16 +1,16 @@
 ---
 description: >
-  Search and read Notion pages, databases and comments to answer questions from
-  workspace content; look up workspace users. Create or edit content only when
-  requested. Requires the project's connected Notion OAuth account; if access
-  is unavailable, ask for the relevant content rather than claiming it was read.
+  Search and read Notion pages, databases and comments, or find workspace users.
+  Create and edit workspace content when requested through the project's
+  connected Notion OAuth account; unavailable access requires supplied content.
 ---
 
 # notion
 
-OAuth only — no fallback header. Notion offers dynamic client registration, so
-the console's Discover step is enough to set the entry up; each project then
-connects with its own account.
+The registry entry uses OAuth only, with no fallback header. Notion supports
+dynamic client registration. After the first sync, run Discover once to populate
+the OAuth block, then connect each project with its own account.
 
-Sync creates the entry without the OAuth block. Run Discover once after the first
-sync, then connect per project.
+Access is determined by that project's connection and the content available to
+the connected account. Verify a representative page or database read after
+connecting; successful discovery alone does not establish workspace access.

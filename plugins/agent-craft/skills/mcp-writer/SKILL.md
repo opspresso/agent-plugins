@@ -1,9 +1,8 @@
 ---
 name: mcp-writer
 description: >
-  MCP 서버의 tool·resource 인터페이스를 설계하거나 구현안을 작성하고 기존 MCP 서버의
-  품질·보안을 검토할 때 로드한다. discoverability, 입력·응답 계약, 인증과 권한,
-  pagination, 오류 처리, Agent Studio 등록과 평가 방법을 다룬다.
+  MCP 서버의 도구·리소스 API를 설계·구현하거나 기존 서버의 사용성·보안을 검토할 때 쓴다.
+  검색 설명, 입력·응답 계약, 인증·오류 처리와 Agent Studio 연결 방법을 정리한다.
 ---
 
 # MCP 서버 작성
@@ -33,20 +32,21 @@ description: >
 - 호출마다 여러 단계가 반드시 함께 움직이고 중간 상태를 노출하면 위험한 작업만
   workflow tool로 묶는다.
 - 전체 endpoint 수보다 사용자가 실제로 완료해야 하는 작업과 context 비용을 우선한다.
-- 같은 결과를 tool과 resource 양쪽에 중복 노출하지 않는다. 모델이 인자를 주어 실행할
-  작업은 tool, URI로 반복 조회할 안정된 자료는 resource가 기본이다.
+- 모델이 인자를 주어 실행할 작업은 tool, URI로 반복 조회할 안정된 자료는 resource가 기본이다.
+  양쪽에 제공할 때는 클라이언트의 접근 방식과 필요한 이유를 설명한다.
 
 ### 이름과 description
 
 - 이름은 같은 서버 안에서 일관된 `동사_대상` 형태로 쓴다.
-- description에는 호출 시점, 핵심 입력, 반환값과 중요한 부작용을 짧게 적는다.
+- description에는 사용자 목적과 반환값을 먼저 쓴다. 선택에 중요한 입력 조건·부작용만 덧붙인다.
 - 비슷한 tool의 선택 기준을 description만 읽고 구분할 수 있게 한다.
 - 내부 구현 이름이나 REST 경로를 모델에게 그대로 떠넘기지 않는다.
 
 ### 입력
 
 - 경계에서 type, enum, 길이, 날짜, ID와 상호 배타 조건을 검증한다.
-- 자유 형식 문자열로 경로·쿼리·shell 조각을 받지 않는다.
+- 가능한 입력은 구조화한다. 경로·쿼리 문자열이 필요하면 허용 범위와 크기를 검증하고,
+  사용자 입력을 shell이나 쿼리에 그대로 삽입하지 않는다.
 - list 입력에는 최대 개수, 검색에는 page size와 범위 제한을 둔다.
 - 기본값이 부작용을 넓히지 않게 한다. 누락된 tenant나 scope를 전체로 해석하지 않는다.
 
@@ -62,15 +62,15 @@ description: >
 
 - 자격증명은 tool 인자가 아니라 설치·배포 측 secret store에서 주입한다.
 - 서버와 token 모두 최소 권한을 사용하고 tenant를 인증된 주체에서 결정한다.
-- remote 서버는 인증과 Origin 검증을 적용한다. 개발용 서버는 기본적으로 loopback에
-  bind한다.
+- remote 서버의 인증·Origin·네트워크 접근 경계를 정한다. 공개 읽기 서버나 내부 무인증
+  배포라면 허용한 접근 범위와 근거를 명시한다. 개발용 서버는 기본적으로 loopback에 bind한다.
 - URL fetch는 허용 scheme·host·port를 제한하고 DNS rebinding과 redirect 뒤 목적지를
   다시 검사한다.
 - 파일·archive 경로는 resolve한 뒤 허용 root 안에 있는지 확인한다.
 - `readOnlyHint`, `destructiveHint`, `idempotentHint` 같은 annotation은 모델을 돕는 정보다.
   승인과 권한 검사를 대신하지 않는다.
-- destructive 작업은 대상을 다시 보여 주고 사용자 승인을 받은 뒤 실행하며 idempotency와
-  재시도 영향을 정의한다.
+- destructive 작업은 대상과 허가 범위를 확인하고 실행하며 idempotency와 재시도 영향을 정의한다.
+  이미 받은 권한은 유지하고 추가 범위가 필요할 때만 확인한다.
 
 ## Agent Studio에 등록할 때
 
@@ -79,7 +79,7 @@ description: >
 - secret이 들어갈 `headers`는 저장소에 넣지 않고 설치 측에서 설정한다.
 - 서버 description은 같은 plugin의 `org.opspresso.agent-studio/mcp/<name>.md`에 둔다.
 - extension의 frontmatter `description`만 모델에게 전달된다. 본문은 운영자용이므로
-  모델이 따라야 할 호출 조건은 description이나 연결된 스킬에 둔다.
+  등록·인증·배포 설정·진단 절차를 적는다. 모델의 호출 조건은 description이나 연결된 스킬에 둔다.
 - `content`가 있으면 Agent Studio는 그 블록을 모델에게 전달하고 별도
   `structuredContent`는 함께 전달하지 않는다. 완전성·잘림·검증 결과처럼 판단에 필요한
   메타데이터를 text 블록에도 담는다. 바이너리는 사용자 파일로 전달되며 모델이 재사용할

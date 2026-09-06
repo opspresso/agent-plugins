@@ -1,100 +1,66 @@
 ---
 description: >
-  Recall earlier decisions, conventions and setup; remember reusable facts or
-  requested conversation notes. recall searches memories, not indexed documents.
-  remember defaults to project-wide sharing; use scope="conversation" for this
-  conversation only, never type as a privacy setting. If conversation scope fails,
-  do not store it project-wide instead. forget permanently deletes a known id;
-  use only within the user's authorized deletion scope.
+  Search earlier decisions, conventions and setup, or save reusable facts and
+  conversation notes; this memory service does not search indexed documents.
+  Storage is project-wide by default; use scope="conversation" for notes recalled
+  only in this conversation and never fall back to project scope when it fails.
+  forget permanently deletes a known id only within the authorized scope.
 ---
 
 # memory
 
-The bundled address uses the internal `agent-mcps.svc.cluster.local` suffix;
-`MCP_INTERNAL_HOST_SUFFIXES` must allow it for registration. The address can
-resolve to a Kubernetes Service or an IDC container network alias.
+## Connection and authentication
 
-With `MCP_API_KEY` unset, the server trusts every caller that can reach it, so
-the deployment must restrict network access. If an operator sets that key,
-configure the matching `Authorization: Bearer …` header in the registry's
-credential settings. Keep the value out of this repository.
+The internal `agent-mcps.svc.cluster.local` suffix must be allowed by
+`MCP_INTERNAL_HOST_SUFFIXES`. It can resolve through a Kubernetes Service or
+an IDC network alias. With `MCP_API_KEY` unset, every reachable caller is trusted;
+restrict network access. When set, register the matching Bearer credential
+outside this repository.
 
-## Memories are scoped per project, with no header to set
+## Tenant and conversation scope
 
-Agent Studio stamps `X-Tenant-Id: <project name>` on every MCP request a run
-makes, and this server reads it as the tenant when no explicit `X-Memory-Tenant`
-is present. **Binding supplies the tenant**: each project gets its own memory,
-and requests with different tenants cannot read each other's memories. No
-tenant header needs to be configured on the entry or binding; authentication
-headers, when required by the deployment, are separate.
+Agent Studio sends `X-Tenant-Id: <project name>` on bound MCP calls.
+`X-Memory-Tenant`, if configured, overrides that value and can intentionally
+share a tenant across projects. Tenant headers are independent of authentication.
+Discovery and connection tests work without a tenant; tool calls require one.
 
-The tenant is deliberately a header and not a tool argument: a tool argument is
-chosen by the model, and a model that can name its own tenant can read another
-project's memories by asking — including one talked into it by text it just
-retrieved. The platform supplies `X-Tenant-Id` outside the model's control.
+Conversation runs also carry `X-Conversation-Id`. `remember(scope="conversation")`
+requires this header and does not fall back to project storage. Omitting scope
+stores project memory even when the header exists. The `type` field is only a
+classification and does not control visibility.
 
-Set `X-Memory-Tenant` only to name the tenant yourself — for instance so
-several projects share one memory. It wins over the stamped project name. A
-request carrying neither header may still discover the server and list its
-tools, so **Test connection** and the catalog probe work without a project. The
-tenant is resolved when a tool runs; an unscoped call is refused, while a bound
-run carries the stamped project header.
+Conversation scope restricts recall, listing and statistics. `forget` checks
+tenant and memory id, not conversation scope, and permanently deletes the target.
 
-When the run is in a conversation (a chat, a Slack thread, an A2A context, an
-API caller that declared one) the platform also sends `X-Conversation-Id`, and
-`remember(scope: "conversation")` files a memory that only that conversation
-recalls or lists. Omitting `scope` stores a project memory even when a
-conversation header is present. Requesting conversation scope without that
-header is refused; it does not fall back to project scope. `type` is only a
-classification: `type: "conversation"` does not change visibility.
+A version's **Recall memory before each run** setting invokes bound recall
+servers before generation. Enabling it without a suitable bound server produces
+a warning on each run.
 
-Conversation scope limits recall, listing and statistics. `forget` checks the
-tenant and memory id, not the conversation; it permanently deletes the target.
+## Storage and troubleshooting
 
-## Recalling before the first token
+`DATABASE_URL` is required; the server creates its PostgreSQL/pgvector schema
+at startup. Bedrock Titan v2 is the default embedding provider. An OpenAI-compatible
+deployment uses `EMBEDDING_PROVIDER=openai`, `EMBEDDING_BASE_URL`,
+`EMBEDDING_API_KEY`, `EMBEDDING_MODEL` and `EMBEDDING_DIM` as server settings.
 
-Bound alone, `recall` is a tool the model may or may not think to call. A
-version that turns on **Recall memory before each run** has the run call it
-first, with the newest user turn, and adds the answer to the system prompt.
-That option asks only the servers the version has bound — bind this one, or
-the run warns on every turn that nothing could answer.
+Memories do not expire automatically. Access counters update atomically.
+`Already known` means a near-duplicate was not inserted; supplied tags, category
+and scope do not update the existing record. A database cannot mix embedding
+dimensions. Model migration requires clearing or re-embedding existing records
+and recalibrating `RECALL_MIN_SIMILARITY`, whose default is tuned to Titan.
 
-## Storage
+## Separate Agent Memory service
 
-PostgreSQL with pgvector stores each memory, its embedding and its access count
-in one row. `DATABASE_URL` is required and the server creates its schema at
-startup. Bedrock Titan v2 is the default embedding provider. Deployments using
-an OpenAI-compatible endpoint set `EMBEDDING_PROVIDER=openai` together with
-`EMBEDDING_BASE_URL`, `EMBEDDING_API_KEY`, `EMBEDDING_MODEL` and `EMBEDDING_DIM`.
-These are server environment settings, not MCP request headers.
+Indexed document search and RAG use Agent Memory at
+`<base URL>/api/organizations/<organizationSlug>/mcp`, with a separate registry
+entry and Bearer credential. An organization Agent token is limited to that
+organization's MCP endpoint and organization scope. User/team scope and the
+ordinary HTTP API require a user's session Bearer token.
 
-The server does not provide document search. Use Agent Memory when a project
-needs indexed documents or RAG.
+Agent Memory exposes `context_search`, `recall`, `memory_search`,
+`memory_create`, `document_search`, `knowledge_search` and
+`knowledge_neighborhood`. It has no `remember`, `forget` or document-upload
+MCP tool, so bindings must match the intended service.
 
-## Connecting Agent Memory separately
-
-Agent Memory uses a separate registry entry pointing to
-`<base URL>/api/organizations/<organizationSlug>/mcp`, with a Bearer credential
-configured by the operator. Its organization Agent token works only on that
-organization's MCP endpoint and only for organization scope. User or team scope
-and the ordinary HTTP API require a user's session Bearer token.
-
-Its tools are `context_search`, `recall`, `memory_search`, `memory_create`,
-`document_search`, `knowledge_search` and `knowledge_neighborhood`. It does not
-expose this server's `remember` or `forget`, or a document-upload MCP tool.
-Choose the tools actually bound to the agent rather than reusing the same
-memory instructions unchanged. Connection and API details:
-https://github.com/opspresso/agent-memory/blob/main/docs/api.md
-
-## Operating notes
-
-- Access counters are updated atomically in PostgreSQL.
-- Nothing expires on its own. `forget` is the only removal.
-- `remember` may return `Already known` for near-identical content. That means
-  nothing new was stored; supplied tags, category and scope did not update the
-  existing memory.
-- One database cannot mix embedding dimensions. Changing the embedding model
-  requires clearing or re-embedding existing memories and recalibrating
-  `RECALL_MIN_SIMILARITY`, which is tuned to Titan's similarity scale.
-
-Source and full design notes: https://github.com/opspresso/mcp-memory
+Sources: https://github.com/opspresso/mcp-memory
+and https://github.com/opspresso/agent-memory/blob/main/docs/api.md

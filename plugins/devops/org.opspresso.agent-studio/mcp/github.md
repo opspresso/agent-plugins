@@ -1,56 +1,44 @@
 ---
 description: >
-  Search and read GitHub repositories, files, diffs, issues, pull requests,
-  Actions and security alerts. Create branches, commits, PRs or comments only
-  when that write is requested; a review or draft request is read-only.
-  Available operations depend on the connected token's permissions; use the
-  actual tool schemas and do not treat a listed write tool as authorization.
+  Search and read GitHub code, files, diffs, issues, pull requests, Actions and
+  security alerts; create branches, commits, PRs and comments when requested.
+  Review or description-only requests do not authorize writes, and available
+  operations depend on the connected token's permissions.
 ---
 
 # github
 
-GitHub's own hosted MCP server at `https://api.githubcopilot.com/mcp/`. The only
-entry here that is neither cluster-internal nor free: it is a public endpoint
-that answers for whatever account the caller authenticates as.
+## Endpoint and authentication
 
-**Two ways in, and the entry carries both.** A project that has connected via
-OAuth uses its own token; everything else falls back to the entry's
-`Authorization` header. OAuth needs a hand-registered app — GitHub offers no
-dynamic client registration, so the console's Discover step finds the endpoints
-but not a way to create a client. Register the OAuth app on GitHub and enter its
-credentials. After the first sync the entry has neither credential: run Discover
-for the OAuth block, and add the `Authorization` header for the fallback.
+The hosted endpoint is `https://api.githubcopilot.com/mcp/`.
+A project's OAuth connection takes precedence; otherwise the registry's
+`Authorization` header supplies a fallback token.
 
-## What a run may do is the token, not this entry
+The first sync supplies neither credential. Run Discover to configure OAuth
+endpoints, register a GitHub OAuth app manually, and enter its client credentials.
+GitHub does not support dynamic client registration. Configure a fallback
+Bearer credential only if a shared identity is intended.
 
-Nothing here narrows the server. It exposes reads and writes across repositories,
-issues, pull requests, Actions and security alerts, and **which of those succeed
-is decided by the scopes of whichever token answered** — the project's OAuth
-grant or the fallback header's PAT. A read-only fine-grained token lists the
-write tools and answers 403 when one is called, the same shape as the cluster
-entries here.
+## Permission boundary
 
-That makes the token choice the security boundary:
+The server exposes reads and writes across repositories, issues, PRs, Actions
+and security alerts. Token scopes determine which calls succeed. A read-only
+token can still discover write tools and receive 403 when calling them.
 
-- The fallback header is a **shared identity**. Every project without OAuth acts
-  as that account, and the audit trail says that account rather than a person.
-  Give it the narrowest scopes that let a run read code and open a pull request,
-  and never a scope that can merge, force-push or administer.
-- Per-project OAuth is the preferred path for the same reason — the commit and
-  the PR carry the person who connected.
-- Branch protection is what actually stops a bad merge. A token that can push is
-  not a token that can bypass a required review, and this entry should never hold
-  one that can.
+Fallback credentials act as one shared account for projects without OAuth.
+Per-project OAuth uses the connected account's identity. Restrict fallback
+repository access and permissions to the required operations, and enforce
+merge/review restrictions with branch protection. Do not supply bypass or
+administrative privileges for ordinary agent work.
 
-## What the skills here expect of it
+Verify representative repository access after connecting; tool discovery alone
+does not verify access to a private repository or a requested write.
 
-`gitops-change` uses it to land a chart-values change as a pull request rather
-than touching the cluster, and `code-review` and `pr-description` in the
-**engineering** plugin read PRs through it. Those two live in another plugin, so
-a project that binds one without the other still works — each says in its own
-body what it does when this server is absent.
+## Skill bindings
 
-Tool names are the server's, not this file's. A run reads the actual schema from
-its own tool list; nothing here should be treated as a spelling reference.
+DevOps `gitops-change` uses GitHub for repository changes and pull requests.
+Engineering `code-review` and `pr-description` use it for PR analysis.
+These skills are separately bound and define their fallback when GitHub is absent.
+Actual tool names and arguments come from the connected server's schema.
 
 Upstream: https://github.com/github/github-mcp-server

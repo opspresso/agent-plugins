@@ -1,38 +1,35 @@
 ---
 description: >
   Inspect Kubernetes resources, pod logs, events, nodes and namespaces for
-  workload failures, scheduling and rollout issues. Authorized workload writes
-  are temporary mitigation; durable changes go through the GitOps repository.
-  This deployment does not grant Secret reads, deletion or pods/exec, even if
-  those tools are listed. Use Grafana or CloudWatch for historical telemetry.
+  workload, scheduling and rollout failures, with requested workload writes
+  for temporary mitigation. Durable changes belong in GitOps; this deployment
+  denies Secret reads, deletion and pods/exec even when those tools are listed.
 ---
 
 # kubernetes
 
-Cluster-internal (`agent-mcps` namespace, no ingress), so registering it
-depends on `MCP_INTERNAL_HOST_SUFFIXES` naming that suffix, same as the other
-entries here.
+## Connection and identity
 
-No credential on the entry: nothing routes to the Service from outside the
-cluster, and the server reaches the cluster with its own ServiceAccount rather
-than anything from the caller.
+The bundled service is internal to `agent-mcps` with no ingress.
+`MCP_INTERNAL_HOST_SUFFIXES` must allow its suffix. The registry has no caller
+credential; the server uses its own Kubernetes ServiceAccount.
 
-What a run may do is that ServiceAccount's RBAC, decided in the deployment
-rather than here. Reads are view-level with core `secrets` deliberately
-excluded, and `--toolsets core` follows from that exclusion — helm stores
-releases in Secrets, so its toolset would only ever answer 403.
+## Effective permissions
 
-Writes are narrower than reads, which is the whole shape of this entry: create,
-update and patch on workload objects (pods, services, configmaps, PVCs and the
-apps, batch, autoscaling, policy, networking and gateway kinds), and nothing at
-all on RBAC, CRDs, StorageClasses, ServiceAccounts, nodes, ExternalSecrets or
-Argo CD Applications. Each of those is an escalation path rather than a
-workload change — an ExternalSecret in particular would walk around the Secret
-exclusion above.
+Deployment RBAC permits view-level reads excluding core Secrets.
+`--toolsets core` excludes Helm operations, which require Secret-backed releases.
 
-No `delete` verb and no `pods/exec` are granted anywhere. `--read-only` is gone
-from the pod, so `resources_delete`, `pods_delete` and `pods_exec` are listed
-and answer 403 when called. Changing any of this means editing the
-`mcp-kubernetes` chart in argocd-env-demo, not this file.
+Writes allow create, update and patch on workload objects: pods, services,
+configmaps, PVCs and the apps, batch, autoscaling, policy, networking and gateway
+kinds. RBAC, CRDs, StorageClasses, ServiceAccounts, nodes, ExternalSecrets and
+Argo CD Applications are not writable.
+
+No delete or `pods/exec` permission is granted. The pod does not use
+`--read-only`, so deletion and exec tools may be discoverable but return 403.
+Tool visibility is not the permission boundary.
+
+RBAC and toolset changes belong to the `mcp-kubernetes` chart in
+argocd-env-demo. Verify representative resource access after deployment changes.
+Durable workload configuration belongs in the GitOps repository.
 
 Upstream: https://github.com/containers/kubernetes-mcp-server

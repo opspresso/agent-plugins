@@ -112,26 +112,41 @@ SVG 안의 요소는 개수를 미리 그려 두고 보이기만 바꾼다. 값�
 **지킬 것**
 
 - 두 경우를 같은 크기, 같은 자리, 같은 축척으로 둔다. 크기가 다르면 그 차이가 먼저 읽힌다.
-- 선택은 라디오 그룹으로 만든다. **CSS만으로 전환되면 JavaScript가 필요 없다.**
+- 선택은 라디오 그룹으로 만들고 선택 값에 맞는 패널을 표시한다.
 - 무엇이 켜져 있는지 색 말고 글자로도 보인다.
 
 ```html
+<div class="comparison">
 <fieldset class="switch">
   <legend>비교</legend>
-  <input type="radio" id="before" name="case" checked>
+  <input type="radio" id="before" name="case" value="before" checked>
   <label for="before">한 대일 때</label>
-  <input type="radio" id="after" name="case">
+  <input type="radio" id="after" name="case" value="after">
   <label for="after">세 대일 때</label>
 </fieldset>
 
 <div class="pane" data-case="before">…</div>
 <div class="pane" data-case="after">…</div>
+</div>
 ```
 
+```js
+document.querySelectorAll('.comparison').forEach(function (comparison) {
+  function showCase() {
+    var selected = comparison.querySelector('input[type="radio"]:checked');
+    comparison.querySelectorAll('.pane').forEach(function (pane) {
+      pane.hidden = pane.dataset.case !== selected.value;
+    });
+  }
+  comparison.addEventListener('change', showCase);
+  showCase();
+});
+```
+
+스크립트가 없으면 두 패널이 모두 보인다. 인쇄에도 두 경우를 남긴다.
+
 ```css
-.pane { display: none; }
-#before:checked ~ .pane[data-case="before"] { display: block; }
-#after:checked ~ .pane[data-case="after"] { display: block; }
+@media print { .comparison .pane[hidden] { display: block !important; } }
 ```
 
 ## 4. 그림 위 hotspot
@@ -162,18 +177,24 @@ SVG 안의 요소는 개수를 미리 그려 두고 보이기만 바꾼다. 값�
 document.querySelectorAll('.hotspot').forEach(function (spot) {
   spot.addEventListener('click', function () {
     var on = spot.getAttribute('aria-pressed') === 'true';
-    document.querySelectorAll('.hotspot').forEach(function (other) {
+    var figure = spot.closest('.figure');
+    figure.querySelectorAll('.hotspot').forEach(function (other) {
       other.setAttribute('aria-pressed', 'false');
     });
     spot.setAttribute('aria-pressed', on ? 'false' : 'true');
-    document.querySelector('.figure').dataset.focus = on ? '' : spot.dataset.part;
+    figure.querySelectorAll('svg [data-part]').forEach(function (part) {
+      part.classList.toggle('dimmed', !on && part.dataset.part !== spot.dataset.part);
+    });
   });
 });
 ```
 
 ```css
-.figure[data-focus] svg > *:not([data-part]) { opacity: .25; }
+.figure svg .dimmed { opacity: .25; }
 ```
+
+각 비교 대상은 `<g data-part="router">`처럼 묶는다. 라벨을 해당 그룹에 넣고,
+다른 대상을 감싸는 상위 그룹에는 `data-part`를 중복 지정하지 않는다.
 
 ## 5. 직접 해보기
 

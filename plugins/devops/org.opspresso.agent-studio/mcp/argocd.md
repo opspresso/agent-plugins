@@ -1,54 +1,39 @@
 ---
 description: >
-  Inspect Argo CD application health, sync status, revisions, resource trees,
-  logs and events when investigating deployments or GitOps drift. Application
-  create/update/delete, sync and resource actions change the cluster; use only
-  for requested changes, not diagnosis. Durable desired-state changes belong
-  in the GitOps repository.
+  Investigate Argo CD application health, sync status, revisions, deployment
+  resources, logs and GitOps drift. Application changes, sync and resource
+  actions require a requested change; durable desired state belongs in Git.
 ---
 
 # argocd
 
-Drives the Argo CD API: what exists (`list_applications`, `get_application`,
-`get_appproject`, `list_clusters`), what a deployed app is actually doing
-(resource tree, managed resources, workload logs, resource events), and what to
-change about it (`create_application`, `update_application`,
-`delete_application`, `sync_application`, `run_resource_action`).
+## Connection and credentials
 
-Cluster-internal (`agent-mcps` namespace, no ingress), so registering it at all
-depends on `MCP_INTERNAL_HOST_SUFFIXES` naming that suffix. Without it the sync
-reports this entry as `invalid-url` and moves on.
+The bundled service is internal to `agent-mcps`, with no ingress.
+`MCP_INTERNAL_HOST_SUFFIXES` must allow its suffix or sync reports `invalid-url`.
+No caller credential is configured on the registry entry.
 
-**The token is the last mile.** The `mcp-argocd` chart in argocd-env-demo lands
-the same `mcp-<slug>` Service on port 80 its six siblings use, but it cannot
-carry the credential: Argo CD signs its own API tokens. argocd-env-addons'
-`install/token.sh` mints one and pins it in parameter store alongside the token
-list Argo CD checks it against, so the same token survives a cluster rebuild and
-the installer needs no token step. Until that parameter holds a real token the
-pod runs and `/healthz` stays green while every tool call answers 401 — a tool
-error rather than a registration problem.
+The pod uses `ARGOCD_API_TOKEN` supplied through External Secrets and parameter
+store. In argocd-env-addons, `install/token.sh` creates the token and persists
+it with Argo CD's token-list state. A healthy pod and `/healthz` do not verify
+this credential: an invalid token produces 401 on tool calls.
 
-No credential on the entry: nothing routes to the Service from outside the
-cluster, and the server authenticates to Argo CD with `ARGOCD_API_TOKEN` from
-the pod's environment (External Secrets, parameter-store) rather than from the
-caller. `ARGOCD_BASE_URL` points in-cluster at
-`http://argocd-server.argocd.svc.cluster.local` — plain HTTP, because
-argocd-env-addons runs the server with `server.insecure: true` and TLS
-terminates at the gateway.
+`ARGOCD_BASE_URL` is `http://argocd-server.argocd.svc.cluster.local`.
+The deployment uses `server.insecure: true` because TLS terminates at the gateway.
 
-The write tools are listed because `MCP_READ_ONLY` is left unset, but what they
-can actually do is Argo CD's own RBAC, not anything this entry decides. The
-token belongs to the `mcp` account, and `role:mcp` in argocd-env-addons bounds
-its writes to applications alone — create, update, delete, sync and resource
-actions. Nothing else is writable, and `exec` is granted by neither that role
-nor the default one.
+## Permissions and verification
 
-Reads are wider than that role suggests, deliberately: the deployment keeps
-`policy.default: role:readonly`, and Argo CD's built-in definition of that role
-is `get` on applications, applicationsets, certificates, clusters,
-repositories, projects, accounts, gpgkeys and logs. Every account inherits it,
-this one included. So `role:mcp` narrows what a run may change, not what it may
-see — narrowing the latter would take explicit deny rules, which Argo CD
-evaluates ahead of allows.
+`MCP_READ_ONLY` is unset, so write tools are discoverable. Effective permission
+comes from Argo CD RBAC. The `mcp` account's `role:mcp` allows application
+create, update, delete, sync and resource actions; it does not grant exec.
+
+The inherited `policy.default: role:readonly` also allows reads of applications,
+applicationsets, certificates, clusters, repositories, projects, accounts,
+gpgkeys and logs. The account role does not remove those default reads.
+Restricting inherited reads requires explicit denies.
+
+After credential or RBAC changes, verify an application read and the intended
+permission boundary. Registration alone does not validate upstream access.
+Durable desired-state changes are maintained in the GitOps repository.
 
 Upstream: https://github.com/argoproj-labs/mcp-for-argocd
