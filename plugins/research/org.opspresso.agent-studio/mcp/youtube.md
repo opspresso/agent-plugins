@@ -3,6 +3,8 @@ description: >
   Read a YouTube link or video id as timestamped captions or metadata. Use
   get_transcript for spoken content; metadata is not evidence of what was said.
   State transcript truncation when reported, and summarize only the returned part.
+  No continuation or time-range input is supported. Caption languages marked
+  "could not be listed" mean discovery failed, not that captions are absent.
 ---
 
 # youtube

@@ -1,9 +1,10 @@
 ---
 name: image-generation
 description: >
-  사용자가 그림을 요청하거나 이미 있는 이미지를 고쳐 달라고 할 때 로드한다.
-  아이디어를 영어 프롬프트로 다듬어 GenerateImage로 새로 그리거나, 기존 이미지를
-  id로 지목해 EditImage로 고친다.
+  사진·일러스트·콘셉트 아트 같은 이미지를 생성하거나 기존 이미지의 내용·스타일을
+  편집할 때 쓴다. GenerateImage로 생성하고, 실제 이미지 id를 지정해 EditImage로
+  편집한다. 필요한 빌트인이 없으면 생성·편집했다고 말하지 않는다. 시스템 구조도는
+  diagram-design, 수치 차트는 tufte-charts, 웹 UI 코드는 frontend-design을 쓴다.
 compatibility: >
   GenerateImage·EditImage 빌트인이 제시된 런에서만 동작한다. 두 툴은 그 능력이 실제로
   있는 런에만 나타나므로, 목록에 없으면 이미지를 만들 수 없다고 밝힌다.

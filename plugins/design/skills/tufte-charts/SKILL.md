@@ -1,10 +1,10 @@
 ---
 name: tufte-charts
 description: >
-  차트·그래프를 고르거나 지표를 시각화해 HTML/SVG·React 코드로 만들 때 로드한다.
-  데이터와 질문에 맞는 차트 유형을 고르고 불필요한 장식을 줄여 정확하고 읽기 쉽게
-  표현한다. 화면 레이아웃과 컴포넌트 구조는 frontend-design이, 구조 탐색은
-  html-wireframe이, 눌러보는 목업은 html-prototype이 맡는다.
+  매출·비율·분포·시계열 같은 정량 데이터의 비교·추세를 차트로 표현할 때 쓴다.
+  질문에 맞는 차트·축·단위·라벨을 골라 HTML/SVG·React 코드로 만들고 수치를 꾸며내지
+  않는다. 서비스 의존성·조직도·처리 흐름 같은 관계 그래프는 diagram-design,
+  전체 HTML 보고서 구성은 html-report를 쓴다.
 ---
 
 # Tufte 차트

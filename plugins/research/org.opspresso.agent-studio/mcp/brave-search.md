@@ -1,5 +1,10 @@
 ---
-description: "Web, image, video, news and local search on Brave's independent index, plus AI summaries — for anything current, niche or beyond the model's knowledge."
+description: >
+  Find current or niche information, source URLs, images, videos and news with
+  Brave search. Search snippets and AI summaries are discovery evidence;
+  read source pages with FetchUrl when available before attributing detailed
+  claims. Local search and summarizer may be unavailable on the configured
+  plan; do not repeatedly call a plan-restricted tool.
 ---
 
 # brave-search

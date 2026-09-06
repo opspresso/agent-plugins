@@ -79,11 +79,12 @@ def deployment_exception(where: Path, message: str) -> None:
     deployment_exceptions.append(f"{where}: {message}")
 
 
-def parse_frontmatter(text: str) -> dict[str, str] | None:
+def parse_frontmatter(text: str, *, where: Path | None = None) -> dict[str, str] | None:
     """The flat `key: value` subset every client here actually reads.
 
     Match Agent Studio's paired quotes, lowercase keys and folded scalars
     (`>`, `|`, `>-`, `|-`). Nested mapping entries are not consumed.
+    When validating a file, report prose the runtime would silently drop.
     """
     match = FRONTMATTER.match(text)
     if not match:
@@ -91,11 +92,20 @@ def parse_frontmatter(text: str) -> dict[str, str] | None:
     fields: dict[str, str] = {}
     lines = re.split(r"\r?\n", match.group(1))
     index = 0
+    key = None
     while index < len(lines):
-        header = KEY.match(lines[index].rstrip())
+        line = lines[index].rstrip()
+        header = KEY.match(line)
         index += 1
         if not header:
+            if (
+                where is not None and line.strip() and not line.lstrip().startswith("#")
+                and not (key == "metadata" and line.startswith((" ", "\t")))
+            ):
+                fail(where, f"frontmatter line {index + 1} is ignored by Agent Studio; "
+                     "use an indented > or | scalar for multiline descriptions")
             continue
+        key = header.group(1).lower()
         value = re.sub(r"^([\"'])([\s\S]*)\1$", r"\2", header.group(2))
         if value in {">", "|", ">-", "|-"}:
             folded = []
@@ -103,7 +113,7 @@ def parse_frontmatter(text: str) -> dict[str, str] | None:
                 folded.append(lines[index].strip())
                 index += 1
             value = " ".join(folded)
-        fields[header.group(1).lower()] = value
+        fields[key] = value
     return fields
 
 
@@ -273,8 +283,8 @@ def check_mcp_docs(plugin: Path, servers: set[str]) -> None:
         if doc is None:
             fail(manifest, f"{name}: missing org.opspresso.agent-studio/mcp/{name}.md")
             continue
-        fields = parse_frontmatter(doc.read_text())
-        if fields is None or not fields.get("description"):
+        fields = parse_frontmatter(doc.read_text(), where=doc)
+        if fields is None or not fields.get("description", "").strip():
             fail(doc, "description is required in frontmatter for Agent Studio sync")
     for name, doc in sorted(docs.items()):
         if name not in servers:
@@ -284,7 +294,7 @@ def check_mcp_docs(plugin: Path, servers: set[str]) -> None:
 def check_skill(skill: Path) -> None:
     directory = skill.parent.name
     text = skill.read_text()
-    fields = parse_frontmatter(text)
+    fields = parse_frontmatter(text, where=skill)
     if fields is None:
         fail(skill, "no YAML frontmatter")
         return
@@ -298,7 +308,7 @@ def check_skill(skill: Path) -> None:
         fail(skill, f"name {name!r} must match its directory {directory!r}")
 
     description = fields.get("description", "")
-    if not description:
+    if not description.strip():
         fail(skill, "description is required and must not be empty")
     elif len(description) > MAX_DESCRIPTION:
         fail(skill, f"description is {len(description)} chars, over {MAX_DESCRIPTION}")

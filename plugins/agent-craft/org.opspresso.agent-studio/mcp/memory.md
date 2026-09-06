@@ -1,8 +1,11 @@
 ---
 description: >
-  Remember and recall this project's durable knowledge — decisions, conventions
-  and setup from earlier sessions. Call recall before asking the user to
-  re-explain anything, and remember a decision or convention as soon as it lands.
+  Recall earlier decisions, conventions and setup; remember reusable facts or
+  requested conversation notes. recall searches memories, not indexed documents.
+  remember defaults to project-wide sharing; use scope="conversation" for this
+  conversation only, never type as a privacy setting. If conversation scope fails,
+  do not store it project-wide instead. forget permanently deletes a known id;
+  use only within the user's authorized deletion scope.
 ---
 
 # memory

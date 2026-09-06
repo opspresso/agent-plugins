@@ -1,5 +1,9 @@
 ---
-description: "Search and edit Notion pages, databases and comments, and look up workspace users."
+description: >
+  Search and read Notion pages, databases and comments to answer questions from
+  workspace content; look up workspace users. Create or edit content only when
+  requested. Requires the project's connected Notion OAuth account; if access
+  is unavailable, ask for the relevant content rather than claiming it was read.
 ---
 
 # notion

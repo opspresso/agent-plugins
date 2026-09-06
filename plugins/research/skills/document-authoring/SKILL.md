@@ -1,13 +1,12 @@
 ---
 name: document-authoring
 description: >
-  보고서·발표 자료·회의록처럼 사람에게 건넬 파일을 만들어 달라는 요청을 받으면
-  로드한다. document MCP 의 render_document 툴로 Markdown 을 DOCX·PPTX·PDF·HWPX
-  로 쓰는 절차와, 독자·의사결정에 따른 profile 선택·제목 작성법·슬라이드
-  아키타입(카드·지표·비교·플로우) 유도법·표지와 목차·이미지 임베드·표 정렬·
-  전문가 품질 검수 규칙을 다룬다. "보고서
-  만들어줘", "발표 자료로 정리해줘", "문서로 뽑아줘" 같은 요청이 트리거다. 브라우저에서
-  열어 읽을 HTML 리포트는 html-report 가, XLSX 생성·수식 점검은 spreadsheet-authoring 이 맡는다.
+  보고서·발표 자료·회의록을 DOCX·PPTX·PDF·HWPX 파일로 만들 때 로드한다.
+  document MCP의 render_document로 독자에 맞는 profile·문서 구조를 정해 생성한다.
+  형식 미지정 문서 파일은 DOCX, 발표·슬라이드는 PPTX가 기본이다.
+  서버가 없으면 Markdown 초안을 제공한다. 원본 보존 편집과 시각 검수는 보장하지 않으며,
+  이미지 임베드·파일 재검사는 실제 bytes 전달 경로가 필요하다.
+  HTML 리포트 요청은 html-report, XLSX 생성·수식 점검은 spreadsheet-authoring을 쓴다.
 compatibility: >
   research 플러그인의 document MCP 서버가 연결돼 있어야 파일을 만든다. 없으면 본문을
   Markdown 으로만 낸다.

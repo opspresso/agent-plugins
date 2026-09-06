@@ -1,5 +1,10 @@
 ---
-description: "Inspect a Kubernetes cluster — resources, pod logs, events, nodes and namespaces. Workload writes (create, update, scale) are for temporary mitigation only; durable change goes through the GitOps repo."
+description: >
+  Inspect Kubernetes resources, pod logs, events, nodes and namespaces for
+  workload failures, scheduling and rollout issues. Authorized workload writes
+  are temporary mitigation; durable changes go through the GitOps repository.
+  This deployment does not grant Secret reads, deletion or pods/exec, even if
+  those tools are listed. Use Grafana or CloudWatch for historical telemetry.
 ---
 
 # kubernetes

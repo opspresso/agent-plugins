@@ -1,5 +1,9 @@
 ---
-description: "Search AWS documentation and read it as markdown: service docs, API references, What's New posts and Well-Architected guidance — consult it before answering any AWS question from memory."
+description: >
+  Search and read AWS service documentation, API references, What's New and
+  Well-Architected guidance for setup, behavior and architecture questions.
+  This is public documentation, not access to live AWS account resources;
+  it cannot report a subnet's available IPs or an instance's current state.
 ---
 
 # aws-knowledge

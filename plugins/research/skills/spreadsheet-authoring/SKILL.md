@@ -1,11 +1,12 @@
 ---
 name: spreadsheet-authoring
 description: >
-  XLSX 파일을 새로 만들거나 스프레드시트의 값·수식·오류 셀·숨김 시트·매크로·외부 링크를
-  점검해 달라는 요청을 받으면 로드한다. document MCP 의 render_spreadsheet 와
-  inspect_spreadsheet 를 구분해 쓰는 절차, 명시적 수식 셀, 계산하지 않은 cachedValue,
-  원본 보존 편집 한계와 검수 규칙을 다룬다. 단순 표를 보고서·발표 자료에 넣는 작업은
-  document-authoring 이 맡는다.
+  XLSX 예산·집계 파일 생성이나 기존 통합 문서의 수식·오류 셀·숨김 시트 점검에 쓴다.
+  document MCP의 render_spreadsheet로 행과 명시적 수식 셀을 새 파일로 만든다.
+  inspect_spreadsheet는 원본 bytes가 필요하며 첨부에서 추출된 값만으로 호출할 수 없다.
+  수식 재계산·매크로 실행·원본 서식 보존 편집은 지원하지 않는다. 서버가 없으면 표와
+  수식 초안만 제공한다. 보고서 안의 단순 표는 document-authoring, JSON·CSV 텍스트 추출은
+  structured-output을 쓴다.
 compatibility: >
   research 플러그인의 document MCP 서버가 있어야 XLSX 를 만든다. 첨부는 값으로 추출되며
   수식 검사는 원본 bytes 전달 경로가 따로 필요하다. 서버가 없으면 Markdown 으로 낸다.

@@ -1,11 +1,15 @@
 ---
 description: >
-  Read office documents — DOCX, PPTX, XLSX, HWP, HWPX, ODT/ODS/ODP, RTF — as
-  Markdown that keeps their headings, tables and lists; inspect a document's
-  structure or an XLSX workbook's formulas without executing anything; and
-  create new XLSX, DOCX, PPTX, PDF or HWPX files the user receives. Inspection
-  needs original bytes, not extracted text or a file name. PDFs, plain text
-  and web pages are read by Agent Studio itself, not here.
+  Create DOCX/PPTX/PDF/HWPX from Markdown with render_document, or XLSX from
+  rows and explicit formulas with render_spreadsheet; files are delivered to
+  the user. read_document extracts DOCX/PPTX/XLSX/HWP/HWPX/ODT/ODS/ODP/RTF text;
+  inspect_document inspects
+  structure and inspect_spreadsheet inspects XLSX formulas without calculating.
+  Readers require original base64 bytes, not URLs, file names or extracted text;
+  Studio attachments and generated files provide no reusable byte-input handle.
+  No original-preserving edits or PDF reads. Check visible warnings and counts;
+  package validation is not visual validation, and absent structured metadata
+  does not prove completeness.
 ---
 
 # document

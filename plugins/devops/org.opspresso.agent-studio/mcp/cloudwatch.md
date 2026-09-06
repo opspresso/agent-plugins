@@ -1,5 +1,10 @@
 ---
-description: "Query AWS CloudWatch metrics, alarms, PromQL and Logs Insights for EKS incident investigation."
+description: >
+  Investigate AWS/EKS telemetry through CloudWatch metrics, alarms, PromQL and
+  Logs Insights. Narrow log groups, time windows and query limits; scans incur
+  cost. Use the deployment's default credentials without profile_name. This
+  reads telemetry, not EC2/subnet/ENI state, ELB target health, IAM evaluation
+  or CloudTrail events; AWS documentation belongs to aws-knowledge.
 ---
 
 # cloudwatch

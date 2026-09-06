@@ -45,6 +45,12 @@ case에는 문장 일치가 아니라 관찰 가능한 동작을 적는다.
 1. **Positive** — 표현이 달라도 분명히 이 스킬이 필요한 요청
 2. **Near-miss negative** — 핵심 단어는 겹치지만 다른 스킬이나 일반 응답이 맡아야 하는 요청
 
+선택 평가는 본문·`compatibility`·운영 설명 없이 실제 노출되는 이름과 description만
+제공해 수행한다. 도구 부재·원본 bytes 부재처럼 실행 가능성을 바꾸는 조건도 사례에 넣고,
+선택한 기능과 수행할 수 없는 호출을 함께 기록한다. 선택 후 본문까지 읽는 실행 평가는
+별도로 수행한다. MCP 서버는 운영 `content`를 제공하지 않고 서버 description과 실제
+개별 도구 description·schema로 평가한다.
+
 쉬운 negative만 두면 description이 과하게 넓어져도 통과한다. 실제 충돌 상대의
 description을 읽고 경계 case를 만든다. 예를 들어 `diagram-design`은 차트,
 웹 화면, 일반 이미지 요청과 구분한다.

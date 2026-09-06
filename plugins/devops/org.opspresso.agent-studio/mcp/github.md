@@ -1,5 +1,10 @@
 ---
-description: "Work with GitHub: repositories and code search, issues, pull requests, Actions and security alerts — including opening a pull request and committing to a branch."
+description: >
+  Search and read GitHub repositories, files, diffs, issues, pull requests,
+  Actions and security alerts. Create branches, commits, PRs or comments only
+  when that write is requested; a review or draft request is read-only.
+  Available operations depend on the connected token's permissions; use the
+  actual tool schemas and do not treat a listed write tool as authorization.
 ---
 
 # github

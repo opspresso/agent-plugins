@@ -4,7 +4,8 @@ description: >
   AWS EKS에서 서비스 장애, 지연, 오류 증가, pod 재시작·Pending, 배포 실패,
   Argo CD OutOfSync, 노드·네트워크 이상을 조사할 때 로드한다. 증상에 맞춰 Kubernetes,
   Grafana Prometheus·Loki, AWS CloudWatch, Argo CD의 증거를 시간축으로 연결해 원인을
-  판정하고 완화책과 근본 해결책을 제시한다.
+  판정하고 완화책과 근본 해결책을 제시한다. 조사는 읽기 전용이며 sync·scale·수정·삭제를
+  실행하지 않는다. 실제 변경 요청은 gitops-change를 쓴다.
 ---
 
 # EKS 장애 조사

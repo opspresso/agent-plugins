@@ -1,11 +1,10 @@
 ---
 name: pr-description
 description: >
-  Pull Request 본문을 쓰거나 이미 올린 PR의 본문을 고칠 때 로드한다. 바꾼 파일을
-  나열하는 대신 해결하려는 문제(why), 머지 후 보장되는 동작(intent), 머지해도
-  되는지 판정하는 기준(acceptance)으로 본문을 구성한다. 한국어 문장이 GitHub에서
-  취소선·기울임으로 깨지지 않는지 확인하는 절차까지 포함한다. 코드 자체를 보는 일은
-  code-review가, 문장의 톤은 engineering-writing이 맡는다.
+  Pull Request 제목·본문을 작성하거나 기존 본문을 개선할 때 쓴다. 변경 근거에서
+  문제·보장 동작·관련 스펙·위험·검증 기준을 정리해 Markdown 초안을 만든다.
+  github MCP가 없으면 제공 자료로 작성한다. 작성 요청만으로 원격 본문을 게시·수정하지
+  않으며 사용자가 요청한 게시 범위만 실행한다. 코드 회귀 검토는 code-review를 쓴다.
 compatibility: >
   devops 플러그인의 github MCP 서버가 연결돼 있으면 저장소 관례와 PR 상태를 직접
   읽는다. 없으면 사용자가 준 정보로 본문 초안만 만든다.

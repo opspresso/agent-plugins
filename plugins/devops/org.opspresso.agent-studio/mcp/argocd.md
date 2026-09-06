@@ -1,5 +1,10 @@
 ---
-description: "Work with Argo CD, the GitOps deployer for the Kubernetes cluster: applications and their resource tree, workload logs, events, clusters and projects — including create, sync and resource actions."
+description: >
+  Inspect Argo CD application health, sync status, revisions, resource trees,
+  logs and events when investigating deployments or GitOps drift. Application
+  create/update/delete, sync and resource actions change the cluster; use only
+  for requested changes, not diagnosis. Durable desired-state changes belong
+  in the GitOps repository.
 ---
 
 # argocd

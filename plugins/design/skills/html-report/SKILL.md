@@ -1,12 +1,10 @@
 ---
 name: html-report
 description: >
-  데이터·메모·조사 결과를 브라우저에서 읽을 리포트로 내보낼 때 로드한다. 외부 파일
-  없이 혼자 열리는 HTML 한 개를 만들고, 편집 지면처럼 여백과 활자로 읽히게 한다. "리포트 만들어줘", "HTML로 뽑아줘", "결과를 보기 좋게 정리해줘"가
-  트리거다. DOCX·PPTX·PDF·HWPX 파일로 건네야 하면 document-authoring이, 차트의 데이터
-  표현 원칙은 tufte-charts가, 화면 구조 탐색은 html-wireframe이, 눌러보는 목업과
-  프로토타입은 html-prototype이, 제품에 들어갈 UI 코드는 frontend-design이, 개념을 처음
-  접하는 사람에게 큰 그림으로 설명하는 지면은 html-explainer가 맡는다.
+  데이터·메모·조사 결과를 HTML 보고서나 브라우저에서 읽는 리포트로 요청할 때 쓴다.
+  산문·표·차트·출처를 외부 의존성 없는 HTML 하나로 구성한다. SaveFile이 있으면 파일로,
+  없으면 HTML 코드로 제공한다. 형식 없는 보고서 파일이나 DOCX·PPTX·PDF·HWPX 요청은
+  document-authoring, 조작하며 원리를 배우는 설명 페이지는 html-explainer를 쓴다.
 compatibility: >
   SaveFile 빌트인이 제시된 런에서는 리포트를 파일로 남기고, 없으면 코드 블록으로 낸다.
   둘 다 같은 HTML 이고 산출 방법만 다르다.

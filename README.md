@@ -85,6 +85,31 @@ prompt carries only the name and description — the body loads at call time
 guidance lives in
 [`plugins/agent-craft/skills/skill-writer`](plugins/agent-craft/skills/skill-writer/SKILL.md).
 
+### Description is the selection contract
+
+Write each description so a model can select the capability without reading
+operator notes, compatibility metadata or another skill first.
+
+| Field | Model visibility | What belongs here |
+|---|---|---|
+| Skill `description` | Available Skills table before selection | User task, output, nearest competing task and essential tool/input conditions |
+| Skill body (`content`) | Returned after an explicit `Skill` call | Detailed workflow and references; cannot rescue a missed selection |
+| MCP extension `description` | Connected MCP Servers table | When to use this server, supported work, consequential limits and write boundaries |
+| MCP extension body (`content`) | Operator-facing only | Setup, deployment and maintenance notes; no model-only instruction should live solely here |
+| Individual MCP tool description and schema | Discovered from the server | Exact arguments and call behavior; not overridden by this repository's extension body |
+
+Put the actual task first. Name an adjacent skill only when it prevents a likely
+collision, rather than repeating the plugin's whole catalog. Keep prerequisites
+that change whether a call can succeed in the description: an XLSX inspection
+needs bytes, and an image edit needs both the builtin and an image id. Describe
+observable limits without copying the full procedure into every run's prompt.
+
+Check descriptions alone against realistic requests and similar out-of-scope
+requests. For example, distinguish a numeric chart from a dependency graph, an
+interactive explanation page from a two-sentence explanation, and an HTML report
+from an unspecified report file. Static validation detects lost frontmatter
+lines; it does not prove that a model selects the right capability.
+
 A skill directory may carry reference files alongside `SKILL.md`. Use them for
 material too large for the body (bulk mapping tables, a full style guide), not
 to split a few dozen lines of body.
@@ -259,6 +284,8 @@ checks that every MCP declaration has exactly one Agent Studio extension documen
 with a description (and no extension is left without `mcp.json`), rejects malformed
 hosts and ports, and reports the private-HTTP exceptions above. Frontmatter checks
 use Agent Studio's flat scalar parsing, including paired quotes and `>-`/`|-`.
+Prose that the parser would silently drop, including a misindented folded
+description, fails validation instead of shortening the routing instruction.
 Standard library only, no network.
 
 `scripts/test_validate.py` pins the checker's own edges — where a limit stops

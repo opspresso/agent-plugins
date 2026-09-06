@@ -69,6 +69,27 @@ class ValidateSkillTest(TestCase):
             validate.check_skill(skill_file)
         self.assertEqual([], validate.problems)
 
+    def test_skill_rejects_description_lines_lost_by_runtime(self) -> None:
+        for description in (
+            ">\n  First line\nUnindented routing boundary",
+            "First line\n  Ignored plain continuation",
+            ">\n  First line\n\n  Ignored after blank line",
+        ):
+            with self.subTest(description=description), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                skill_file = self.write_skill(Path(temporary), description=description)
+                validate.check_skill(skill_file)
+                self.assertTrue(any("ignored by Agent Studio" in p for p in validate.problems))
+
+    def test_frontmatter_allows_metadata_and_comments(self) -> None:
+        with TemporaryDirectory() as temporary:
+            skill_file = self.write_skill(
+                Path(temporary), description=">-\n  Complete description",
+                extra="# Operator comment\nmetadata:\n  owner: team\n",
+            )
+            validate.check_skill(skill_file)
+        self.assertEqual([], validate.problems)
+
     def test_skill_name_rejects_invalid_boundaries(self) -> None:
         invalid_names = ["", "-sample", "sample-", "sample--skill", "Sample", "a" * 65]
         with TemporaryDirectory() as temporary:
@@ -84,7 +105,7 @@ class ValidateSkillTest(TestCase):
                     self.assertTrue(validate.problems)
 
     def test_skill_rejects_empty_description(self) -> None:
-        for description in ("", '""', "''", ">-", "|-"):
+        for description in ("", '""', "''", '"   "', ">-", "|-"):
             with self.subTest(description=description), TemporaryDirectory() as temporary:
                 validate.problems.clear()
                 skill_file = self.write_skill(Path(temporary), description=description)
@@ -220,6 +241,17 @@ class ValidateManifestTest(TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(data))
         return path
+
+    def test_mcp_rejects_description_lines_lost_by_runtime(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            extension = root / "org.opspresso.agent-studio" / "mcp"
+            extension.mkdir(parents=True)
+            (extension / "server.md").write_text(
+                "---\ndescription: >\n  Search data\nDo not write\n---\nNotes\n"
+            )
+            validate.check_mcp_docs(root, {"server"})
+        self.assertTrue(any("ignored by Agent Studio" in p for p in validate.problems))
 
     def test_plugin_rejects_non_object_and_invalid_field_types(self) -> None:
         with TemporaryDirectory() as temporary:
