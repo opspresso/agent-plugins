@@ -1,9 +1,8 @@
 ---
 description: >
   Remember and recall this project's durable knowledge — decisions, conventions
-  and setup from earlier sessions — and search the shared documentation library.
-  Call recall before asking the user to re-explain anything, and remember a
-  decision or convention as soon as it lands.
+  and setup from earlier sessions. Call recall before asking the user to
+  re-explain anything, and remember a decision or convention as soon as it lands.
 ---
 
 # memory
@@ -26,7 +25,7 @@ chosen by the model, and a model that can name its own tenant can read another
 project's memories by asking — including one talked into it by text it just
 retrieved. The platform supplies `X-Tenant-Id` outside the model's control.
 
-Set `X-Memory-Tenant` only to name the bucket yourself — for instance so
+Set `X-Memory-Tenant` only to name the tenant yourself — for instance so
 several projects share one memory. It wins over the stamped project name. A
 request carrying neither header may still discover the server and list its
 tools, so **Test connection** and the catalog probe work without a project. The
@@ -46,36 +45,21 @@ first, with the newest user turn, and adds the answer to the system prompt.
 That option asks only the servers the version has bound — bind this one, or
 the run warns on every turn that nothing could answer.
 
-## The documentation library
-
-`search_docs` answers from a Bedrock Knowledge Base rather than from memories,
-and the two are not the same store. Memories are what a run decided; the library
-is what someone wrote down — documentation, runbooks, conventions — uploaded to
-`s3://agent-studio-kb` and indexed by the knowledge base's own ingestion.
-
-**It is shared across projects.** A tenant header is still required, but it does
-not filter documents: two projects searching the same phrase get the same
-excerpts. Memories remain strictly per-tenant.
-
-Nothing ingests on a schedule. A document added to the bucket is invisible to
-`search_docs` until an ingestion job runs, and the tool is offered at all only
-where `KNOWLEDGE_BASE_ID` is set — alpha today, since prod has no knowledge base
-of its own yet.
-
 ## Storage
 
-S3 only. S3 Vectors (`agent-studio-vector/memories`) holds the memories; ordinary
-S3 (`agent-studio-memory`) holds access counters. Embeddings come from Bedrock
-Titan v2 via the pod's own role — no key to rotate.
+PostgreSQL with pgvector stores each memory, its embedding and its access count
+in one row. `DATABASE_URL` is required and the server creates its schema at
+startup. Embeddings come from Bedrock Titan v2 through the pod's own role.
+
+The server does not provide document search. Use Agent Memory when a project
+needs indexed documents or RAG.
 
 ## Operating notes
 
-- Access counters are approximate: a pod that dies before its next flush loses up
-  to 30s of them. They only affect ranking.
+- Access counters are updated atomically in PostgreSQL.
 - Nothing expires on its own. `forget` is the only removal.
-- The vector index's dimension, distance metric and non-filterable metadata keys
-  are fixed at creation. Changing the embedding model means a new index and
-  re-embedding everything — and recalibrating `RECALL_MIN_SIMILARITY`, which is
-  tuned to Titan's similarity scale.
+- One database cannot mix embedding dimensions. Changing the embedding model
+  requires clearing or re-embedding existing memories and recalibrating
+  `RECALL_MIN_SIMILARITY`, which is tuned to Titan's similarity scale.
 
 Source and full design notes: https://github.com/opspresso/mcp-memory
