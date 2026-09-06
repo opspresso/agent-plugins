@@ -45,8 +45,8 @@ PLUGIN_NAME = re.compile(r"^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$")
 SKILL_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 MCP_CWD = re.compile(r"^(?:\./|\$\{PLUGIN_ROOT\}(?:/|$)|\$\{PLUGIN_DATA\}(?:/|$))")
 
-FRONTMATTER = re.compile(r"\A---\n(.*?)\n---\n", re.S)
-KEY = re.compile(r"^([A-Za-z0-9_-]+):\s*(.*)$")
+FRONTMATTER = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n?", re.S)
+KEY = re.compile(r"^([A-Za-z_-]+):\s*(.*)$")
 
 MAX_DESCRIPTION = 1024
 MAX_COMPATIBILITY = 500
@@ -82,22 +82,28 @@ def deployment_exception(where: Path, message: str) -> None:
 def parse_frontmatter(text: str) -> dict[str, str] | None:
     """The flat `key: value` subset every client here actually reads.
 
-    Folded scalars (`>` and `|`) are joined into one line, which is what a
-    description written across three lines is. Nested mappings are returned as
-    the empty string — only `metadata` may be one, and nothing checks its shape.
+    Match Agent Studio's paired quotes, lowercase keys and folded scalars
+    (`>`, `|`, `>-`, `|-`). Nested mapping entries are not consumed.
     """
     match = FRONTMATTER.match(text)
     if not match:
         return None
     fields: dict[str, str] = {}
-    key: str | None = None
-    for line in match.group(1).split("\n"):
-        header = KEY.match(line)
-        if header and not line.startswith((" ", "\t")):
-            key = header.group(1)
-            fields[key] = header.group(2).strip().lstrip(">|").strip()
-        elif key and line.strip():
-            fields[key] = f"{fields[key]} {line.strip()}".strip()
+    lines = re.split(r"\r?\n", match.group(1))
+    index = 0
+    while index < len(lines):
+        header = KEY.match(lines[index].rstrip())
+        index += 1
+        if not header:
+            continue
+        value = re.sub(r"^([\"'])([\s\S]*)\1$", r"\2", header.group(2))
+        if value in {">", "|", ">-", "|-"}:
+            folded = []
+            while index < len(lines) and re.match(r"^\s+\S", lines[index]):
+                folded.append(lines[index].strip())
+                index += 1
+            value = " ".join(folded)
+        fields[header.group(1).lower()] = value
     return fields
 
 
@@ -220,8 +226,16 @@ def check_mcp(manifest: Path) -> None:
             if not isinstance(url, str):
                 fail(manifest, f"{name}: url must be a string")
             else:
-                parsed = urlsplit(url)
-                if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+                try:
+                    parsed = urlsplit(url)
+                    # urllib validates numeric range and spelling on port access.
+                    parsed.port
+                except ValueError:
+                    fail(manifest, f"{name}: url has an invalid host or port")
+                    parsed = None
+                if parsed is None:
+                    pass
+                elif parsed.scheme not in {"http", "https"} or not parsed.hostname:
                     fail(manifest, f"{name}: url must be an absolute HTTP or HTTPS URL")
                 elif parsed.username or parsed.password or parsed.fragment:
                     fail(manifest, f"{name}: url must not contain user information or a fragment")
@@ -247,7 +261,12 @@ def check_mcp(manifest: Path) -> None:
         for extra in sorted(set(server) - allowed):
             fail(manifest, f"{name}: {extra!r} is not allowed on a {kind} server")
 
-    extension = manifest.parent / "org.opspresso.agent-studio" / "mcp"
+    check_mcp_docs(manifest.parent, set(servers))
+
+
+def check_mcp_docs(plugin: Path, servers: set[str]) -> None:
+    manifest = plugin / "mcp.json"
+    extension = plugin / "org.opspresso.agent-studio" / "mcp"
     docs = {path.stem: path for path in extension.glob("*.md")} if extension.is_dir() else {}
     for name in sorted(servers):
         doc = docs.get(name)
@@ -369,6 +388,8 @@ def main() -> int:
             fail(plugin, "plugin.json is required")
         if (plugin / "mcp.json").is_file():
             check_mcp(plugin / "mcp.json")
+        else:
+            check_mcp_docs(plugin, set())
         # One level only: the spec tells clients not to search deeper, so a skill
         # nested further down would pass a check nothing would ever load.
         for child in sorted((plugin / "skills").glob("*")) if (plugin / "skills").is_dir() else []:

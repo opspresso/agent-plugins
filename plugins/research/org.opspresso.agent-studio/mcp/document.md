@@ -3,8 +3,9 @@ description: >
   Read office documents — DOCX, PPTX, XLSX, HWP, HWPX, ODT/ODS/ODP, RTF — as
   Markdown that keeps their headings, tables and lists; inspect a document's
   structure or an XLSX workbook's formulas without executing anything; and
-  create new XLSX, DOCX, PPTX, PDF or HWPX files the user receives. PDFs, plain
-  text and web pages are read by Agent Studio itself, not here.
+  create new XLSX, DOCX, PPTX, PDF or HWPX files the user receives. Inspection
+  needs original bytes, not extracted text or a file name. PDFs, plain text
+  and web pages are read by Agent Studio itself, not here.
 ---
 
 # document
@@ -26,6 +27,28 @@ workbook from named rows and explicit formula cells. `render_document` takes
 Markdown and returns a generated `.docx`, `.pptx`, `.pdf` or `.hwpx`.
 Both renderers return the file **as bytes** — Agent Studio stores it as an
 artifact and hands it to the user.
+
+## Agent Studio's input and result boundaries
+
+Binding this server lets the platform pass attached office files to
+`read_document` and show their extracted text to the model. `FetchUrl`, when
+enabled, uses the same extraction path. Neither path exposes original bytes or
+a reusable file-input handle to the model. An ordinary uploaded XLSX therefore
+supports value extraction, but does not give the model the `content` needed
+for `inspect_spreadsheet`. Generated artifacts likewise return a delivery
+notice, not bytes the model can pass into another call. Image ids are not
+base64 `assets`.
+
+Markdown and row-based generation work without original file access. Inspection,
+image embedding and generated-file reinspection require a separate byte-input
+path; prompting the model to invent base64 cannot supply it.
+
+When an MCP result has non-empty `content`, Agent Studio forwards those blocks
+and does not also forward `structuredContent`. The renderer text reports package
+validation and the absence of visual validation, but not every structured field.
+Skills must check the visible result and leave unavailable checks unverified.
+Complete `omissions`, `counts` and `validation` metadata require client support
+or a server text representation before a model can inspect them.
 
 ## What it deliberately does not do
 
@@ -53,6 +76,9 @@ Consequences worth knowing when binding it:
 
 - **No AWS role needed any more.** `pod-role--mcp-document` and its S3 grant
   were for the upload path and can be retired.
+- Direct inputs have a 12MiB decoded limit and a 16MiB HTTP body limit;
+  base64 overhead counts toward the latter. Reads are capped at 90,000
+  characters. A successful partial read is not the whole document.
 - A simple spreadsheet read returns cached values, never formulas, one heading
   per visible sheet, and cuts on a whole row so columns never come apart.
   `inspect_spreadsheet` is the formula-aware path: hidden sheets require opt-in,
@@ -78,7 +104,10 @@ Consequences worth knowing when binding it:
   table merges, whether a paragraph is a heading or just bold, how deep a list
   nests, where a picture sat. It returns previews rather than prose, so
   `read_document` is still what to call for the words. `from` and `to` page
-  through a long document; at most 500 blocks come back per call.
+  through a long document; indices are zero-based and `to` is inclusive.
+  At most 500 blocks come back per call. Continue from the returned `to + 1`,
+  using the returned total block count; these previews do not extend the
+  prose reader's limit.
 - A deck comes back in the order `presentation.xml` states rather than the order
   its slides were named, numbered, with each slide's title as a heading; speaker
   notes are left out, being the presenter's script rather than the slide. Shape

@@ -60,6 +60,18 @@ render_document(format="pptx", profile="executive", content="<Markdown 본문>",
 
 결과 파일이 10MB 를 넘으면 거부된다. 그때는 문서를 나눈다.
 
+### Agent Studio에서 실제로 전달되는 것
+
+`render_document`의 Markdown은 직접 작성해 넘길 수 있다. 파일 첨부와 `FetchUrl`의
+office 문서 읽기는 플랫폼이 `read_document`에 bytes를 전달하고 추출 텍스트를 모델에게
+준다. `FetchUrl`은 해당 빌트인이 제시된 런에서만 쓴다.
+
+추출 텍스트·파일명·이미지 id는 원본 base64가 아니다. 현재 런타임에는 첨부·생성 파일을
+검사 도구의 `content`나 이미지 `assets`로 다시 전달하는 경로가 없다. 실제 bytes를
+제공하는 도구가 확인되지 않았으면 base64를 만들어내거나 파일명·URL·`img_1`로 대신하지
+않는다. 이미지 없이 문서를 작성할 수 있으면 진행하고, 원본 구조 검사나 이미지 임베드가
+필수이면 현재 접근 한계를 알린다. 파일을 다시 첨부하는 것만으로 이 제한이 풀리지는 않는다.
+
 읽기는 같은 서버의 `read_document` 다. DOCX·PPTX·XLSX·HWP·HWPX·ODF·RTF 의 본문을
 **문서의 모양을 지킨 마크다운**으로 추출한다 — 제목은 레벨을 가진 `#`, 표는 정렬까지
 살아있는 GFM 표, 목록은 순서와 깊이, 링크는 주소, 그림은 있었다는 표시. PDF·일반
@@ -70,8 +82,11 @@ render_document(format="pptx", profile="executive", content="<Markdown 본문>",
 를 쓴다. `from`·`to` 로 페이징하며 호출당 최대 500 블록이다. XLSX 는 이름을 대며
 거절한다 — 통합 문서의 구조는 `inspect_spreadsheet` 의 질문이다.
 이 결과는 **내용 추출물**이지 원본 보존 편집 모델이 아니다. 헤더·푸터·각주·주석·추적
-변경·발표자 노트·차트·매크로 등이 빠질 수 있으며 `structuredContent.omissions` 와
-`complete` 로 범위를 확인한다. `omissions` 는 **정적 목록 + 관측된 손실**이다 — 앞부분은
+변경·발표자 노트·차트·매크로 등이 빠질 수 있다. 서버는 `structuredContent.omissions` 와
+`complete` 를 반환하지만 Agent Studio는 `content`가 있으면 별도 `structuredContent`를
+모델에게 전달하지 않는다. 실제 받은 텍스트의 잘림·누락 안내를 확인하고, 메타데이터가
+보이지 않는 것을 완전성의 증거로 삼지 않는다. 전달된 경우 `omissions` 는
+**정적 목록 + 관측된 손실**이다 — 앞부분은
 그 포맷에서 원래 안 읽는 것, 뒷부분은 *이 문서가* 실제로 잃은 것(병합 셀, 표 안의 그림,
 슬라이드 이름과 순서가 어긋난 덱). HWP 5.x 는 제목 레벨을 복원하지 않고 그렇게 말한다 —
 레코드 오프셋이 스펙 대조가 안 돼 있어, 틀리면 확신에 찬 오답을 내기 때문이다. 추출물을 고쳐 다시 렌더하면 새 문서를 만드는 것이며 원본
@@ -262,8 +277,9 @@ profile 별 기본 구조:
   "도움이 되셨기를", AI 자기 언급. 사람에게 건네는 파일에는 들어갈 자리가 없다.
 
 표준 기술 용어(API·토큰·파이프라인·롤백)는 원어로 둔다. "첫째·둘째" 열거, "~것이다", "~를 통해"
-는 사람도 흔히 쓰므로 남발만 손댄다. 전체 패턴과 전후 예시는 이 저장소의
-`plugins/workspace/skills/korean-humanize/ai-tell-catalog.md` 가 source 다.
+는 사람도 흔히 쓰므로 남발만 손댄다. 상세 패턴이 필요하고 `korean-humanize`가 연결돼
+있으면 `Skill(skill_name="korean-humanize", file_path="ai-tell-catalog.md")`로 읽는다.
+없으면 위 규칙으로 진행하고 저장소 경로를 `file_path`에 넣지 않는다.
 
 ## 렌더링 전후 검수
 
@@ -289,14 +305,16 @@ profile 별 기본 구조:
 - "A가 아니라 B" 대구와 "결론적으로·다음과 같은" 류 상투구가 남아 있지 않은가
 - 연결어미 뒤 쉼표, 이모지, 본문 볼드, "X: Y" 헤딩이 없는가
 
-호출 뒤에는 `structuredContent.validation` 을 확인한다. `structure=passed` 와
-`content=reopened` 는 패키지·내용 재열기 검증이고 `visual=not_run` 은 시각 검수가 아직
-없다는 뜻이다. 페이지·슬라이드 수와 `continuations` 경고도 함께 본다. 내용
-보존이 중요하면 생성 파일을 `read_document` 로 한 번 읽어 제목·표·핵심 수치가
-남았는지 확인한다 — 제목은 `#` 레벨로, 표는 GFM 표로 돌아오므로 구조가 무너졌는지
-바로 보인다. 표의 병합·헤더 행처럼 마크다운이 못 말하는 것까지 확인해야 하면
-`inspect_document` 로 한 번 더 본다. 이 왕복은 **내용 검수**일 뿐 시각 검수로 간주하지
-않는다.
+호출 뒤에는 실제 응답의 파일 전달 표시, 페이지·슬라이드 수, 검증·분할 안내를 확인한다.
+`Package validation passed`는 서버의 패키지 검증이며 화면 배치 검수가 아니다.
+`structuredContent.validation`까지 전달된 환경이면 `structure=passed`,
+`content=reopened`, `visual=not_run`과 `continuations`도 확인한다. 보이지 않는 필드를
+확인했다고 쓰지 않는다.
+
+생성 파일의 bytes를 다시 전달할 수 있는 환경에서만 Office 파일을 `read_document`로
+재열어 제목·표·핵심 수치를 대조하고, 필요하면 `inspect_document`로 구조를 본다.
+PDF는 이 두 도구가 받지 않는다. 현재 Agent Studio의 파일 전달 표시는 재입력용 handle이
+아니므로 이 왕복을 보장하지 않는다. 수행하지 못한 재열기·시각 검수는 미실행으로 밝힌다.
 
 ## 하지 않는 것
 

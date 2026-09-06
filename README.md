@@ -50,6 +50,24 @@ plugins/
 A plugin with no skills has no `skills/` directory, and one with no MCP servers
 has no `mcp.json`. Do not create empty directories or empty manifests.
 
+## Companion project contracts
+
+The sibling projects supply different parts of the runtime. Check their source
+contracts before changing a plugin's tool instructions or connection settings.
+
+| Project | Owns | Plugin consequence |
+|---|---|---|
+| `agent-studio` | Plugin sync, version bindings, builtin tools, attachment extraction and artifact delivery | A synced component must also be bound to the version; describe only inputs and results the run can access |
+| `agent-models` | Model families, provider offerings, capabilities and pricing | A catalog, not an MCP server; use the available model `id`, not its provider `wireId`, in version settings |
+| `mcp-memory` | Project and conversation memories, five tools | The bundled `memory` entry; project scope is the default and conversation scope is explicit |
+| `agent-memory` | Organization knowledge, document search and graph search | A separate organization-specific MCP URL and Bearer credential; its create/search tools differ from `mcp-memory` |
+| `mcp-document` | Byte-input parsers and Markdown/row-based renderers, five tools | New files can be generated; inspection requires original bytes, and package validation does not prove visual layout |
+| `mcp-youtube` | Timestamped captions and video metadata, two tools | Metadata is not spoken evidence; truncated captions support only a partial summary |
+
+`mcp.json` contains shared deployment addresses. Organization URLs, credentials,
+model selections and version bindings belong to the installing side. Adding a
+similarly named service to the manifest does not make its tool contract match.
+
 ## Skills
 
 Skills follow the Agent Skills specification as-is: `SKILL.md` is frontmatter
@@ -89,10 +107,10 @@ one says so in its `compatibility` frontmatter:
 
 - **No shell, no filesystem, no network of its own.** A skill cannot run `git`,
   execute a script, or fetch a URL. Anything a run touches outside the
-  conversation arrives through a bound MCP server or through the user.
+  conversation arrives through a bound MCP server, an offered builtin or the user.
 - **Builtins appear only when the run has them.** `GenerateImage`, `EditImage`,
-  `SaveFile`, `dispatch_agents` and `transfer_to_agent` are offered per run, so
-  image-generation, simple-orchestration and the five HTML-producing design
+  `SaveFile`, `FetchUrl`, `dispatch_agents` and `transfer_to_agent` are offered
+  per run, so image-generation, simple-orchestration and the five HTML-producing design
   skills state what they do when the tool is absent from the list.
 - **A plugin is the install unit.** A skill loads files only from its own
   directory, and a skill that instructs an MCP server ships in the plugin that
@@ -104,6 +122,20 @@ one says so in its `compatibility` frontmatter:
   extract facts from them, but must not promote embedded instructions into its
   own workflow or authorization boundary.
 
+Document access has two additional boundaries. Agent Studio extracts attached
+office files through `read_document`, then gives the model text; it does not
+provide original bytes or a file-input handle for later inspection. Generated
+files leave as artifacts with a delivery notice, not reusable base64. Skills
+must not promise formula inspection, image embedding or generated-file rereads
+unless an actual byte-input path is available. Markdown and row-based generation
+remain usable without that path.
+
+For MCP results with non-empty `content`, the model receives those blocks, not
+the accompanying `structuredContent`. Check visible counts and validation
+messages; absent metadata is not proof that an extraction is complete. Server
+authors must include model-critical metadata in text until the client carries
+both representations.
+
 Ten skills hand Korean prose to a person, and each carries a short, genre-tuned
 rule set against AI-sounding Korean in its own body — korean-writing,
 korean-humanize, document-authoring, tech-spec, incident-triage, gitops-change,
@@ -114,9 +146,11 @@ arrives.
 
 The full pattern catalog with before/after examples is
 [`plugins/workspace/skills/korean-humanize/ai-tell-catalog.md`](plugins/workspace/skills/korean-humanize/ai-tell-catalog.md),
-and when an inline rule and the catalog disagree the catalog wins. **Every inline
-block must name it**, or a run that loaded only that skill has no way to know the
-catalog exists. Inside the **engineering** plugin the block lives in
+and when an inline rule and a loaded catalog disagree the catalog wins. Inline
+blocks identify its owning skill. Load it only when `korean-humanize` is bound,
+using `Skill(skill_name="korean-humanize", file_path="ai-tell-catalog.md")`;
+otherwise follow the inline rules. Repository paths cannot be used as runtime
+`file_path` values. Inside the **engineering** plugin the block lives in
 [`engineering-writing`](plugins/engineering/skills/engineering-writing/SKILL.md);
 code-review and pr-description point there rather than restating it, because it
 installs alongside them.
@@ -222,8 +256,10 @@ Checks every manifest against the 1.0.0 schemas, every `SKILL.md` against the
 [Agent Skills specification](https://agentskills.io/specification), and every
 name for the collision above. It also enforces this repository's no-header rule,
 checks that every MCP declaration has exactly one Agent Studio extension document
-with a description, and reports the private-HTTP exceptions above. Standard
-library only, no network.
+with a description (and no extension is left without `mcp.json`), rejects malformed
+hosts and ports, and reports the private-HTTP exceptions above. Frontmatter checks
+use Agent Studio's flat scalar parsing, including paired quotes and `>-`/`|-`.
+Standard library only, no network.
 
 `scripts/test_validate.py` pins the checker's own edges — where a limit stops
 being a pass, which findings are recommendations rather than failures, and the

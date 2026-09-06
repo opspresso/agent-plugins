@@ -218,7 +218,9 @@ description: >
   본문 볼드를 쓰지 않는다. 별표는 ⑯ 표에서만 쓴다.
 - 간지·십신·용신 같은 명리 용어는 한자 병기를 첫 등장 때 한 번만 한다.
 
-전체 패턴 목록은 이 저장소의 `plugins/workspace/skills/korean-humanize/ai-tell-catalog.md`.
+기본 작성은 위 인라인 규칙으로 충분하다. `korean-humanize`가 현재 연결돼 있고 상세
+패턴·예시가 필요할 때만 `Skill(skill_name="korean-humanize", file_path="ai-tell-catalog.md")`로
+카탈로그를 읽는다. 연결되지 않았으면 저장소 경로로 찾지 않고 인라인 규칙을 따른다.
 
 ## 예외
 

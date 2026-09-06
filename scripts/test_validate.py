@@ -7,6 +7,7 @@ from io import StringIO
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest import TestCase, main
+from unittest.mock import patch
 
 import validate
 
@@ -41,6 +42,33 @@ class ValidateSkillTest(TestCase):
 
         self.assertEqual("First line second line", fields["description"])
 
+    def test_frontmatter_matches_studio_scalar_boundaries(self) -> None:
+        for marker in (">", "|", ">-", "|-"):
+            with self.subTest(marker=marker):
+                fields = validate.parse_frontmatter(
+                    f"---\r\nNAME: 'sample'\r\ndescription: {marker}\r\n"
+                    "  First line\r\n  second line\r\nmetadata:\r\n"
+                    "  owner: team\r\n---"
+                )
+                self.assertEqual(
+                    {"name": "sample", "description": "First line second line", "metadata": ""},
+                    fields,
+                )
+
+    def test_frontmatter_preserves_unpaired_quotes_and_plain_values(self) -> None:
+        for value in ("'til dawn", "\"mismatched'", "> plain value"):
+            with self.subTest(value=value):
+                fields = validate.parse_frontmatter(
+                    f"---\nname: sample\ndescription: {value}\n  ignored continuation\n---\n"
+                )
+                self.assertEqual(value, fields["description"])
+
+    def test_quoted_skill_name_is_accepted(self) -> None:
+        with TemporaryDirectory() as temporary:
+            skill_file = self.write_skill(Path(temporary), name='"sample"')
+            validate.check_skill(skill_file)
+        self.assertEqual([], validate.problems)
+
     def test_skill_name_rejects_invalid_boundaries(self) -> None:
         invalid_names = ["", "-sample", "sample-", "sample--skill", "Sample", "a" * 65]
         with TemporaryDirectory() as temporary:
@@ -56,13 +84,13 @@ class ValidateSkillTest(TestCase):
                     self.assertTrue(validate.problems)
 
     def test_skill_rejects_empty_description(self) -> None:
-        with TemporaryDirectory() as temporary:
-            skill_file = self.write_skill(Path(temporary), description="")
-
-            validate.check_skill(skill_file)
-
-        self.assertEqual(1, len(validate.problems))
-        self.assertIn("must not be empty", validate.problems[0])
+        for description in ("", '""', "''", ">-", "|-"):
+            with self.subTest(description=description), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                skill_file = self.write_skill(Path(temporary), description=description)
+                validate.check_skill(skill_file)
+                self.assertEqual(1, len(validate.problems))
+                self.assertIn("must not be empty", validate.problems[0])
 
     def test_skill_description_accepts_limit_and_rejects_overflow(self) -> None:
         with TemporaryDirectory() as temporary:
@@ -249,6 +277,63 @@ class ValidateManifestTest(TestCase):
                     manifest = self.write_json(root / str(index) / "mcp.json", data)
                     validate.check_mcp(manifest)
                     self.assertTrue(any(expected in problem for problem in validate.problems))
+
+    def test_mcp_reports_malformed_urls_and_continues_validation(self) -> None:
+        for url in ("https://[broken", "https://example.com:bad/mcp", "https://example.com:65536/mcp"):
+            with self.subTest(url=url), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                root = Path(temporary)
+                manifest = self.write_json(
+                    root / "mcp.json",
+                    {
+                        "$schema": validate.MCP_SCHEMA,
+                        "mcpServers": {
+                            "server": {"type": "streamable-http", "url": url},
+                            "second": [],
+                        },
+                    },
+                )
+                validate.check_mcp(manifest)
+                self.assertTrue(any("invalid host or port" in p for p in validate.problems))
+                self.assertTrue(any("second: server must be an object" in p for p in validate.problems))
+
+    def test_mcp_rejects_quoted_empty_extension_description(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            manifest = self.write_json(
+                root / "mcp.json",
+                {
+                    "$schema": validate.MCP_SCHEMA,
+                    "mcpServers": {"server": {"type": "streamable-http", "url": "https://example.com/mcp"}},
+                },
+            )
+            extension = root / "org.opspresso.agent-studio" / "mcp"
+            extension.mkdir(parents=True)
+            (extension / "server.md").write_text('---\ndescription: ""\n---\nNotes\n')
+            validate.check_mcp(manifest)
+
+        self.assertEqual(1, len(validate.problems))
+        self.assertIn("description is required", validate.problems[0])
+
+    def test_main_rejects_extension_without_mcp_manifest(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            plugin = root / "plugins" / "sample"
+            self.write_json(
+                plugin / "plugin.json",
+                {"$schema": validate.PLUGIN_SCHEMA, "name": "sample"},
+            )
+            extension = plugin / "org.opspresso.agent-studio" / "mcp"
+            extension.mkdir(parents=True)
+            (extension / "server.md").write_text("---\ndescription: Server\n---\nNotes\n")
+
+            with patch.object(validate, "__file__", str(root / "scripts" / "validate.py")):
+                with redirect_stdout(StringIO()):
+                    result = validate.main()
+
+        self.assertEqual(1, result)
+        self.assertEqual(1, len(validate.problems))
+        self.assertIn("no matching 'server' server in mcp.json", validate.problems[0])
 
     def test_unique_rejects_skill_and_mcp_name_collision(self) -> None:
         with TemporaryDirectory() as temporary:

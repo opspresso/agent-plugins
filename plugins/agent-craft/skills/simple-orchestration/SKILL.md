@@ -102,6 +102,7 @@ compatibility: >
 - "단순히 A가 아니라 B" 대구, "~것으로 보입니다" 남발, "-고,"·"-지만," 뒤 쉼표를 쓰지
   않는다. 확인된 것은 단언하고 확인 못 한 것은 그렇다고 적는다.
 
-전체 패턴 목록과 전후 예시는 이 저장소의
-`plugins/workspace/skills/korean-humanize/ai-tell-catalog.md` 가 source 다. 인라인 규칙과
-카탈로그가 어긋나면 카탈로그가 이긴다.
+기본 작성은 위 인라인 규칙으로 충분하다. `korean-humanize`가 현재 연결돼 있고 상세
+패턴·예시가 필요할 때만 `Skill(skill_name="korean-humanize", file_path="ai-tell-catalog.md")`로
+카탈로그를 읽는다. 연결되지 않았으면 저장소 경로로 찾지 않고 인라인 규칙을 따른다.
+읽은 카탈로그와 인라인 규칙이 어긋나면 카탈로그가 이긴다.

@@ -80,9 +80,10 @@ description: >
 - **참조는 텍스트가 아니라 링크로.** 이슈 번호와 문서 이름을 적을 때 실제 링크를 건다.
 - **연결어미 뒤 쉼표를 뺀다.** "-고,", "-지만,", "-어서,"는 쉼표 없이 잇는다.
 
-전체 패턴 목록과 전후 예시는 이 저장소의
-`plugins/workspace/skills/korean-humanize/ai-tell-catalog.md` 가 source 다. 인라인 규칙과
-카탈로그가 어긋나면 카탈로그가 이긴다.
+기본 작성은 위 인라인 규칙으로 충분하다. `korean-humanize`가 현재 연결돼 있고 상세
+패턴·예시가 필요할 때만 `Skill(skill_name="korean-humanize", file_path="ai-tell-catalog.md")`로
+카탈로그를 읽는다. 연결되지 않았으면 저장소 경로로 찾지 않고 인라인 규칙을 따른다.
+읽은 카탈로그와 인라인 규칙이 어긋나면 카탈로그가 이긴다.
 
 ## 근거
 

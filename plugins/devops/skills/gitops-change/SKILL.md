@@ -94,9 +94,10 @@ apps/<name>.yaml               # ApplicationSet (새 앱을 추가할 때)
 - 이모지, 볼드 강조, "X: Y" 콜론 부제, "다음은 변경 내용입니다" 같은 챗봇 문구를 넣지
   않는다. 위 네 항목의 라벨과 백틱만 서식이다.
 
-전체 패턴 목록과 전후 예시는 이 저장소의
-`plugins/workspace/skills/korean-humanize/ai-tell-catalog.md` 가 source 다. 인라인 규칙과
-카탈로그가 어긋나면 카탈로그가 이긴다.
+기본 작성은 위 인라인 규칙으로 충분하다. `korean-humanize`가 현재 연결돼 있고 상세
+패턴·예시가 필요할 때만 `Skill(skill_name="korean-humanize", file_path="ai-tell-catalog.md")`로
+카탈로그를 읽는다. 연결되지 않았으면 저장소 경로로 찾지 않고 인라인 규칙을 따른다.
+읽은 카탈로그와 인라인 규칙이 어긋나면 카탈로그가 이긴다.
 
 ## 반영 확인
 

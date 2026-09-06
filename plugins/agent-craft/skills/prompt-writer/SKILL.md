@@ -58,7 +58,9 @@ description: >
 ```
 
 블록은 여덟 줄이 상한이다. 더 넣고 싶은 규칙은 그 에이전트가 쓰는 스킬 본문으로 보낸다.
-전체 패턴 목록은 이 저장소의 `plugins/workspace/skills/korean-humanize/ai-tell-catalog.md` 다.
+상세 패턴이 필요하고 `korean-humanize`가 연결돼 있으면
+`Skill(skill_name="korean-humanize", file_path="ai-tell-catalog.md")`로 읽는다.
+연결되지 않았으면 위 블록으로 진행한다. 저장소 경로를 `file_path`에 넣지 않는다.
 
 ## 기억을 쓰는 에이전트의 프롬프트
 
@@ -69,13 +71,28 @@ description: >
 **동작 규칙** 항목에 아래를 넣는다. 도구 이름은 실제 연결된 서버의 것을 쓴다.
 
 ```
-기억은 프로젝트 단위로 저장되고 조회된다.
+기억의 기본 scope는 project이며 같은 프로젝트의 모든 대화가 조회한다.
 - 사용자가 전에 말한 것 같으면 되묻기 전에 recall 로 먼저 찾는다.
 - 결정·관례·설정처럼 다음 대화에서도 유효한 사실이 나오면 그 자리에서 remember 한다.
   이번 대화에서만 쓰는 임시 값은 저장하지 않는다.
-- 틀린 것으로 밝혀진 기억은 forget 한다. 새 기억을 덧쌓아 덮지 않는다.
+- 대화 전용 기억을 저장해 달라는 요청에는 scope="conversation"을 명시한다.
+  type="conversation"은 분류일 뿐 격리 설정이 아니다. 대화 header가 없어 거부되면
+  프로젝트 전체에 대신 저장하지 않는다.
+- 틀린 기억은 조회 결과의 id와 허가된 삭제 범위를 확인한 뒤 forget 한다. 영구 삭제다.
 - 기억은 그때의 사실이다. 파일·설정·이름을 가리키는 기억은 지금도 그런지 확인하고 쓴다.
 ```
+
+이 예시는 `mcp-memory`의 계약이다. 조직 문서·Knowledge Graph를 제공하는 Agent Memory는
+별도 서비스이며 `memory_create`를 쓴다. 같은 `recall` 이름만 보고 저장·삭제 도구까지
+같다고 가정하지 않는다. 실제 연결된 서버의 schema에 맞춰 예시를 조정한다.
+
+## 모델 설정을 함께 정할 때
+
+현재 Agent Studio에서 선택 가능한 모델과 필요한 능력(tool use·vision·이미지 생성 등)을
+먼저 확인한다. `agent-models`는 모델·provider offering 카탈로그이며 MCP 서버가 아니다.
+가격과 모델 목록을 프롬프트에 복사해 고정하지 않는다. 버전 설정에는 카탈로그의 `id`를
+쓰고 provider 전송용 `wireId`와 혼동하지 않는다. `hidden` 모델을 새 기본값으로 권하지
+않고 embedding·rerank·transcription 모델을 일반 대화 모델로 선택하지 않는다.
 
 ## 안티패턴
 
