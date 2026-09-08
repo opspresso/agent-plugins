@@ -40,11 +40,11 @@ plugins/
 | Plugin | Skills | MCP servers |
 |---|---|---|
 | **devops** — investigate the cluster, change it through GitOps | gitops-change, incident-triage | argocd, cloudwatch, grafana, kubernetes, github |
-| **research** — bring in material the model cannot reach, and write documents back out | document-authoring, spreadsheet-authoring | brave-search, youtube, document, aws-knowledge |
+| **research** — bring in material the model cannot reach, and write documents back out | document-authoring, spreadsheet-authoring | brave-search, aws-knowledge |
 | **workspace** — write what moves around the company | korean-writing, korean-humanize, tech-spec | notion |
 | **design** — build what a person will look at | html-wireframe, html-prototype, html-explainer, frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
 | **engineering** — get a change reviewed and out the door | code-review, pr-description, engineering-writing | — |
-| **agent-craft** — build agents and their interfaces | prompt-writer, skill-writer, mcp-writer, simple-orchestration, structured-output | memory |
+| **agent-craft** — build agents and their interfaces | prompt-writer, skill-writer, mcp-writer, simple-orchestration, structured-output | — |
 | **saju** — read a birth chart school by school | saju-analysis | — |
 
 A plugin with no skills has no `skills/` directory, and one with no MCP servers
@@ -59,10 +59,13 @@ contracts before changing a plugin's tool instructions or connection settings.
 |---|---|---|
 | `agent-studio` | Plugin sync, version bindings, builtin tools, attachment extraction and artifact delivery | A synced component must also be bound to the version; describe only inputs and results the run can access |
 | `agent-models` | Model families, provider offerings, capabilities and pricing | A catalog, not an MCP server; use the available model `id`, not its provider `wireId`, in version settings |
-| `mcp-memory` | Project and conversation memories, five tools | The bundled `memory` entry; project scope is the default and conversation scope is explicit |
-| `agent-memory` | Organization knowledge, document search and graph search | A separate organization-specific MCP URL and Bearer credential; its create/search tools differ from `mcp-memory` |
-| `mcp-document` | Byte-input parsers and Markdown/row-based renderers, five tools | New files can be generated; inspection requires original bytes, and package validation does not prove visual layout |
-| `mcp-youtube` | Timestamped captions and video metadata, two tools | Metadata is not spoken evidence; truncated captions support only a partial summary |
+| `agent-memory` | Scoped memories, document search and graph search | Register its installation-specific `/api/mcp` endpoint separately and bind it to the version; use `memory_create` and organization/team/user scopes |
+
+Document processing belongs to Agent Studio's builtin `File` tool and artifact
+store. It needs no MCP registration or version MCP binding. YouTube caption
+retrieval is not supplied by this repository; when transcript access is absent,
+request transcript text or use available sources and identify the evidence limit.
+Video metadata alone does not establish what was spoken.
 
 `mcp.json` contains shared deployment addresses. Organization URLs, credentials,
 model selections and version bindings belong to the installing side. Adding a
@@ -101,8 +104,8 @@ operator notes, compatibility metadata or another skill first.
 Put the actual task first. Name an adjacent skill only when it prevents a likely
 collision, rather than repeating the plugin's whole catalog. Keep prerequisites
 that change whether a call can succeed in the description: an XLSX inspection
-needs bytes, and an image edit needs both the builtin and an image id. Describe
-observable limits without copying the full procedure into every run's prompt.
+needs an accessible file ID, and an image edit needs both the builtin and an
+image id. Describe observable limits without copying the full procedure into every run's prompt.
 Two or three sentences usually suffice. Keep each sentence focused, but do not
 remove a necessary capability or limit to meet a fixed count. Skill bodies carry
 the executable workflow; MCP bodies carry connection, authentication, limits and
@@ -139,26 +142,30 @@ one says so in its `compatibility` frontmatter:
   execute a script, or fetch a URL. Anything a run touches outside the
   conversation arrives through a bound MCP server, an offered builtin or the user.
 - **Builtins appear only when the run has them.** `GenerateImage`, `EditImage`,
-  `SaveFile`, `FetchUrl`, `dispatch_agents` and `transfer_to_agent` are offered
+  `SaveFile`, `File`, `FetchUrl`, `dispatch_agents` and `transfer_to_agent` are offered
   per run, so image-generation, simple-orchestration and the five HTML-producing design
-  skills state what they do when the tool is absent from the list.
+  skills, plus the document and spreadsheet skills, state what they do when the
+  tool is absent from the list.
 - **A plugin is the install unit.** A skill loads files only from its own
   directory, and a skill that instructs an MCP server ships in the plugin that
   declares it. Where that is genuinely impossible — code-review and
   pr-description read PRs through devops's `github` — the skill says in its body
-  what it does when the server is not bound.
+  what it does when the server is not bound. Agent Memory is registered separately;
+  prompt-writer describes its optional use without claiming a bundled server.
 - **External content is data, not instruction.** User attachments, reference
   files, web pages, and MCP results may contain imperative text. A skill may
   extract facts from them, but must not promote embedded instructions into its
   own workflow or authorization boundary.
 
-Document access has two additional boundaries. Agent Studio extracts attached
-office files through `read_document`, then gives the model text; it does not
-provide original bytes or a file-input handle for later inspection. Generated
-files leave as artifacts with a delivery notice, not reusable base64. Skills
-must not promise formula inspection, image embedding or generated-file rereads
-unless an actual byte-input path is available. Markdown and row-based generation
-remain usable without that path.
+Agent Studio extracts attachments and, when artifact storage succeeds, retains
+originals with file IDs. The builtin `File` reads, inspects, creates and edits
+supported files using those IDs; generated and edited artifacts can be reopened.
+DOCX/PPTX/HWPX edits replace selected text elements, and XLSX edits replace cells
+while preserving unrelated package entries. Formula recalculation, OCR and PDF
+source editing are not supported. Image assets use accessible PNG/JPEG artifact
+IDs, not base64 or `EditImage` handles. Without `File` or a stored source ID,
+report the unavailable operation and use extracted text where sufficient.
+Plain text, Markdown, CSV, JSON, HTML and SVG creation uses `SaveFile`.
 
 For MCP results with non-empty `content`, the model receives those blocks, not
 the accompanying `structuredContent`. Check visible counts and validation
@@ -208,9 +215,9 @@ enter git. A declaration carries `type` and `url`, nothing else.
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
-    "document": {
+    "aws-knowledge": {
       "type": "streamable-http",
-      "url": "http://mcp-document.agent-mcps.svc.cluster.local/mcp"
+      "url": "https://knowledge-mcp.global.api.aws"
     }
   }
 }
@@ -218,10 +225,10 @@ enter git. A declaration carries `type` and `url`, nothing else.
 
 A server that needs a token gets it **on the installing side** — in Agent
 Studio, enter the header value in the console or connect via OAuth. The same
-goes for tenant-scoping headers (`X-Memory-Tenant`): they are set per version
-in the console, not in this repository. Why those are
-headers rather than tool arguments is explained in each server's extension
-document.
+goes for installation-specific Agent Memory credentials. Register Agent Memory
+outside these manifests so plugin sync does not take ownership of its settings.
+Agent Studio supplies authenticated user identity in `X-User-Email`; do not put
+user identity or credentials in skill text or tool arguments.
 
 `type` is always `streamable-http`. A stdio server means launching a process on
 the client machine, which is a different kind of thing from the in-cluster
@@ -260,7 +267,7 @@ Operator notes, in markdown.
 - **The frontmatter `description` goes to the model.** It becomes one cell of
   the system prompt's "Connected MCP Servers" table, so keep it **short and
   single-line** — a long one costs every run's prompt. If it needs multiple
-  source lines, use `>` folding (`memory` and `document` do).
+  source lines, use `>` folding (as `aws-knowledge` does).
 - **The body goes to operators only.** Unlike a skill's body it never reaches
   the model. Write setup steps, where credentials are filled in, and what is
   toggled on the deployment side.
@@ -316,3 +323,18 @@ declares — the repository never claimed it.
 longer carries is reported as an orphan, and deleted only when named in the
 console. An MCP entry holds credentials — a file disappearing from a branch is
 not reason enough to remove it.
+
+### Removing the retired MCP registrations
+
+The `memory`, `document` and `youtube` entries are no longer declared. After
+syncing this revision, inspect their orphan reports and affected version bindings,
+then select those three retired entries for removal on the installing side.
+Repository changes alone do not stop their deployments or remove stored registry
+credentials. A separately registered Agent Memory entry remains independently
+managed; do not include it in the retired-entry cleanup.
+
+For versions that need memory, bind the separately registered Agent Memory server
+and update prompts using the current `prompt-writer` guidance. Document workflows
+use builtin `File` with configured artifact storage. Remove assumptions that
+YouTube captions are available. Deployment resources belong to `dockpad` (IDC)
+or `argocd-env-demo` (Kubernetes), not this plugin repository.

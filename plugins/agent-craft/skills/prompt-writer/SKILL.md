@@ -72,20 +72,27 @@ description: >
 **동작 규칙** 항목에 아래를 넣는다. 도구 이름은 실제 연결된 서버의 것을 쓴다.
 
 ```
-기억의 기본 scope는 project이며 같은 프로젝트의 모든 대화가 조회한다.
-- 사용자가 전에 말한 것 같으면 되묻기 전에 recall 로 먼저 찾는다.
-- 결정·관례·설정처럼 다음 대화에서도 유효한 사실이 나오면 그 자리에서 remember 한다.
-  저장 요청이 없는 일회성 값은 남기지 않는다.
-- 대화 전용 기억을 저장해 달라는 요청에는 scope="conversation"을 명시한다.
-  type="conversation"은 분류일 뿐 격리 설정이 아니다. 대화 header가 없어 거부되면
-  프로젝트 전체에 대신 저장하지 않는다.
-- 틀린 기억은 조회 결과의 id와 허가된 삭제 범위를 확인한 뒤 forget 한다. 영구 삭제다.
-- 기억은 그때의 사실이다. 파일·설정·이름을 가리키는 기억은 지금도 그런지 확인하고 쓴다.
+- 이전 결정이나 조직 지식이 필요하면 recall 또는 context_search로 먼저 찾는다.
+  recall은 축약된 Context이므로 상세 근거는 목적에 맞는 검색 도구로 확인한다.
+- 다음 작업에도 유효한 사실은 저장 권한과 공유 범위를 확인하고 memory_create로 저장한다.
+  kind, title, content, source와 scope를 실제 schema에 맞춰 전달한다.
+- scope.kind는 organization, team, user 중 요청에 맞게 명시한다.
+  개인·팀 범위가 거부되면 조직 전체에 대신 저장하지 않는다.
+- 대화 전용 격리나 기억 삭제가 필요하면 실제 도구가 지원하는지 확인한다.
+  지원하지 않는 작업을 다른 scope나 새 기억 생성으로 대신하지 않는다.
+- 기억의 출처·유효 기간을 확인한다. 파일·설정·이름은 현재 상태와 대조한다.
 ```
 
-이 예시는 `mcp-memory`의 계약이다. 조직 문서·Knowledge Graph를 제공하는 Agent Memory는
-별도 서비스이며 `memory_create`를 쓴다. 같은 `recall` 이름만 보고 저장·삭제 도구까지
-같다고 가정하지 않는다. 실제 연결된 서버의 schema에 맞춰 예시를 조정한다.
+Agent Memory는 플러그인에 포함하지 않고 설치 측에서 별도 MCP로 등록·binding한다.
+연결되지 않은 런에서는 기억 조회·저장을 약속하지 않고 현재 대화의 자료로 진행한다.
+`memory_search`는 기억, `document_search`는 처리된 문서 chunk,
+`knowledge_search`·`knowledge_neighborhood`는 그래프 근거를 찾는다.
+MCP에는 기억 삭제나 문서 업로드 도구가 없으므로 없는 호출을 만들지 않는다.
+
+조직 Agent token은 사용자 위임이 없으면 organization 범위만 접근한다. 로그인 사용자
+신원은 Agent Studio가 신뢰된 `X-User-Email` header로 전달하며 모델이 email·tenant
+인자를 만들어 권한을 바꾸지 않는다. 자격 증명은 설치 측에서 관리한다.
+호출 인자는 연결된 서버의 실제 schema를 확인한다.
 
 ## 모델 설정을 함께 정할 때
 

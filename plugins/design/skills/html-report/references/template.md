@@ -2,7 +2,7 @@
 
 아래 HTML을 그대로 복사해 내용만 채운다. 토큰, 목차 스크롤 추적, 표 정렬, 인쇄와
 모션 축소 스타일이 이미 들어 있으니 이 배관을 다시 짜지 않는다. 값의 근거는 같은
-디렉터리의 `design-system.md`에 있고, 색은 `document` MCP의 `executive` 프로파일과
+디렉터리의 `design-system.md`에 있고, 색은 Agent Studio 내장 문서 엔진의 `executive` 프로파일과
 같은 값이다.
 
 ```html
