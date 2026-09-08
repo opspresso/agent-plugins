@@ -57,15 +57,24 @@ contracts before changing a plugin's tool instructions or connection settings.
 
 | Project | Owns | Plugin consequence |
 |---|---|---|
-| `agent-studio` | Plugin sync, version bindings, builtin tools, attachment extraction and artifact delivery | A synced component must also be bound to the version; describe only inputs and results the run can access |
+| `agent-studio` | Plugin sync, version bindings, builtin tools, attachment extraction and artifact delivery | A component must be offered through version bindings or enabled dynamic discovery; describe only inputs and results the run can access |
 | `agent-models` | Model families, provider offerings, capabilities and pricing | A catalog, not an MCP server; use the available model `id`, not its provider `wireId`, in version settings |
-| `agent-memory` | Scoped memories, document search and graph search | Register its installation-specific `/api/mcp` endpoint separately and bind it to the version; use `memory_create` and organization/team/user scopes |
+| `agent-memory` | Scoped memories, document search and graph search | Register its installation-specific `/api/mcp` endpoint separately and bind it to the version; use the deployed schema for `remember`/`recall`/`forget` and organization/team/user scopes |
 
 Document processing belongs to Agent Studio's builtin `File` tool and artifact
 store. It needs no MCP registration or version MCP binding. YouTube caption
 retrieval is not supplied by this repository; when transcript access is absent,
 request transcript text or use available sources and identify the evidence limit.
 Video metadata alone does not establish what was spoken.
+
+Agent Memory separates durable Memory from document chunks and graph context.
+`recall` returns compact Memory text with IDs and versions; `context_search`
+searches across those source types and supplies detailed evidence. `remember`
+creates a new scoped Memory; `forget` archives the identified current version
+without erasing its history. Confirm the deployed server's tool schema before
+using those names. Automatic pre-run recall needs `memoryRecall` enabled plus
+an explicit server binding that permits `recall`; dynamic discovery alone does
+not enable it. Search result IDs belong to Agent Memory, not Studio artifacts.
 
 `mcp.json` contains shared deployment addresses. Organization URLs, credentials,
 model selections and version bindings belong to the installing side. Adding a
@@ -135,8 +144,10 @@ server instead.
 ## What the skills assume
 
 The runtime is Agent Studio, and the skills are written to it rather than to a
-generic client. Four assumptions run through them, and a skill that depends on
-one says so in its `compatibility` frontmatter:
+generic client. Four assumptions run through them. A skill may document its
+environment in `compatibility`, but Studio does not pass that field or
+`allowed-tools` to the model or use them to configure permissions. Keep essential
+conditions and fallbacks in the description and body:
 
 - **No shell, no filesystem, no network of its own.** A skill cannot run `git`,
   execute a script, or fetch a URL. Anything a run touches outside the
@@ -157,6 +168,11 @@ one says so in its `compatibility` frontmatter:
   extract facts from them, but must not promote embedded instructions into its
   own workflow or authorization boundary.
 
+A version may also enable `dynamicCapabilities` to discover relevant catalog
+entries for the request. This supplements explicit bindings; it does not make
+every installed skill or tool available. Use the actual offered list and schemas.
+OAuth-backed MCP discovery still requires that project's connection.
+
 Agent Studio extracts attachments and, when artifact storage succeeds, retains
 originals with file IDs. The builtin `File` reads, inspects, creates and edits
 supported files using those IDs; generated and edited artifacts can be reopened.
@@ -165,7 +181,10 @@ while preserving unrelated package entries. Formula recalculation, OCR and PDF
 source editing are not supported. Image assets use accessible PNG/JPEG artifact
 IDs, not base64 or `EditImage` handles. Without `File` or a stored source ID,
 report the unavailable operation and use extracted text where sufficient.
-Plain text, Markdown, CSV, JSON, HTML and SVG creation uses `SaveFile`.
+Plain text, Markdown, CSV, JSON, HTML and SVG creation uses `SaveFile` (UTF-8
+1MiB per file). These text artifacts can be inspected and edited through `File`;
+HTML inspection returns source while reading extracts safe text. `SaveFile` and
+`File` create/edit share ten write attempts per run, including failed attempts.
 
 For MCP results with non-empty `content`, the model receives those blocks, not
 the accompanying `structuredContent`. Check visible counts and validation
@@ -299,14 +318,24 @@ Standard library only, no network.
 
 `scripts/test_validate.py` pins the checker's own edges — where a limit stops
 being a pass, which findings are recommendations rather than failures, and the
-name collision — so a change to `validate.py` cannot loosen them unnoticed:
+name collision, Studio registry slugs, UTF-16 description limits and skipped
+symlinks — so a change to `validate.py` cannot loosen them unnoticed:
 
     python3 -m unittest discover -s scripts -p 'test_*.py'
+
+The HTML report's executable table sorting is tested directly from its template
+with Node's built-in test runner; no package installation is needed:
+
+    node --test scripts/test_html_report.mjs
+
+Both test suites and repository validation run in CI. Static checks do not
+execute skills in a model or verify every prose reference; compare those paths
+with each skill's stored attachment list when editing a workflow.
 
 It is worth running because **neither kind of mistake fails loudly**. A skill
 whose frontmatter breaks the spec is skipped by the client and loading carries
 on, so the only symptom is a skill that is never called; a duplicated name gets
-as far as the installing side before anything notices. CI runs both on every
+as far as the installing side before anything notices. CI runs these checks on every
 pull request and on every push to main.
 
 ## How changes land

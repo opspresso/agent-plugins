@@ -43,6 +43,8 @@ SKILL_FIELDS = {"name", "description", "license", "compatibility", "metadata", "
 PLUGIN_NAME = re.compile(r"^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$")
 # Agent Skills is stricter: no dots, and no consecutive hyphens.
 SKILL_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+# Agent Studio's registry slug rule, independent of plugin/skill spec names.
+MCP_NAME = re.compile(r"^[a-z0-9-]+$")
 MCP_CWD = re.compile(r"^(?:\./|\$\{PLUGIN_ROOT\}(?:/|$)|\$\{PLUGIN_DATA\}(?:/|$))")
 
 FRONTMATTER = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n?", re.S)
@@ -191,6 +193,8 @@ def check_mcp(manifest: Path) -> None:
         return
 
     for name, server in servers.items():
+        if not MCP_NAME.fullmatch(name):
+            fail(manifest, f"{name!r}: server name must be an Agent Studio slug (lowercase letters, digits, hyphens)")
         if not isinstance(server, dict):
             fail(manifest, f"{name}: server must be an object")
             continue
@@ -312,6 +316,8 @@ def check_skill(skill: Path) -> None:
         fail(skill, "description is required and must not be empty")
     elif len(description) > MAX_DESCRIPTION:
         fail(skill, f"description is {len(description)} chars, over {MAX_DESCRIPTION}")
+    elif len(description.encode("utf-16-le")) // 2 > MAX_DESCRIPTION:
+        fail(skill, f"description exceeds Agent Studio's {MAX_DESCRIPTION} UTF-16 code unit limit")
 
     compatibility = fields.get("compatibility", "")
     if len(compatibility) > MAX_COMPATIBILITY:
@@ -332,13 +338,16 @@ def check_bundle(directory: Path) -> None:
     skill = directory / "SKILL.md"
     files = sorted(
         path for path in directory.rglob("*")
-        if path.is_file() and path != skill
+        if (path.is_file() or path.is_symlink()) and path != skill
     )
     total = 0
     for path in files:
+        if path.is_symlink():
+            fail(path, "symlink attachments are not carried by Agent Studio sync")
+            continue
         size = path.stat().st_size
         total += size
-        if path.suffix not in SKILL_FILE_SUFFIXES:
+        if path.suffix.lower() not in SKILL_FILE_SUFFIXES:
             allowed = " ".join(sorted(SKILL_FILE_SUFFIXES))
             fail(path, f"{path.suffix or 'no suffix'} is not carried by the sync — only {allowed}")
         if size > MAX_FILE_BYTES:

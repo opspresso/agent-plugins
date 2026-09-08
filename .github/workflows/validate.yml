@@ -17,3 +17,4 @@ jobs:
       # runner image already has a Python new enough for it.
       - run: python3 -m unittest discover -s scripts -p 'test_*.py'
       - run: python3 scripts/validate.py
+      - run: node --test scripts/test_html_report.mjs

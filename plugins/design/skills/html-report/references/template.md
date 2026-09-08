@@ -289,7 +289,17 @@ sup a { color: var(--brand-light); text-decoration: none; padding: 0 .1em; }
 })();
 
 // 표 정렬. 행이 스무 개를 넘을 때만 헤더에 data-sort 를 남긴다.
+// 축약 단위 등 별도 표기는 셀의 data-sort-value에 같은 단위의 원래 수치를 넣는다.
 (function () {
+  function numericValue(cell) {
+    var explicit = cell.getAttribute('data-sort-value');
+    var value = (explicit === null ? cell.textContent : explicit).trim().replace(/−/g, '-');
+    if (explicit === null) { value = value.replace(/^([+-]?)[$₩€£¥]\s*/, '$1').replace(/\s*%$/, ''); }
+    if (!/^[+-]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?$/.test(value)) { return null; }
+    var number = Number(value.replace(/,/g, ''));
+    return Number.isFinite(number) ? number : null;
+  }
+
   document.querySelectorAll('th[data-sort]').forEach(function (th) {
     th.setAttribute('tabindex', '0');
     function sort() {
@@ -303,8 +313,10 @@ sup a { color: var(--brand-light); text-decoration: none; padding: 0 .1em; }
         var x = a.cells[index].textContent.trim();
         var y = b.cells[index].textContent.trim();
         if (numeric) {
-          x = parseFloat(x.replace(/[^0-9.-]/g, '')) || 0;
-          y = parseFloat(y.replace(/[^0-9.-]/g, '')) || 0;
+          x = numericValue(a.cells[index]);
+          y = numericValue(b.cells[index]);
+          if (x === null) { return y === null ? 0 : 1; }
+          if (y === null) { return -1; }
           return asc ? x - y : y - x;
         }
         return asc ? x.localeCompare(y, 'ko') : y.localeCompare(x, 'ko');

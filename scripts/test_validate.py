@@ -230,6 +230,32 @@ class ValidateSkillTest(TestCase):
         self.assertEqual(1, len(validate.problems))
         self.assertIn("is not carried by the sync", validate.problems[0])
 
+    def test_description_respects_studio_utf16_limit(self) -> None:
+        for length in (512, 513):
+            with self.subTest(length=length), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                skill = self.write_skill(Path(temporary), description="😀" * length)
+                validate.check_skill(skill)
+                self.assertEqual(length > 512, bool(validate.problems))
+
+    def test_bundle_rejects_symlinks_even_when_dangling(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            skill = self.write_skill(root).parent
+            (root / "reference.md").write_text("outside the bundle")
+            (skill / "linked.md").symlink_to(root / "reference.md")
+            (skill / "missing.md").symlink_to(root / "missing.md")
+            validate.check_bundle(skill)
+            self.assertEqual(2, len(validate.problems))
+            self.assertTrue(all("symlink" in problem for problem in validate.problems))
+
+    def test_bundle_accepts_uppercase_extensions(self) -> None:
+        with TemporaryDirectory() as temporary:
+            skill = self.write_skill(Path(temporary)).parent
+            (skill / "REFERENCE.MD").write_text("reference")
+            validate.check_bundle(skill)
+        self.assertEqual([], validate.problems)
+
 
 class ValidateManifestTest(TestCase):
     def setUp(self) -> None:
@@ -241,6 +267,18 @@ class ValidateManifestTest(TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(data))
         return path
+
+    def test_mcp_names_must_be_addressable_by_studio(self) -> None:
+        for name in ("valid-server", "Invalid", "invalid.name", "", "with space"):
+            with self.subTest(name=name), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                manifest = self.write_json(Path(temporary) / "mcp.json", {
+                    "$schema": validate.MCP_SCHEMA,
+                    "mcpServers": {name: {"type": "streamable-http", "url": "https://example.com/mcp"}},
+                })
+                with patch.object(validate, "check_mcp_docs"):
+                    validate.check_mcp(manifest)
+                self.assertEqual(name != "valid-server", bool(validate.problems))
 
     def test_mcp_rejects_description_lines_lost_by_runtime(self) -> None:
         with TemporaryDirectory() as temporary:

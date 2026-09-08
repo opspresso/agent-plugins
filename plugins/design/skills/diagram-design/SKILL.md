@@ -64,6 +64,13 @@ compatibility: >
 스킬을 열면 그 디렉터리의** `references/ai-visual-tells.md`다. 다이어그램의 색·형태
 판단은 **이 스킬의** `references/design-system.md`가 먼저다.
 
+## 참고 스킬이 없을 때
+
+`frontend-design`의 상세 카탈로그는 그 스킬이 현재 런에 제공될 때만
+`Skill(skill_name="frontend-design", file_path="references/ai-visual-tells.md")`로 읽는다.
+제공되지 않으면 이 스킬의 인라인 규칙과 자체 참고 파일로 진행한다.
+같은 플러그인에 있다는 이유로 다른 스킬의 파일을 현재 스킬 경로에서 찾지 않는다.
+
 ## 산출
 
 기본 산출물은 외부 의존성이 없는 HTML 한 개다. CSS와 SVG를 모두 inline으로 넣고,
@@ -87,3 +94,18 @@ JavaScript 없이도 전체 의미가 보여야 한다.
 - 인쇄와 `prefers-reduced-motion` 환경에서도 의미가 유지되는가?
 
 검증하지 못한 브라우저나 렌더링 조건이 있으면 결과와 함께 짧게 밝힌다.
+
+## 기존 파일 수정과 저장 한도
+
+기존 HTML·SVG 파일 ID와 `File`이 있으면 원본을 `inspect`로 읽는다. HTML의 `read`는
+활성 내용을 제거하므로 코드 보존 편집에는 원문을 반환하는 `inspect`를 사용한다.
+요청한 부분은 `File(operation="edit", file_id="<실제 ID>", edits=[...])`로 수정한다.
+각 편집은 `operation="replace_text"`, `part="text"`, `index=0`, 한 번만 등장하는 원문
+`text`와 `replacement`를 사용한다. 원본을 유지한 새 파일 ID가 반환된다.
+잘린 원문으로 전체 파일을 재작성하지 않으며 수정 후 새 ID를 검사해 변경을 대조한다.
+텍스트 검사는 `from`으로 이어 읽을 수 없다. 잘림으로 수정 대상이 보이지 않으면
+원문을 추측하지 않고 접근 한계와 미수행 범위를 알린다.
+
+`SaveFile`의 파일당 한도는 UTF-8 1MiB다. `SaveFile`과 `File` 생성·편집은 런당 합계
+10회 시도를 공유하며 실패도 차감된다. 한도에 도달하면 같은 런에서 분할·재호출을
+계속하지 않고 전달한 파일과 남은 작업을 밝힌다.
