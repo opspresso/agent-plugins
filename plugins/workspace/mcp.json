@@ -1,6 +1,10 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
+    "plaud": {
+      "type": "streamable-http",
+      "url": "https://mcp.plaud.ai/mcp"
+    },
     "notion": {
       "type": "streamable-http",
       "url": "https://mcp.notion.com/mcp"

@@ -41,7 +41,7 @@ plugins/
 |---|---|---|
 | **devops** — investigate the cluster, change it through GitOps | gitops-change, incident-triage | argocd, cloudwatch, grafana, kubernetes, github |
 | **research** — bring in material the model cannot reach, and write documents back out | document-authoring, spreadsheet-authoring | brave-search, aws-knowledge |
-| **workspace** — write what moves around the company | korean-writing, korean-humanize, tech-spec | notion |
+| **workspace** — write what moves around the company | korean-writing, korean-humanize, tech-spec, meeting-minutes | notion, plaud |
 | **design** — build what a person will look at | html-wireframe, html-prototype, html-explainer, frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
 | **engineering** — get a change reviewed and out the door | code-review, pr-description, engineering-writing | — |
 | **agent-craft** — build agents and their interfaces | prompt-writer, skill-writer, mcp-writer, simple-orchestration, structured-output | — |
@@ -79,6 +79,28 @@ not enable it. Search result IDs belong to Agent Memory, not Studio artifacts.
 `mcp.json` contains shared deployment addresses. Organization URLs, credentials,
 model selections and version bindings belong to the installing side. Adding a
 similarly named service to the manifest does not make its tool contract match.
+
+### Plaud recordings to meeting minutes
+
+The `workspace` plugin declares the official [Plaud MCP](https://docs.plaud.ai/plaud-mcp-cli/mcp)
+at `https://mcp.plaud.ai/mcp`. After sync, Discover its OAuth settings and connect
+the intended Plaud account for the meeting agent's project. Cloud Sync is required.
+Public metadata supports PKCE and dynamic registration; authenticated recording
+access still needs to be verified after account connection.
+
+The intended workflow is recording selection → temporary audio URL → internal
+download/transcription tool → `meeting-minutes` → optional document or Notion output.
+Plaud supplies audio URLs and existing provider transcripts, not an internal ASR
+executor. Agent Studio currently registers Transcription model metadata but has
+no audio transcription builtin; `FetchUrl` and document `File` do not fill that gap.
+Adding this plugin alone therefore does not complete the internal transcription
+pipeline. The skill preserves this boundary instead of substituting Plaud output.
+
+Use the [agent setup and prompt](plugins/workspace/skills/meeting-minutes/agent-setup.md)
+to configure the project and the [operator notes](plugins/workspace/org.opspresso.agent-studio/mcp/plaud.md)
+for connection and data handling. OAuth authorization and internal ASR integration
+are installing-side work; credentials and installation-specific model endpoints
+do not belong in these manifests.
 
 ## Skills
 
