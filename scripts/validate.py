@@ -27,7 +27,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 MCP_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"
@@ -66,7 +66,6 @@ MAX_SKILL_BYTES = 200 * 1024
 
 problems: list[str] = []
 recommendations: list[str] = []
-deployment_exceptions: list[str] = []
 
 
 def fail(where: Path, message: str) -> None:
@@ -75,10 +74,6 @@ def fail(where: Path, message: str) -> None:
 
 def recommend(where: Path, message: str) -> None:
     recommendations.append(f"{where}: {message}")
-
-
-def deployment_exception(where: Path, message: str) -> None:
-    deployment_exceptions.append(f"{where}: {message}")
 
 
 def parse_frontmatter(text: str, *, where: Path | None = None) -> dict[str, str] | None:
@@ -259,14 +254,7 @@ def check_mcp(manifest: Path) -> None:
                     except ValueError:
                         loopback = parsed.hostname == "localhost"
                     if not loopback:
-                        if parsed.hostname.endswith(".agent-mcps.svc.cluster.local"):
-                            deployment_exception(
-                                manifest,
-                                f"{name}: private HTTP is an Agent Studio deployment exception; "
-                                "portable Agent Plugins requires HTTPS",
-                            )
-                        else:
-                            fail(manifest, f"{name}: a non-loopback endpoint must use HTTPS")
+                        fail(manifest, f"{name}: a non-loopback endpoint must use HTTPS")
         else:
             fail(manifest, f"{name}: type must be stdio, streamable-http or sse (got {kind!r})")
             continue
@@ -387,10 +375,44 @@ def check_unique(root: Path, plugins: list[Path]) -> None:
                 seen[name] = where
 
 
+def check_markdown_links(document: Path, boundary: Path) -> None:
+    """Check literal inline file links outside fenced examples, within the payload.
+
+    Heading anchors, remote URLs and reference-style Markdown are not checked.
+    A skill's boundary is its own bundle, not the repository or another skill.
+    """
+    fence_char = ""
+    fence_length = 0
+    for number, line in enumerate(document.read_text().splitlines(), 1):
+        fence = re.match(r"^\s{0,3}(`{3,}|~{3,})(.*)$", line)
+        if fence:
+            marker, rest = fence.groups()
+            if not fence_char:
+                fence_char, fence_length = marker[0], len(marker)
+            elif marker[0] == fence_char and len(marker) >= fence_length and not rest.strip():
+                fence_char = ""
+            continue
+        if fence_char:
+            continue
+        for match in re.finditer(r"\[[^\]\n]+\]\((<[^>]+>|[^\s)]+)(?:\s+\"[^\"]*\")?\)", line):
+            target = match.group(1).strip("<>")
+            try:
+                parsed = urlsplit(target)
+            except ValueError:
+                fail(document, f"line {number}: malformed link {target!r}")
+                continue
+            if parsed.scheme or parsed.netloc or not parsed.path:
+                continue
+            path = (document.parent / unquote(parsed.path)).resolve()
+            if not path.is_relative_to(boundary.resolve()):
+                fail(document, f"line {number}: link leaves its bundle: {target!r}")
+            elif not path.is_file():
+                fail(document, f"line {number}: linked file does not exist: {target!r}")
+
+
 def main() -> int:
     problems.clear()
     recommendations.clear()
-    deployment_exceptions.clear()
 
     root = Path(__file__).resolve().parent.parent
     plugins = sorted(p for p in (root / "plugins").iterdir() if p.is_dir())
@@ -414,25 +436,28 @@ def main() -> int:
         for child in sorted((plugin / "skills").glob("*")) if (plugin / "skills").is_dir() else []:
             if (child / "SKILL.md").is_file():
                 check_skill(child / "SKILL.md")
+                for document in sorted(child.rglob("*.md")):
+                    if not document.is_symlink():
+                        check_markdown_links(document, child)
                 skills += 1
             elif child.is_dir():
                 fail(child, "a skills/ child with no SKILL.md is not a skill")
 
     check_unique(root, plugins)
+    for document in [root / "README.md", *sorted((root / "docs").rglob("*.md"))]:
+        if document.is_file():
+            check_markdown_links(document, root)
+    for plugin in plugins:
+        for document in sorted((plugin / "org.opspresso.agent-studio" / "mcp").glob("*.md")):
+            check_markdown_links(document, root)
 
     for problem in problems:
         print(f"  {problem}")
     for recommendation in recommendations:
         print(f"  warning: {recommendation}")
-    for exception in deployment_exceptions:
-        print(f"  warning: {exception}")
     print(
         f"\n{len(plugins)} plugins, {skills} skills — "
         + ("pass repository checks for Agent Plugins 1.0.0" if not problems else f"{len(problems)} problems")
-        + (
-            f" ({len(deployment_exceptions)} private-HTTP deployment exceptions)"
-            if deployment_exceptions else ""
-        )
     )
     return 1 if problems else 0
 

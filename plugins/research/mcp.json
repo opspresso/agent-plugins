@@ -1,10 +1,6 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
-    "brave-search": {
-      "type": "streamable-http",
-      "url": "http://mcp-brave-search.agent-mcps.svc.cluster.local/mcp"
-    },
     "aws-knowledge": {
       "type": "streamable-http",
       "url": "https://knowledge-mcp.global.api.aws"

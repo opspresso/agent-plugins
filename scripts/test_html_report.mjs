@@ -8,7 +8,7 @@ const start = template.indexOf('// 표 정렬.');
 assert.notEqual(start, -1);
 const script = template.slice(start, template.indexOf('</script>', start));
 
-function sortable(values) {
+function sortable(values, { sort = 'num', lang = 'ko' } = {}) {
   const attributes = new Map();
   const events = new Map();
   const body = {
@@ -22,7 +22,7 @@ function sortable(values) {
   };
   const table = { tBodies: [body], querySelectorAll: () => [header] };
   const header = {
-    dataset: { sort: 'num' },
+    dataset: { sort },
     setAttribute: (name, value) => attributes.set(name, value),
     getAttribute: (name) => attributes.get(name) ?? null,
     removeAttribute: (name) => attributes.delete(name),
@@ -30,7 +30,9 @@ function sortable(values) {
     closest: () => table,
   };
   header.parentNode = { children: [header] };
-  runInNewContext(script, { document: { querySelectorAll: () => [header] } });
+  runInNewContext(script, {
+    document: { documentElement: { lang }, querySelectorAll: () => [header] },
+  });
   return {
     click: () => events.get('click')(),
     key: (key) => events.get('keydown')({ key, preventDefault() {} }),
@@ -68,4 +70,34 @@ test('unsupported or malformed display values are not guessed; explicit keys are
   assert.deepEqual(table.values(), ['0', '1.5K', ...missing]);
   table.click();
   assert.deepEqual(table.values(), ['1.5K', '0', ...missing]);
+});
+
+test('text sorting follows document language in both directions', () => {
+  // German treats ä alongside a; Swedish places it after z.
+  for (const [lang, expected] of [['de', ['ä', 'z']], ['sv', ['z', 'ä']]]) {
+    const table = sortable([['z'], ['ä']], { sort: 'text', lang });
+    table.click();
+    assert.deepEqual(table.values(), expected);
+    table.key(' ');
+    assert.deepEqual(table.values(), [...expected].reverse());
+  }
+});
+
+test('an absent or invalid language still allows sorting', () => {
+  for (const lang of ['', 'invalid_locale']) {
+    const table = sortable([['b'], ['a']], { sort: 'text', lang });
+    table.click();
+    assert.deepEqual(table.values(), ['a', 'b']);
+  }
+});
+
+test('localized numbers use explicit canonical keys without guessing separators', () => {
+  const table = sortable([
+    ['1.234,50 €', '1234.50'], ['2,5 %', '2.5'], ['−0,5', '-0.5'],
+    ['1,2', '1,2'], ['1,234', '1,234'], ['missing', ''],
+  ], { lang: 'de' });
+  table.click();
+  assert.deepEqual(table.values(), ['−0,5', '2,5 %', '1.234,50 €', '1,2', '1,234', 'missing']);
+  table.click();
+  assert.deepEqual(table.values(), ['1.234,50 €', '2,5 %', '−0,5', '1,2', '1,234', 'missing']);
 });

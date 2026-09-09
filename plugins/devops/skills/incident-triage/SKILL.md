@@ -1,188 +1,68 @@
 ---
 name: incident-triage
 description: >
-  AWS EKS의 서비스 장애, 지연·오류 증가, Pod 재시작·Pending, 배포 실패와 Argo CD OutOfSync를
-  조사할 때 쓴다. Kubernetes, Grafana Prometheus·Loki, CloudWatch와 Argo CD의 관측을
-  시간순으로 연결해 원인과 완화·복구 방안을 제시한다. 실제 변경은 gitops-change를 쓴다.
+  서비스 장애, 지연·오류 증가, 작업 중단과 배포 실패를 조사할 때 쓴다.
+  실제 환경의 지표·로그·상태·변경 이력을 연결해 원인, 완화책과 검증 방법을 제시한다.
+  조사는 읽기 전용이며 변경 실행은 사용자가 요청한 운영 절차를 따른다.
 ---
 
-# EKS 장애 조사
+# 서비스 장애 조사
 
-증상에 맞는 관측 지점에서 시작해 Kubernetes의 현재 상태, Prometheus와 CloudWatch의
-추세, Loki와 CloudWatch Logs의 로그, Argo CD의 배포 상태를 하나의 시간축으로
-연결한다. 조사 결과에는 원인 판정뿐 아니라 안전한 완화책, 근본 해결책, 검증 방법과
-롤백 조건까지 포함한다.
+증상이 나타난 시스템과 시간창에서 시작한다. 클라우드, 클러스터, 서버, 관리형 서비스,
+배치 중 실제 대상에 맞는 관측을 선택하며 특정 공급자나 배포 방식을 전제하지 않는다.
 
-## 반드시 지킬 것
+## 대상과 관측
 
-- **관측, 해석, 미확인을 구분한다.** 모든 사실에 출처와 시간 범위를 붙이고, 서로
-  독립적인 신호 없이 상관관계를 원인으로 확정하지 않는다.
-- **조사 도구로 운영 상태를 바꾸지 않는다.** Kubernetes와 Argo CD의 create,
-  update, patch, scale, delete, sync, resource action을 호출하지 않는다. 변경은 해결
-  방안으로만 제시하고, 실행 요청을 받으면 `gitops-change`를 따른다.
+요청과 제공 자료에서 증상, 정상 기준, 영향 범위, 최초 이상 시각, 최근 변경과 지속 여부를
+확인한다. 계정·환경·서비스 식별자는 실제 설정에서 얻는다. 결과를 바꿀 대상이 모호할 때만
+질문하고 독립적으로 확인 가능한 읽기는 계속한다.
 
-## 먼저 고정할 것
+시각에는 시간대를 붙인다. 장애 시작점과 데이터 보존·해상도에 맞게 좁은 시간창에서 시작해
+필요한 방향으로 넓힌다. 일간·주간 주기가 있으면 같은 주기의 정상 구간과 비교한다.
 
-조사 전에 아래 항목을 가능한 만큼 채운다. 사용자의 답을 기다리는 동안 확인 가능한
-항목은 읽기 도구로 병렬 조회한다.
+| 질문 | 필요한 관측 |
+|---|---|
+| 누구에게 어떤 실패가 발생했는가 | 오류율·지연·실패 작업 수·사용자 영향 |
+| 어디서 실패하는가 | 요청 경로·로그·trace·프로세스나 리소스 상태 |
+| 언제 무엇이 바뀌었는가 | 배포·설정·데이터·트래픽·의존 서비스 이력 |
+| 정상 대상과 무엇이 다른가 | 같은 기간·조건의 정상 인스턴스·지역·버전 |
+| 어느 경계가 아직 보이지 않는가 | 외부 서비스·네트워크·스토리지·권한의 추가 증거 |
 
-- 증상: 무엇이 정상 기준에서 어떻게 달라졌는가
-- 영향: 사용자, 서비스, namespace, cluster, region 중 어디까지인가
-- 시간: 정상 확인 시각, 최초 이상 시각, 현재도 지속되는지
-- 대상: AWS account·region, cluster, namespace, workload, Argo CD application, 주요 label
-- 변경: 배포, 설정, 트래픽, 노드, 의존 서비스의 최근 변화
+현재 제공된 도구와 schema를 사용한다. 특정 관측 도구가 없으면 제공 로그와 자료로 조사하고
+미관측 범위를 남긴다. Kubernetes나 AWS가 대상일 때만
+[references/kubernetes-aws.md](references/kubernetes-aws.md)를 읽는다.
 
-시각은 ISO 8601과 timezone으로 기록한다. 최초 이상 시각을 모르면 최근 30분으로
-시작해 2시간, 6시간, 24시간 순으로 넓힌다. 장애 구간 앞의 동일 길이 정상 구간을
-baseline으로 비교한다.
+## 조사
 
-## 도구 선택
+1. 영향 범위를 측정하고 같은 조건의 정상 대조군을 찾는다.
+2. 지표·로그·상태 전이와 변경 이력을 최초 이상 시각 앞뒤로 정렬한다.
+3. 각 가설의 예상 관측, 지지 증거, 반증과 다음 확인을 정한다.
+4. 원인을 시작시킨 계기, 실패가 발생한 경로, 영향을 키운 요인을 구분한다.
+5. 새 관측이 가설을 지지하는지 확인하고 다음 조회가 더 이상 정보를 늘리지 않으면
+   현재 판정과 필요한 추가 접근·자료를 보고한다.
 
-시스템 프롬프트의 연결된 MCP 서버와 실제 tool schema를 진실로 삼는다. 없는 서버나
-도구 이름을 만들어내지 않는다. 쿼리는 좁은 시간 범위와 namespace·workload·label로
-시작하고, 집계 결과에서 이상 대상을 찾은 뒤 상세 로그로 내려간다.
+관측·해석·미확인을 구분하고 사실에 출처와 시간창을 붙인다. 같은 원본에서 파생된 알람과
+대시보드를 독립 증거로 세지 않는다. 단순한 시간적 상관관계만으로 원인을 확정하지 않는다.
 
-| 확인할 것 | 서버 | 조회 기준 |
-|---|---|---|
-| 리소스 상태, rollout, pod, node, Service/Endpoint, Event | kubernetes | namespace, kind, name, label selector |
-| 오류율, 지연, 트래픽, saturation, 재시작·자원 추세 | grafana / Prometheus | PromQL, start, end, step |
-| 오류 문맥, 예외, request·trace ID, 재시작 직전 로그 | grafana / Loki | LogQL, start, end, direction, limit |
-| AWS alarm, managed metric, Container Insights, CloudWatch log | cloudwatch | region, namespace·log group, start, end, limit |
-| application health/sync, revision, resource tree, 배포 이벤트 | argocd | application, resource, revision |
+쿼리는 대상과 시간창을 좁히고 페이지·잘림·보존 기간·비용 한계를 확인한다. 오류나 조회 실패를
+정상·빈 결과로 바꾸지 않는다. 같은 실패 호출은 입력이나 접근 조건을 고칠 근거가 있을 때만 재시도한다.
 
-Grafana dashboard는 탐색용으로 쓰고, 결론의 근거는 패널이 실행한 PromQL·LogQL과
-명시적인 시간 범위로 남긴다. 로그는 전체를 붙이지 말고 판단에 필요한 줄과 전후
-문맥만 인용한다. CloudWatch는 Pod Identity의 기본 credential chain을 사용하므로
-`profile_name`을 지정하지 않는다. Logs Insights는 log group과 시간창을 먼저 좁히고
-스캔 범위를 제한하고 query에 `limit`을 넣어 반환 결과 수를 줄인다.
+## 판정과 대응
 
-## 증상별 시작점
+- 확인됨: 관측된 실패 경로가 시각과 영향 범위를 설명하고 반증·대조군에도 모순이 없다.
+- 유력함: 증거가 일치하지만 결정적인 상태·이력·재현이나 복구 후 확인이 빠졌다. 빠진 근거를 적는다.
+- 미확인: 증상만 확인했거나 여러 가설을 가를 수 없다. 가장 유용한 다음 조회를 제시한다.
 
-| 증상 | 먼저 확인 | 다음 상관관계 |
-|---|---|---|
-| HTTP 5xx, latency, timeout | Prometheus의 rate·latency·traffic | Loki 오류 문맥 → pod·Endpoint 상태 → Argo revision |
-| CrashLoopBackOff, restart, OOM | pod 상태·restart reason·이전 container 로그·Event | CPU/memory 추세 → rollout·revision |
-| Pending, scheduling 실패 | pod Event, node condition·taint, request와 allocatable | cluster 자원 추세 → 최근 node 변화 |
-| 배포 실패, 새 버전 이후 장애 | Argo health/sync·revision·resource tree·event | Kubernetes rollout → 신·구 pod 지표와 로그 비교 |
-| OutOfSync, 설정 불일치 | Argo desired/live 차이와 마지막 sync | 실제 리소스·rollout 시각 → 영향 지표 |
-| node 불안정, 광범위한 pod 영향 | node condition·pressure, pod 분포, cluster Event | node별 자원 추세 → CloudWatch alarm·Container Insights → workload 영향 |
-| DNS, 연결, 의존 서비스 오류 | Loki의 timeout·name resolution·connection 오류 | Service/Endpoint·NetworkPolicy·Gateway → 양쪽 오류율 |
-| AWS 서비스·EKS 경계 이상 | CloudWatch alarm·metric·log | Kubernetes 영향 범위 → 필요한 AWS resource 상태 |
-| 알림만 있고 증상이 불명확 | alert source·label·조건·발생 시각과 원본 query | 같은 시간의 workload 상태·로그·배포 변화 |
+즉시 완화와 근본 해결을 구분하고 대상·예상 효과·위험·검증·되돌리는 방법을 붙인다.
+재발 방지는 확인된 실패와 직접 관련된 것만 제안한다. GitOps 관리 대상의 변경 실행을
+요청받았으면 연결된 `gitops-change`를 사용한다. 다른 대상은 해당 시스템의 변경 절차를 따른다.
+스킬이 없으면 확인한 절차와 권한 범위에서 진행하며 없는 도구를 가정하지 않는다.
 
-현재 snapshot만으로 정상 여부를 판단하지 않는다. 실패한 pod가 이미 교체됐을 수
-있으므로 종료된 상태, 이전 container 로그, Event와 시계열을 함께 본다.
+조사 요청만으로 운영 상태를 변경하지 않는다. 실제 실행에는 사용자가 허가한 대상과 조치만
+포함하고 이미 받은 권한은 다시 묻지 않는다.
 
-## 조사 절차
+## 보고
 
-1. **영향 범위를 잰다.** cluster 전체인지, node·AZ·namespace·workload·version 중
-   일부인지 비교한다. 정상 대조군이 있으면 같은 쿼리로 차이를 확인한다.
-2. **변화 시점을 찾는다.** Prometheus에서 정상 baseline과 장애 구간의 RED
-   (rate, errors, duration) 및 USE(utilization, saturation, errors)를 비교한다.
-3. **동일 시간창의 로그와 상태를 연결한다.** Loki 오류, Kubernetes Event와 상태
-   전이, Argo revision·sync·health 변화를 최초 이상 시각 앞뒤로 정렬한다.
-4. **유력한 가설부터 검증한다.** 각 가설마다 예상 관측, 지지 증거, 반증 증거와
-   다음 확인을 적는다. 정상 대상과 비교하고 새 증거에 따라 가설을 갱신한다.
-5. **원인과 기여 요인을 구분한다.** 장애를 시작시킨 trigger, 실패로 이어진
-   mechanism, 영향이나 복구 시간을 키운 contributing factor를 분리한다.
-6. **판정하고 해결 방안을 설계한다.** 아래 판정 기준과 보고 형식을 따른다.
-
-독립적인 조회는 병렬로 실행하되, 앞선 결과로 대상을 좁혀야 하는 조회는 순차로
-실행한다. 같은 실패 호출을 반복하지 말고 namespace, label, 시간창, query를
-교정하거나 다른 신호로 우회한다.
-
-## EKS에서 확인할 경계
-
-EKS control plane은 관리형이므로 Kubernetes 관측만으로 AWS 원인을 확정할 수 없는
-경우가 있다. `cloudwatch`가 연결돼 있으면 같은 시간창의 alarm, metric, log를 먼저
-확인한다. 다음 징후가 보이면 관측된 cluster 증상, CloudWatch 증거, 남은 AWS resource
-상태 확인을 분리해 보고한다.
-
-| cluster에서 보이는 징후 | 가능한 AWS 경계 | CloudWatch에서 확인 | 남는 확인 |
-|---|---|---|---|
-| pod sandbox·IP 할당 실패, 특정 node/AZ 집중 | VPC CNI, subnet IP, ENI | CNI·container 로그, node network metric·alarm | subnet 가용 IP, ENI 한도·상태 |
-| node join·scale 실패, Pending 확산 | EC2 capacity, Auto Scaling, quota | node 수·자원 metric, 관련 alarm·log | node group/ASG activity, capacity·quota event |
-| volume attach·mount timeout | EBS CSI, volume/AZ | EBS metric·alarm, CSI controller 로그 | attachment·volume 상태 |
-| LoadBalancer·target health 이상 | ELB/NLB/ALB, controller | request·target 오류 metric·alarm, controller 로그 | target health와 LB 설정 |
-| AccessDenied, credential 만료 | IRSA/Pod Identity, IAM | workload의 AccessDenied 로그 | CloudTrail event와 IAM policy 평가 |
-| DNS 지연·실패 | CoreDNS, VPC DNS | CoreDNS metric·log가 수집됐다면 오류 추세 | resolver·VPC DNS 설정 |
-
-CloudWatch MCP는 metric, alarm, 수집된 log를 읽지만 EC2, EKS, Auto Scaling, EBS,
-ELB, IAM, CloudTrail의 resource 상태 API는 제공하지 않는다. 그 상태를 읽을 도구가
-연결되지 않았으면 “AWS 원인”으로 확정하지 않고, “증거가 이 경계를 가리킨다”는
-잠정 결론과 정확한 추가 확인 항목을 남긴다.
-
-## 원인 판정 기준
-
-- **확인됨**: 원인 후보가 영향 범위와 최초 이상 시각을 설명하고, 예상 mechanism이
-  두 개 이상의 독립적인 신호에서 관측되며, 반증과 대조군에도 모순이 없다.
-- **유력함**: 여러 신호가 일치하지만 AWS 측 상태, 변경 이력, 복구 후 검증 등
-  결정적인 증거 하나가 없다. 빠진 증거를 명시한다.
-- **미확인**: 증상만 확인했거나 가설들이 같은 정도로 가능하다. 가장 정보를 많이
-  줄 다음 조회를 제시한다.
-
-배포와 장애 시각이 가깝다는 사실만으로 배포를 원인으로 확정하지 않는다. 새 revision과
-이전 revision의 오류율·지연·로그·pod 상태 차이 또는 변경된 설정이 실패를 일으키는
-mechanism을 확인한다.
-
-## 해결 방안 작성
-
-각 방안에 대상, 예상 효과, 위험, 검증, 롤백을 붙인다.
-
-1. **즉시 완화**: 영향 축소와 복구를 위한 최소 조치다. 원인을 제거하지 못하면
-   임시 조치라고 밝힌다.
-2. **근본 해결**: 확인된 mechanism을 제거하는 GitOps, application, capacity,
-   dependency 변경이다. 바꿀 리소스와 설정 범위를 구체적으로 적는다.
-3. **재발 방지**: 같은 실패를 빨리 감지하거나 blast radius를 줄이는 alert,
-   limit, probe, disruption·rollout 정책이다. 원인과 직접 관련된 것만 제안한다.
-
-실행 순서는 위험과 되돌리기 용이성을 기준으로 정한다. 데이터 손실, 보안, 비용,
-가용성에 큰 영향을 주는 조치는 별도 승인 조건을 명시한다.
-
-## 보고 형식
-
-```markdown
-## 결론
-- 상태: 확인됨 | 유력함 | 미확인
-- 원인: [한 문장]
-- 영향: [대상과 범위]
-
-## 증상과 타임라인
-- [ISO 8601 시각] [관측 또는 변경] — [서버/조회, 시간 범위]
-
-## 증거
-- 관측: [사실] — [Kubernetes | Prometheus | Loki | CloudWatch | Argo CD]
-- 해석: [이 사실이 지지하거나 반증하는 가설]
-
-## 원인 분석
-- Trigger: [장애 시작 계기 또는 미확인]
-- Mechanism: [증상이 발생한 경로]
-- Contributing factors: [영향을 키운 요인 또는 없음]
-- 반증 결과: [대안 가설과 배제 근거]
-- 남은 불확실성: [필요한 추가 증거]
-
-## 해결 방안
-1. 즉시 완화 — [조치, 예상 효과, 위험, 검증, 롤백]
-2. 근본 해결 — [GitOps 변경 대상, 예상 효과, 위험, 검증, 롤백]
-3. 재발 방지 — [원인과 직접 연결된 후속 조치]
-
-## 다음 확인
-- [담당자가 실행할 구체적인 조회 또는 승인할 변경]
-```
-
-원인을 찾지 못했으면 미확인으로 보고한다. 조회 실패, 잘린 결과, 보존 기간 밖의
-로그, 권한 부재도 증거의 한계로 명시한다. `Error:`로 시작하는 도구 응답은 관측
-데이터로 사용하지 않는다. Secret을 읽을 수 없는 것은 이 Kubernetes MCP의 정상적인
-권한 경계이며, 그 자체를 장애 원인으로 해석하지 않는다.
-
-## 보고서 문장
-
-관측은 시간·출처·값과 함께 쓰고 해석은 이를 지지하는 근거와 확신 수준을 붙인다.
-확인하지 못한 상태는 “미확인”으로 적는다. 확인된 사실과 원인 가설을 같은 강도로 단언하지 않는다.
-
-정도 표현은 가능하면 수치로 바꾼다. 예: “5xx 비율이 09:12부터 0.3%에서 4.1%로 증가했다.”
-해결 방안은 “설정 최적화” 대신 대상 리소스와 바꿀 값을 적고 효과·위험·검증·롤백을 연결한다.
-기술 용어와 상태 값은 원어로 두되 독자에게 필요한 역할은 설명한다.
-
-보고 형식은 조사 규모에 맞춰 줄일 수 있다. 결론, 핵심 증거, 불확실성과 다음 확인은 유지한다.
-중복 설명과 홍보 표현을 줄이고 문장 길이를 맞추려고 근거를 생략하지 않는다.
+결론과 영향, 핵심 타임라인·증거, 원인 판정의 근거와 불확실성, 대응과 다음 확인을 적는다.
+짧은 조사는 문단으로 충분하다. 원인을 찾지 못했으면 미확인으로 보고하고 관측하지 못한
+시스템을 정상으로 표시하지 않는다. 로그 전문 대신 판단에 필요한 문맥만 인용한다.

@@ -154,7 +154,7 @@ h1 {
 
 ## 바꾸는 순서
 
-1. 제목과 `<title>`·`<desc>`를 실제 결론으로 바꾼다.
+1. `lang`과 접근성 라벨을 문서 언어에 맞추고 제목·`<title>`·`<desc>`를 실제 내용으로 바꾼다.
 2. 선택한 유형의 content model에 맞게 zone, node, connector를 다시 구성한다.
 3. diagram slug를 정하고 SVG 내부 id에 같은 prefix를 사용한다.
 4. `viewBox`를 요소 수와 사용 위치에 맞춘다.

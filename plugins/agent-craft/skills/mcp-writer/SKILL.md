@@ -2,7 +2,7 @@
 name: mcp-writer
 description: >
   MCP 서버의 도구·리소스 API를 설계·구현하거나 기존 서버의 사용성·보안을 검토할 때 쓴다.
-  검색 설명, 입력·응답 계약, 인증·오류 처리와 Agent Studio 연결 방법을 정리한다.
+  검색 설명, 입력·응답 계약, 인증·오류 처리와 대상 클라이언트 연결 방법을 정리한다.
 ---
 
 # MCP 서버 작성
@@ -16,7 +16,7 @@ description: >
 - 연결할 서비스와 필요한 작업
 - read와 write 경계, destructive 작업의 범위
 - 인증 방식과 tenant 경계
-- Agent Studio가 접근할 remote `streamable-http` endpoint와 배포 위치
+- 대상 클라이언트와 지원 transport, 실행·배포 위치
 - 응답 크기, pagination, rate limit과 timeout
 - 대상 저장소의 언어·SDK·배포 관례
 
@@ -33,8 +33,8 @@ description: >
   workflow tool로 묶는다.
 - 전체 endpoint 수보다 사용자가 실제로 완료해야 하는 작업과 context 비용을 우선한다.
 - 모델이 인자를 주어 실행할 작업은 tool로 제공한다. resource를 설계할 때는 대상
-  클라이언트에 조회 경로가 있는지 확인한다. Agent Studio의 기본 MCP 연결은 tool 발견·호출
-  경로이므로 resource만 등록한 자료를 모델이 읽는다고 가정하지 않는다.
+  클라이언트에 조회 경로가 있는지 확인한다. resource만 등록한 자료를 모든 클라이언트가
+  자동으로 읽는다고 가정하지 않는다.
 
 ### 이름과 description
 
@@ -73,23 +73,14 @@ description: >
 - destructive 작업은 대상과 허가 범위를 확인하고 실행하며 idempotency와 재시도 영향을 정의한다.
   이미 받은 권한은 유지하고 추가 범위가 필요할 때만 확인한다.
 
-## Agent Studio에 등록할 때
+## 클라이언트 연결
 
-- remote 서버는 `streamable-http`를 사용하고 실제 endpoint를 `mcp.json`에 적는다.
-  `/mcp`를 임의로 덧붙이지 않는다. AWS Knowledge처럼 루트에서 응답하는 서버도 있다.
-- secret이 들어갈 `headers`는 저장소에 넣지 않고 설치 측에서 설정한다.
-- 서버 description은 같은 plugin의 `org.opspresso.agent-studio/mcp/<name>.md`에 둔다.
-- extension의 frontmatter `description`만 모델에게 전달된다. 본문은 운영자용이므로
-  등록·인증·배포 설정·진단 절차를 적는다. 모델의 호출 조건은 description이나 연결된 스킬에 둔다.
-- `content`가 있으면 Agent Studio는 그 블록을 모델에게 전달하고 별도
-  `structuredContent`는 함께 전달하지 않는다. 완전성·잘림·검증 결과처럼 판단에 필요한
-  메타데이터를 text 블록에도 담는다. 바이너리는 사용자 파일로 전달되지만 bytes/base64는
-  모델 문맥에 넣지 않는다. 저장 후 대화에 실제 파일 ID가 제공되면 `File`로 읽거나 편집할 수
-  있다. MCP 응답의 파일명·resource URI를 file_id로 쓰거나 같은 호출 결과에 ID가 있다고
-  가정하지 않는다. bytes 입력 도구에는 별도의 실제 전달 경로가 필요하다.
-- 스킬과 서버 이름은 저장소 전체에서 중복되지 않아야 한다.
-- 스킬 런타임에는 shell·filesystem·network가 없다. 구현·검증 스크립트를 스킬 attachment로
-  운반하지 말고 실제 서버 저장소나 개발 도구에서 실행한다.
+대상 클라이언트의 transport, 인증, tool·resource 발견, 첨부·바이너리 전달 경로를 확인한다.
+구조화 응답과 text가 실제로 어떻게 모델에게 전달되는지 검증하고, 필수 메타데이터가 누락되는
+경로에는 같은 의미를 전달할 수단을 둔다. 모든 클라이언트의 shell·파일 접근 부재를 가정하지 않는다.
+
+Agent Studio에 등록하는 작업이면 [references/agent-studio.md](references/agent-studio.md)를
+읽는다. 이 저장소의 설치 정책과 MCP 자체의 규격을 구분한다.
 
 ## 검증
 

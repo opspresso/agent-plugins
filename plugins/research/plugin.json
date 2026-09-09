@@ -2,9 +2,9 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "research",
   "version": "1.0.0",
-  "description": "Gather source material an agent cannot reach on its own: web search and AWS documentation, with skills for Agent Studio builtin document creation, inspection, and editing.",
+  "description": "Gather source material and create, inspect or edit documents and spreadsheets. Bundles an AWS documentation integration for AWS-specific research; other search services can be connected separately.",
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
   "license": "MIT",
-  "keywords": ["research", "search", "documents", "web", "aws"]
+  "keywords": ["research", "search", "documents", "spreadsheets", "sources"]
 }

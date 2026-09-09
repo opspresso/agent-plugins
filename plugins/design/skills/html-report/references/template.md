@@ -1,9 +1,8 @@
 # 템플릿
 
-아래 HTML을 그대로 복사해 내용만 채운다. 토큰, 목차 스크롤 추적, 표 정렬, 인쇄와
+아래 HTML에서 시작해 언어·브랜드·내용과 필요한 절을 맞춘다. 예시 수치와 날짜는 검증된 자료로 교체한다. 토큰, 목차 스크롤 추적, 표 정렬, 인쇄와
 모션 축소 스타일이 이미 들어 있으니 이 배관을 다시 짜지 않는다. 값의 근거는 같은
-디렉터리의 `design-system.md`에 있고, 색은 Agent Studio 내장 문서 엔진의 `executive` 프로파일과
-같은 값이다.
+디렉터리의 `design-system.md`에 있다. 색은 조정 가능한 기본값이다.
 
 ```html
 <!doctype html>
@@ -205,8 +204,8 @@ sup a { color: var(--brand-light); text-decoration: none; padding: 0 .1em; }
               <text x="360" y="242">5월</text>
               <text x="500" y="242">6월</text>
             </g>
-            <path d="M80 152 L220 138 L360 118 L500 100" style="fill: none; stroke: var(--c1)" stroke-width="2"/>
-            <circle cx="500" cy="100" r="3.5" style="fill: var(--c1)"/>
+            <path d="M80 152 L220 138 L360 118 L500 98" style="fill: none; stroke: var(--c1)" stroke-width="2"/>
+            <circle cx="500" cy="98" r="3.5" style="fill: var(--c1)"/>
             <text x="512" y="104" style="fill: var(--c1)" font-size="12">15.1%</text>
           </svg>
           <figcaption>월별 재방문율. 2026-03-01 ~ 06-30, 가입 30일 이상 사용자 31.8만 명 기준. 출처<sup><a href="#s1" id="s1-ref">1</a></sup></figcaption>
@@ -288,13 +287,24 @@ sup a { color: var(--brand-light); text-decoration: none; padding: 0 .1em; }
   items.forEach(function (el) { observer.observe(el); el.classList.add('pending'); });
 })();
 
-// 표 정렬. 행이 스무 개를 넘을 때만 헤더에 data-sort 를 남긴다.
-// 축약 단위 등 별도 표기는 셀의 data-sort-value에 같은 단위의 원래 수치를 넣는다.
+// 표 정렬. 비교·탐색에 필요한 헤더에만 data-sort를 설정한다.
+// 축약 단위·지역별 숫자 표기는 data-sort-value에 같은 단위의 원시 숫자를 넣는다.
+// 명시적 정렬 값은 구분자 없는 십진수다. 표시 문자열의 소수점·천 단위를 추측하지 않는다.
 (function () {
+  var locale = document.documentElement.lang || undefined;
+  var collator;
+  try { collator = new Intl.Collator(locale); }
+  catch (_) { collator = new Intl.Collator(); }
+
   function numericValue(cell) {
     var explicit = cell.getAttribute('data-sort-value');
     var value = (explicit === null ? cell.textContent : explicit).trim().replace(/−/g, '-');
-    if (explicit === null) { value = value.replace(/^([+-]?)[$₩€£¥]\s*/, '$1').replace(/\s*%$/, ''); }
+    if (explicit !== null) {
+      if (!/^[+-]?(?:\d+(?:\.\d+)?|\.\d+)$/.test(value)) { return null; }
+      var raw = Number(value);
+      return Number.isFinite(raw) ? raw : null;
+    }
+    value = value.replace(/^([+-]?)[$₩€£¥]\s*/, '$1').replace(/\s*%$/, '');
     if (!/^[+-]?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?$/.test(value)) { return null; }
     var number = Number(value.replace(/,/g, ''));
     return Number.isFinite(number) ? number : null;
@@ -319,7 +329,7 @@ sup a { color: var(--brand-light); text-decoration: none; padding: 0 .1em; }
           if (y === null) { return -1; }
           return asc ? x - y : y - x;
         }
-        return asc ? x.localeCompare(y, 'ko') : y.localeCompare(x, 'ko');
+        return asc ? collator.compare(x, y) : collator.compare(y, x);
       });
       rows.forEach(function (row) { body.appendChild(row); });
       table.querySelectorAll('th').forEach(function (other) { other.removeAttribute('aria-sort'); });

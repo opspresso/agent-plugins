@@ -2,9 +2,9 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "workspace",
   "version": "1.0.0",
-  "description": "Write workplace communication, technical specifications and evidence-based meeting minutes, with MCP access to Plaud recordings and Notion.",
+  "description": "Draft communication, technical specifications and evidence-based meeting minutes. Optional Plaud and Notion integrations support recording and workspace access.",
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
   "license": "MIT",
-  "keywords": ["workspace", "writing", "documentation", "meetings", "plaud", "notion"]
+  "keywords": ["workspace", "writing", "documentation", "meetings", "audio"]
 }

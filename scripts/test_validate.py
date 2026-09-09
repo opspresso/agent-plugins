@@ -16,7 +16,6 @@ class ValidateSkillTest(TestCase):
     def setUp(self) -> None:
         validate.problems.clear()
         validate.recommendations.clear()
-        validate.deployment_exceptions.clear()
 
     def write_skill(
         self,
@@ -261,7 +260,6 @@ class ValidateManifestTest(TestCase):
     def setUp(self) -> None:
         validate.problems.clear()
         validate.recommendations.clear()
-        validate.deployment_exceptions.clear()
 
     def write_json(self, path: Path, data: object) -> Path:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -367,6 +365,28 @@ class ValidateManifestTest(TestCase):
                 self.assertTrue(any("invalid host or port" in p for p in validate.problems))
                 self.assertTrue(any("second: server must be an object" in p for p in validate.problems))
 
+    def test_mcp_url_policy_has_no_deployment_namespace_exception(self) -> None:
+        cases = [
+            ("http://service.agent-mcps.svc.cluster.local/mcp", False),
+            ("http://service.other.svc.cluster.local/mcp", False),
+            ("http://10.0.0.1/mcp", False),
+            ("http://example.com/mcp", False),
+            ("https://example.com/mcp", True),
+            ("http://localhost:3000/mcp", True),
+            ("http://127.0.0.1:3000/mcp", True),
+            ("http://[::1]:3000/mcp", True),
+        ]
+        for url, accepted in cases:
+            with self.subTest(url=url), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                manifest = self.write_json(Path(temporary) / "mcp.json", {
+                    "$schema": validate.MCP_SCHEMA,
+                    "mcpServers": {"server": {"type": "streamable-http", "url": url}},
+                })
+                with patch.object(validate, "check_mcp_docs"):
+                    validate.check_mcp(manifest)
+                self.assertEqual(accepted, not validate.problems)
+
     def test_mcp_rejects_quoted_empty_extension_description(self) -> None:
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -426,19 +446,75 @@ class ValidateManifestTest(TestCase):
     def test_main_clears_results_between_runs(self) -> None:
         validate.problems.append("stale problem")
         validate.recommendations.append("stale recommendation")
-        validate.deployment_exceptions.append("stale exception")
 
         with redirect_stdout(StringIO()):
             first_result = validate.main()
-            first_exceptions = list(validate.deployment_exceptions)
             second_result = validate.main()
 
         self.assertEqual(0, first_result)
         self.assertEqual(0, second_result)
-        self.assertEqual(first_exceptions, validate.deployment_exceptions)
         self.assertNotIn("stale problem", validate.problems)
         self.assertNotIn("stale recommendation", validate.recommendations)
-        self.assertNotIn("stale exception", validate.deployment_exceptions)
+
+
+class ValidateMarkdownLinksTest(TestCase):
+    def setUp(self) -> None:
+        validate.problems.clear()
+
+    def test_local_references_resolve_relative_to_the_document(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            reference = root / "references" / "guide.md"
+            reference.parent.mkdir()
+            (root / "SKILL.md").write_text("Skill")
+            (reference.parent / "data set.md").write_text("Data")
+            reference.write_text(
+                "[body](../SKILL.md#topic)\n[data](data%20set.md)\n"
+                '[data](<data set.md> "title")\n[remote](https://example.com/a)\n'
+                "[anchor](#topic)\n"
+            )
+            validate.check_markdown_links(reference, root)
+        self.assertEqual([], validate.problems)
+
+    def test_missing_and_cross_bundle_references_fail(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            skill = root / "skill"
+            skill.mkdir()
+            (root / "other.md").write_text("Not in the skill payload")
+            document = skill / "SKILL.md"
+            document.write_text("[missing](missing.md)\n[other](../other.md)\n")
+            validate.check_markdown_links(document, skill)
+        self.assertEqual(2, len(validate.problems))
+        self.assertTrue(any("does not exist" in p for p in validate.problems))
+        self.assertTrue(any("leaves its bundle" in p for p in validate.problems))
+
+    def test_fenced_examples_are_not_payload_references(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            document = root / "SKILL.md"
+            document.write_text(
+                "````markdown\n[example](missing.md)\n```\n"
+                "[still example](missing.md)\n````\n"
+                "~~~markdown\n[example](missing.md)\n~~~\n"
+                "[real link](missing.md)\n"
+            )
+            validate.check_markdown_links(document, root)
+        self.assertEqual(1, len(validate.problems))
+        self.assertIn("line 9", validate.problems[0])
+
+    def test_symlink_cannot_escape_the_payload(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            skill = root / "skill"
+            skill.mkdir()
+            (root / "outside.md").write_text("Outside")
+            (skill / "link.md").symlink_to(root / "outside.md")
+            document = skill / "SKILL.md"
+            document.write_text("[reference](link.md)")
+            validate.check_markdown_links(document, skill)
+        self.assertEqual(1, len(validate.problems))
+        self.assertIn("leaves its bundle", validate.problems[0])
 
 
 if __name__ == "__main__":

@@ -2,9 +2,9 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "devops",
   "version": "1.0.0",
-  "description": "Operate and change an AWS EKS platform: incident triage from symptom to cause, GitOps chart-values changes, and MCP access to Argo CD, CloudWatch, Grafana, Kubernetes and GitHub.",
+  "description": "Investigate service incidents and change Git-managed desired state using the target environment’s observability and deployment tools. Bundles GitHub access; infrastructure integrations are configured separately.",
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
   "license": "MIT",
-  "keywords": ["devops", "aws", "eks", "kubernetes", "gitops", "observability", "cloudwatch", "incident"]
+  "keywords": ["devops", "gitops", "observability", "incident", "deployment"]
 }
