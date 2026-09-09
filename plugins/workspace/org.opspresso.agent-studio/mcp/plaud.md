@@ -41,11 +41,18 @@ Use `meeting-minutes` for recording selection, internal-transcript provenance,
 decisions, action items and review. Its `agent-setup.md` supplies a project prompt
 and the required transcription integration boundary.
 
-The repository registers Plaud; it does not implement an audio downloader or ASR.
-Agent Studio currently catalogs Transcription models but has no transcription
-execution builtin. Its `FetchUrl` reads text/images, and `File` processes documents;
-neither turns an audio URL into a transcript. Internal transcription therefore
-needs a configured internal tool before the full agent can run.
+The repository registers Plaud; Agent Studio supplies the optional `ImportFile`,
+`TranscribeAudio` and `AudioJob` builtins when the version enables `audioProcessing`.
+Bind `audio-processing` for the generic submission and recovery contract. Configure a
+file response mapping on this MCP binding so `get_file` returns an opaque `source_ref`
+instead of exposing its signed URL to the model. Derive the URL and item-ID paths
+from the discovered response, and use a distinct account namespace. Do not assume
+that the transformed result retains Plaud's original transcript or metadata fields.
+If the discovered detail tool requires only an item-ID argument, configure that
+argument as `refreshArgument` to obtain a fresh URL immediately before downloading.
+Studio refuses replay across a changed connection generation or a different returned
+item ID. Reauthorization requires checking the intended account and namespace.
+`FetchUrl` and document `File` remain unsuitable for audio transcription.
 
 The hosted Plaud MCP processes requests in the US, and recordings must already
 be cloud-synced. Internal ASR keeps the transcription stage internal; it does not
