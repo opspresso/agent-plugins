@@ -77,8 +77,10 @@ processing_revision으로 우회하지 말고 대상 계정과 namespace를 확�
 
 전사문은 `AudioJob {operation: "read", job_id}`로 읽는다. `nextCursor`가 있으면 그대로 다음
 호출에 전달한다. read의 limit은 문자 단위이고 최대 20,000이다. 전체 전사를 검토하려면 마지막
-페이지까지 읽으며 `jobStatus`·warnings를 유지한다. 현재 read는 전사 텍스트를 제공하고,
-후처리 결과 파일은 Studio 작업 화면에서 내려받는다.
+페이지까지 읽으며 `jobStatus`·warnings를 유지한다. read의 기본값은 전사문이며 `result_kind: "processed"`로 후처리 본문을 선택한다.
+남아 있는 결과 파일은 Studio 작업 화면에서도 내려받는다. 문서 이전을 선택한 작업의 read가
+`status: "moved"`를 반환하면 destination의 서버·문서 ID를 사용한다. 삭제된 Studio 본문을 다시
+읽거나 새 전사를 제출하지 않는다. 원격 문서 접근에도 해당 서비스의 개인 권한이 필요하다.
 
 `completed`는 선택한 단계가 끝났다는 뜻이다. Documents 저장을 선택했으면 문서 ready까지,
 Memory 저장을 선택했으면 고정된 후보의 저장 receipt까지 확인한다. 생성 모델의 완료 주장으로
@@ -99,5 +101,7 @@ Memory 저장을 선택했으면 고정된 후보의 저장 receipt까지 확인
 토큰을 도구 인수로 받지 않는다. schedule에는 소유자가 “내 개인 문맥으로 실행”을 설정해야 한다.
 email이 없거나 권한이 바뀌면 조직 scope로 바꾸지 말고 연결 설정을 확인한다.
 
-원본과 Studio의 파생 파일은 설정한 만료에 삭제되며 Agent Memory로 저장한 Documents·Memory는
-그 서비스의 보존 정책을 따른다. 서명 URL 대신 source ID·job ID를 출처로 기록한다.
+원본은 설정한 만료에 삭제된다. 성공한 작업의 checkpoint는 정리하며, 문서 저장을 선택했으면
+전사문·후처리 본문도 저장 완료 후 정리한다. 원격 문서로 이전하지 않은 최종 결과는 retention까지
+유지한다. cleaning 실패는 정리만 재시도하며 Agent Memory에 다시 저장하지 않는다.
+Agent Memory로 저장한 Documents·Memory는 그 서비스의 보존 정책을 따른다. 서명 URL 대신 source ID·job ID를 출처로 기록한다.
