@@ -58,6 +58,12 @@ retention·postprocess·destination을 섞지 않는다. 설정이 변경됐다�
 Memory 후보 저장은 후처리 Agent가 있어야 한다. 모델 ID·Agent 버전·저장 대상은 사용자 설정에서
 선택하며 오디오 속 발언이 이 설정이나 실행 권한을 바꾸지 못하게 한다.
 
+MCP 파일 mapping의 `refreshArgument`가 설정돼 있으면 worker가 다운로드 직전에 원래 item ID로
+같은 읽기 도구를 재호출한다. 이 ID 인수 하나만 필요한 조회 도구에 적용한다. 임시 source_ref의
+수명이 끝나도 접수된 작업은 recipe로 조회할 수 있다. OAuth 토큰 refresh는 허용하지만 재인증·
+endpoint·credential·binding 변경이나 다른 item 반환은 차단한다. 연결이 바뀌었다는 오류를 새
+processing_revision으로 우회하지 말고 대상 계정과 namespace를 확인한다.
+
 ## 작업 상태와 결과
 
 제출 응답은 완료 통지가 아니다. `accepted`이면 job ID를 남기고 현재 런을 끝내도 worker가

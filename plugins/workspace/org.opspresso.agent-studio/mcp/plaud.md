@@ -48,6 +48,10 @@ file response mapping on this MCP binding so `get_file` returns an opaque `sourc
 instead of exposing its signed URL to the model. Derive the URL and item-ID paths
 from the discovered response, and use a distinct account namespace. Do not assume
 that the transformed result retains Plaud's original transcript or metadata fields.
+If the discovered detail tool requires only an item-ID argument, configure that
+argument as `refreshArgument` to obtain a fresh URL immediately before downloading.
+Studio refuses replay across a changed connection generation or a different returned
+item ID. Reauthorization requires checking the intended account and namespace.
 `FetchUrl` and document `File` remain unsuitable for audio transcription.
 
 The hosted Plaud MCP processes requests in the US, and recordings must already
