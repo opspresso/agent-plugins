@@ -7,7 +7,9 @@
 ## 새 녹음을 한 작업으로 처리한다
 
 `AudioJob {operation: "config"}`로 enabled, revision, model, retention, postprocess를 확인한다.
-후처리 대상은 같은 Agent의 고정 버전으로 설정할 수 있다. 별도 Agent로 위임하는 과정이 아니다.
+같은 Agent로 후처리할 때는 `postprocess: {projectName: "<운영 Agent>", versionName: "published"}`를 권장한다.
+배포 버전은 작업 접수 시 실제 버전으로 고정된다. 별도 Agent로 위임하는 과정이 아니다.
+명시적인 고정 버전을 선택했다면 그 버전을 삭제하기 전에 후처리 설정을 바꾼다.
 자동 처리에서는 destination이 없어야 한다. 설정이 없거나 요청과 맞지 않으면 필요한 설정을 알린다.
 
 ```json
