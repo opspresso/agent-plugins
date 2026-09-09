@@ -41,7 +41,7 @@ plugins/
 |---|---|---|
 | **devops** — investigate the cluster, change it through GitOps | gitops-change, incident-triage | argocd, cloudwatch, grafana, kubernetes, github |
 | **research** — bring in material the model cannot reach, and write documents back out | document-authoring, spreadsheet-authoring | brave-search, aws-knowledge |
-| **workspace** — write what moves around the company | korean-writing, korean-humanize, tech-spec, meeting-minutes | notion, plaud |
+| **workspace** — write what moves around the company | korean-writing, korean-humanize, tech-spec, meeting-minutes, audio-processing | notion, plaud |
 | **design** — build what a person will look at | html-wireframe, html-prototype, html-explainer, frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
 | **engineering** — get a change reviewed and out the door | code-review, pr-description, engineering-writing | — |
 | **agent-craft** — build agents and their interfaces | prompt-writer, skill-writer, mcp-writer, simple-orchestration, structured-output | — |
@@ -88,13 +88,13 @@ the intended Plaud account for the meeting agent's project. Cloud Sync is requir
 Public metadata supports PKCE and dynamic registration; authenticated recording
 access still needs to be verified after account connection.
 
-The intended workflow is recording selection → temporary audio URL → internal
-download/transcription tool → `meeting-minutes` → optional document or Notion output.
-Plaud supplies audio URLs and existing provider transcripts, not an internal ASR
-executor. Agent Studio currently registers Transcription model metadata but has
-no audio transcription builtin; `FetchUrl` and document `File` do not fill that gap.
-Adding this plugin alone therefore does not complete the internal transcription
-pipeline. The skill preserves this boundary instead of substituting Plaud output.
+The intended workflow is recording selection → mapped `source_ref` → Studio
+`AudioJob` → optional `meeting-minutes` Agent → optional personal Documents/Memory.
+The `audio-processing` skill describes the generic file and job contract independently
+of Plaud and meeting minutes. Enable the Studio version's `audioProcessing` tools and
+configure its worker, private source bucket and transcription endpoint first. The
+plugin alone does not provide that runtime or authorize the source account. Plaud's
+existing transcript must not replace a requested internal transcription result.
 
 Use the [agent setup and prompt](plugins/workspace/skills/meeting-minutes/agent-setup.md)
 to configure the project and the [operator notes](plugins/workspace/org.opspresso.agent-studio/mcp/plaud.md)
