@@ -28,7 +28,8 @@ Artifact가 작업의 진행에 따라 만들어진다. config 변경 자체는 
 
 `processing_revision`은 같은 요청 재전송에서 유지한다. 사용자가 명시적으로 재처리를 요청했을 때만
 새 값을 사용한다. accepted는 접수, duplicate는 기존 작업 재사용, busy는 새 작업 미접수다.
-status가 completed일 때만 선택한 단계의 완료를 보고한다.
+제출 응답의 status와 job.status를 구분한다. duplicate라도 job.status가 completed이면 이미 완료된 작업이다.
+stage는 마지막 단계 이름이므로 cleaning이나 importing이라는 값만으로 진행 중이라고 판단하지 않는다.
 
 ## 상태와 결과
 

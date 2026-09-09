@@ -32,7 +32,8 @@ compatibility: >
    기존 외부 ID를 제외한 뒤 상세 조회로 source_ref를 얻는다. 조회 오류를 신규 항목 없음으로 바꾸지 않는다.
 4. `AudioJob config`의 모델·보존 기간·후처리 대상을 확인한다. 자동 실행에서는 destination이 없어야 한다.
    새 녹음 한 건을 `AudioJob submit`으로 제출하면 worker가 보관 → 전사 → 후처리를 이어간다.
-5. 접수·중복·완료를 구분해 job ID를 보고한다. 완료된 결과는 원본·전사·대화·요약 Artifact로 안내한다.
+5. 제출 응답의 status는 접수 결과이고 job.status는 실행 상태다. job.status가 completed이면
+   stage가 cleaning이어도 이미 끝난 작업이다. 접수·중복·완료를 구분해 job ID를 보고한다. 완료된 결과는 원본·전사·대화·요약 Artifact로 안내한다.
 
 source_ref는 원본 URL 대신 제공되는 참조이며 저장 완료를 뜻하지 않는다. URL은 의도적으로 숨겨진다.
 중복 여부는 URL 유무나 제목이 아니라 원래 외부 ID와 작업 상태로 판단한다.
