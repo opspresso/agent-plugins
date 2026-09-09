@@ -2,7 +2,7 @@
 name: audio-processing
 description: >
   오디오를 비공개 Artifact로 보관하고 지정 모델로 전사·후처리한다.
-  정기 수집, 기존 작업 이어가기, 사용자가 요청한 개인 기록을 수행할 때 사용한다.
+  정기 수집이나 기존 오디오 작업 이어가기에 사용한다.
 compatibility: >
   Agent Studio의 ImportFile·TranscribeAudio·AudioJob과 비공개 파일 저장소가 필요하다.
   출처 조회와 개인 기록에는 해당 MCP 연결 및 검증된 사용자 문맥이 필요하다.
@@ -19,7 +19,7 @@ compatibility: >
   제공된 source만 정리하고 요청된 JSON envelope를 반환한다. 회의록이면 연결된 `meeting-minutes`를 읽는다.
   새 작업 제출·파일 저장·외부 기록을 하지 않는다. 산출물 저장은 worker가 담당한다.
 - 정기 수집이나 녹음 처리 요청이면 아래 절차를 따른다. 실제 제출 시 [Studio 도구](references/agent-studio.md)를 읽는다.
-- 사용자가 기존 산출물의 Memory·Document 기록을 요청했다면 [개인 기록](references/personal-records.md)을 읽는다.
+- 사용자가 기존 산출물의 Memory·Document 기록을 요청했다면 연결된 `personal-records` skill을 읽는다.
   기록 요청만으로 원음을 다시 다운로드하거나 전사하지 않는다.
 
 ## 수집과 재개

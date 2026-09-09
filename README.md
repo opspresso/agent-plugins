@@ -48,7 +48,7 @@ repository because the supported registry is flat.
 |---|---|---|
 | devops | gitops-change, incident-triage | github |
 | research | document-authoring, spreadsheet-authoring | aws-knowledge |
-| workspace | korean-writing, korean-humanize, tech-spec, meeting-minutes, audio-processing | notion, plaud |
+| workspace | korean-writing, korean-humanize, tech-spec, meeting-minutes, audio-processing, personal-records | notion, plaud |
 | design | html-wireframe, html-prototype, html-explainer, frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
 | engineering | code-review, pr-description, engineering-writing | — |
 | agent-craft | prompt-writer, skill-writer, mcp-writer, simple-orchestration, structured-output | — |
