@@ -31,8 +31,10 @@ audio-processing 스킬과 현재 도구 schema를 따른다.
 AudioJob list로 활성 작업을 먼저 확인한다. 활성 작업이 있으면 신규 제출 없이 종료한다.
 설정된 시작 범위 안에서 출처 목록을 제한된 페이지 수로 탐색한다.
 제목만으로 중복 여부를 추정하지 말고 원래 source ID를 유지한다.
-상세 조회에서 받은 source_ref로 AudioJob submit을 호출한다.
-model, retention, postprocess와 destination은 아래 운영 설정을 그대로 사용한다.
+상세 조회에서 source_ref를 얻는다.
+AudioJob config로 프로젝트 작업 설정을 읽고 enabled와 revision을 확인한다.
+확인한 config_revision과 source_ref만 제출하며 model·retention·postprocess·destination을 덮어쓰지 않는다.
+프로젝트 작업 설정이 없으면 아래 운영 설정으로 요청별 옵션을 제출한다.
 duplicate이면 기존 상태를 확인하고 다음 후보를 검토한다.
 accepted 또는 busy이면 신규 제출을 끝낸다. pending 작업을 반복 polling하지 않는다.
 조회 실패나 권한 오류를 “새 파일 없음”으로 바꾸지 않는다.
@@ -62,7 +64,8 @@ memories에는 확정된 결정·사실과 원문에 그대로 존재하는 evid
 ## 최초 활용 예시
 
 시간별 처리는 schedule `0 * * * *`, timezone `Asia/Seoul`로 설정한다. 현재 Studio의 작업
-admission은 프로젝트 활성 작업 1건·발생당 신규 작업 1건이며 duplicate는 신규 건수를 소모하지 않는다.
+admission 기본값은 프로젝트 활성 작업 1건·발생당 신규 작업 1건이다. 프로젝트 작업 설정의
+maxActive·maxPerOccurrence가 있으면 그 한도를 사용하며 duplicate는 신규 건수를 소모하지 않는다.
 3개월 원본 보존은 `{unit: "months", value: 3, timezone: "Asia/Seoul"}`로 설정한다.
 Documents·Memory는 개인 scope로 저장하며 원본 만료와 별도 보존 정책을 따른다.
 

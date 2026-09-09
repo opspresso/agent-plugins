@@ -28,7 +28,19 @@ compatibility: >
   원본 수집부터 후처리·저장까지 이어갈 때는 `AudioJob`의 `submit` 한 번으로 제출한다.
   이 경우 ImportFile을 먼저 호출해 발생당 신규 작업 한도를 소모하지 않는다.
 
-`AudioJob submit` 예시는 설정값과 실제 source_ref를 대입한 후 사용한다.
+프로젝트 작업 설정이 있으면 `AudioJob {operation: "config"}`로 읽고 enabled와 revision을 확인한다.
+설정이 비활성화됐거나 소유자 확인이 필요하면 제출하지 않는다. 설정을 수정하는 도구는 제공되지
+않으므로 Studio 설정 화면에서 변경한다. 확인한 revision으로 다음과 같이 제출한다.
+
+```json
+{"operation": "submit", "source_ref": "<실제 source_ref>", "config_revision": 1}
+```
+
+위 revision은 예시다. 반드시 config 응답의 값을 사용한다. config_revision과 model·language·
+retention·postprocess·destination을 섞지 않는다. 설정이 변경됐다는 응답이면 config를 다시 읽고
+바뀐 저장 대상과 범위가 승인된 작업에 맞는지 확인한다. 설정 변경만으로 기존 source를 재처리하지 않는다.
+
+설정이 없거나 명시적으로 요청별 옵션을 사용할 때의 `AudioJob submit` 예시는 다음과 같다.
 
 ```json
 {
