@@ -1,47 +1,80 @@
 # Studio 도구
 
-현재 제공된 schema가 기준이다. `artifact_id`, `file_id`, `source_ref` 중 정확히 하나를 전달한다.
-`artifact_id`는 사용자가 소유한 비공개 Artifact, `file_id`는 업로드·완료된 import 파일,
-`source_ref`는 연결 도구가 발급한 원본 참조다. 외부 녹음 ID·URL·인증 값을 이 인수로 대체하지 않는다.
+현재 제공된 schema가 기준이다. AudioJob 인수는 `request` 객체 하나이며, operation에 맞는 형태만
+선택한다. 선택 항목은 필요 없으면 null로 지정한다. 빈 문자열, "none", 임의 날짜·모델·retention을
+채워 넣지 않는다. 서로 다른 작업의 필드를 섞지 않는다.
 
-## 새 녹음을 한 작업으로 처리한다
+## 짧은 사용자 요청으로 시작한다
 
-`AudioJob {operation: "config"}`로 enabled, revision, model, retention, postprocess를 확인한다.
-같은 Agent로 후처리할 때는 `postprocess: {projectName: "<운영 Agent>", versionName: "published"}`를 권장한다.
-배포 버전은 작업 접수 시 실제 버전으로 고정된다. 별도 Agent로 위임하는 과정이 아니다.
-명시적인 고정 버전을 선택했다면 그 버전을 삭제하기 전에 후처리 설정을 바꾼다.
-자동 처리에서는 destination이 없어야 한다. 설정이 없거나 요청과 맞지 않으면 필요한 설정을 알린다.
+"Plaud 최신 녹음을 전사하고 요약해 줘"처럼 대상과 결과만 받아도 아래 절차를 수행한다.
+스킬이 처리 순서를, MCP가 실제 출처 조회를, 프로젝트 설정이 모델·후처리·보존 기간을 담당한다.
 
 ```json
-{"operation":"submit","source_ref":"<조회된 참조>","config_revision":1}
+{"request":{"operation":"list","cursor":null,"limit":20}}
 ```
 
-revision은 실제 config 응답을 사용한다. config_revision과 model·retention·postprocess·destination
-덮어쓰기를 섞지 않는다. 기본 task는 process이며 source, transcript, processed, structured, dialogue
-Artifact가 작업의 진행에 따라 만들어진다. config 변경 자체는 기존 녹음을 재처리할 이유가 아니다.
+진행 중인 작업이 있으면 ID와 상태를 보고하고 종료한다. 완료된 같은 녹음은 결과를 재사용한다.
+list에 nextCursor가 있으면 필요 범위까지 이어 조회한다. 실패·차단은 원인을 보고하고 임의 재처리하지 않는다.
+
+```json
+{"request":{"operation":"config"}}
+```
+
+enabled·revision·model·retention·postprocess를 확인한다. 설정이 없거나 요청과 맞지 않으면 필요한
+설정만 알린다. 외부 기록을 요청하지 않았으면 destination이 없는 설정을 사용한다.
+연결된 출처 MCP에서 목록과 상세를 조회한다. source_ref는 서버가 발급한 참조이며 외부 파일 ID나 URL이 아니다.
+Plaud plugin의 기본 파일 매핑이 적용되면 get_file 응답에서 source_ref를 받는다.
+
+## 새 녹음은 통합 작업 하나로 처리한다
+
+```json
+{"request":{"operation":"submit","source":{"kind":"source","id":"<source_ref>"},"config_revision":12,"processing_revision":null}}
+```
+
+revision은 실제 config 응답으로 바꾼다. 이 형태에는 model·retention·postprocess·destination·task를
+넣지 않는다. worker가 원본 보관 → 전사 → 설정된 후처리를 이어가며 각 결과를 Artifacts에 저장한다.
+이미 보관된 원본은 source의 kind를 artifact로, id를 원본 Artifact ID로 지정한다.
+사용자가 명시적으로 재처리할 때만 processing_revision에 새 값을 쓰고 같은 요청의 재전송에서는 유지한다.
+앞 작업이 완료돼도 발생당 접수 한도는 복원되지 않으므로 ImportFile·TranscribeAudio로 작업을 분리하지 않는다.
 
 ## 일부 단계만 처리한다
 
-- 보관만: `ImportFile {source_ref, retention}`.
-- 이미 보관된 원본 전사: `TranscribeAudio {artifact_id, model, language, retention}`.
-- 기존 전사 후처리: `AudioJob {operation:"submit", task:"postprocess", artifact_id, postprocess, retention}`.
-  postprocess는 config의 projectName/versionName을 사용한다. model·language·destination·config_revision은 생략한다.
-- `retention`은 `{unit:"days"|"months", value:양의 정수, timezone:IANA 시간대}`이며 months는 달력 월이다.
+원본 보관만 필요할 때 ImportFile을 사용한다.
 
-`processing_revision`은 같은 요청 재전송에서 유지한다. 사용자가 명시적으로 재처리를 요청했을 때만
-새 값을 사용한다. accepted는 접수, duplicate는 기존 작업 재사용, busy는 새 작업 미접수다.
-제출 응답의 status와 job.status를 구분한다. duplicate라도 job.status가 completed이면 이미 완료된 작업이다.
-stage는 마지막 단계 이름이므로 cleaning이나 importing이라는 값만으로 진행 중이라고 판단하지 않는다.
+```json
+{"source":{"kind":"source","id":"<source_ref>"},"retention":{"unit":"months","value":3,"timezone":"Asia/Seoul"},"processing_revision":null}
+```
+
+전사만 필요하면 TranscribeAudio에 source·model·retention·language·processing_revision을 전달한다.
+source는 `{kind:"artifact"|"file"|"source",id:"<해당 참조>"}`이며 language는 선택하지 않으면 null이다.
+모델·보존 기간은 config 또는 사용자 요청에서 가져온다.
+
+이미 전사된 Artifact는 AudioJob postprocess로 요약한다. 오디오 입력으로 다시 제출하지 않는다.
+
+```json
+{"request":{"operation":"postprocess","artifact_id":"<전사 Artifact ID>","postprocess":{"projectName":"<후처리 Agent>","versionName":"published"},"retention":{"unit":"months","value":3,"timezone":"Asia/Seoul"},"processing_revision":null}}
+```
+
+후처리 대상과 retention은 실제 config의 값을 사용한다. 별도 Agent를 만들 필요는 없다.
+config_revision·전사 model·language·destination은 이 형태에 없다.
+설정 대신 명시적 처리 옵션이 필요한 경우에만 operation process를 사용하고 해당 schema를 따른다.
 
 ## 상태와 결과
 
-`AudioJob {operation:"status", job_id}`로 확인한다. queued/running/waiting이면 worker에 맡기고 종료한다.
-다음 정기 실행에서 같은 작업을 확인한다. 이 도구에 없는 retry/cancel operation을 만들지 않는다.
-list는 nextCursor를 사용하며 한 페이지의 결과만으로 전체 작업이 없다고 단정하지 않는다.
+```json
+{"request":{"operation":"status","job_id":"<실제 작업 ID>"}}
+```
 
-전사 본문은 `AudioJob {operation:"read", job_id}`로 읽고 nextCursor가 있으면 이어 읽는다.
-`result_kind:"processed"`는 후처리 본문이다. `File read`는 결과의 Artifact ID를 사용한다.
-화자·시각은 전사 도구가 제공한 정보만 사용하고, 누락·불명확한 내용은 추측으로 채우지 않는다.
+접수 응답의 accepted/duplicate는 job.status와 다르다. queued/running/waiting이면 실제 ID를 보고하고
+종료한다. 한 실행에서 반복 polling하지 않는다. completed라면 마지막 stage가 importing이나 cleaning이어도
+끝난 작업이다. 원본·전사·요약 Artifact 링크를 안내한다. 처리되지 않은 단계는 완료로 보고하지 않는다.
 
-원본 조회의 source_ref가 만료되어도 접수된 작업은 등록된 refresh recipe를 사용할 수 있다.
-OAuth 재인증·계정·endpoint·binding 변경 오류는 연결을 확인하고 새 revision으로 우회하지 않는다.
+```json
+{"request":{"operation":"read","job_id":"<실제 작업 ID>","result_kind":"processed","cursor":null,"limit":12000}}
+```
+
+transcript는 전사문, processed는 후처리 본문이다. nextCursor가 있으면 이어 읽는다.
+원문에 없는 화자·시각·결정은 만들지 않는다. 이 도구에 없는 retry/cancel operation을 만들지 않는다.
+occurrence_limit은 현재 실행의 접수 한도 소진이다. 기다리거나 반복 제출해도 풀리지 않는다.
+active_limit은 진행 중인 작업 한도다. 기존 작업 ID를 보고하고 종료한다.
+연결 변경·OAuth 오류는 설정을 확인하며 새 revision으로 우회하지 않는다.

@@ -43,15 +43,16 @@ and the required transcription integration boundary.
 
 The repository registers Plaud; Agent Studio supplies the optional `ImportFile`,
 `TranscribeAudio` and `AudioJob` builtins when the version enables `audioProcessing`.
-Bind `audio-processing` for the generic submission and recovery contract. Configure a
-file response mapping on this MCP binding so `get_file` returns an opaque `source_ref`
-instead of exposing its signed URL to the model. Derive the URL and item-ID paths
-from the discovered response, and use a distinct account namespace. Do not assume
-that the transformed result retains Plaud's original transcript or metadata fields.
-If the discovered detail tool requires only an item-ID argument, configure that
-argument as `refreshArgument` to obtain a fresh URL immediately before downloading.
-Studio refuses replay across a changed connection generation or a different returned
-item ID. Reauthorization requires checking the intended account and namespace.
+Bind `audio-processing` for the generic submission and recovery contract. The workspace
+plugin declares the default `get_file` projection in plugin.json under
+`extensions.org.opspresso.agent-studio.mcpSourceOutputs.plaud`. Studio applies it
+when the version has no explicit override: `presigned_url` is kept server-side and
+an opaque `source_ref` is returned to the model. No manual mapping is needed for
+this response shape. Default source identity is scoped to the authenticated connection.
+The declared `refreshArgument: file_id` refreshes the URL from the same recording.
+Version overrides take priority; an explicit empty array disables mapping. A changed
+response shape requires an updated plugin declaration or a deliberate version override.
+Studio refuses replay after the connection, effective mapping or returned item ID changes.
 `FetchUrl` and document `File` remain unsuitable for audio transcription.
 
 The hosted Plaud MCP processes requests in the US, and recordings must already

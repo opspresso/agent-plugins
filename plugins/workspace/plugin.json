@@ -6,5 +6,22 @@
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
   "license": "MIT",
-  "keywords": ["workspace", "writing", "documentation", "meetings", "audio"]
+  "keywords": ["workspace", "writing", "documentation", "meetings", "audio"],
+  "extensions": {
+    "org.opspresso.agent-studio": {
+      "mcpSourceOutputs": {
+        "plaud": [
+          {
+            "tool": "get_file",
+            "namespace": "plaud",
+            "urlPath": ["presigned_url"],
+            "idPath": ["id"],
+            "namePath": ["name"],
+            "mimeType": "audio/mpeg",
+            "refreshArgument": "file_id"
+          }
+        ]
+      }
+    }
+  }
 }

@@ -16,23 +16,26 @@ compatibility: >
 ## 입력에 따라 시작한다
 
 - 런타임이 `mode: extract | reduce`와 `source`를 전달했다면 후처리 실행이다.
-  제공된 source만 정리하고 요청된 JSON envelope를 반환한다. 회의록이면 연결된 `meeting-minutes`를 읽는다.
+  제공된 source만 정리하고 런타임이 요청한 출력 형식(Markdown 또는 JSON)을 따른다. 회의록이면 연결된 `meeting-minutes`를 읽는다.
   새 작업 제출·파일 저장·외부 기록을 하지 않는다. 산출물 저장은 worker가 담당한다.
-- 정기 수집이나 녹음 처리 요청이면 아래 절차를 따른다. 실제 제출 시 [Studio 도구](references/agent-studio.md)를 읽는다.
+- 정기 수집이나 녹음 처리 요청이면 아래 절차를 따른다. 도구를 호출하기 전에 [Studio 도구](references/agent-studio.md)의 작업별 입력 예시를 읽는다.
 - 사용자가 기존 산출물의 Memory·Document 기록을 요청했다면 연결된 `personal-records` skill을 읽는다.
   기록 요청만으로 원음을 다시 다운로드하거나 전사하지 않는다.
 
 ## 수집과 재개
 
-1. `AudioJob list`로 기존 작업을 확인한다. 진행 중인 작업이 있으면 ID와 상태를 보고하고 종료한다.
+1. 짧은 요청도 같은 절차로 처리한다. 모델·보존 기간·호출 인수를 사용자에게 반복해서 요구하지 않는다.
+   최신 녹음 요청에서 개수가 없으면 1건만 선택한다. 요청 범위를 임의로 넓히지 않는다.
+2. `AudioJob list`로 기존 작업을 확인한다. 진행 중인 작업이 있으면 ID와 상태를 보고하고 종료한다.
    실패·차단 작업은 원인을 보고한다. 반복 polling이나 새 revision으로 우회하지 않는다.
-2. 완료된 작업의 task·sourceIdentity·artifacts 관계를 확인한다. 미완료 후속 단계가 있으면 그 단계만 제출한다.
+3. 완료된 작업의 task·sourceIdentity·artifacts 관계를 확인한다. 미완료 후속 단계가 있으면 그 단계만 제출한다.
    완료된 단계와 만료된 원본을 자동 재처리하지 않는다.
-3. 새 작업이 필요하면 요청된 범위와 탐색 한도 안에서 출처 목록을 조회한다.
+4. 새 작업이 필요하면 요청된 범위와 탐색 한도 안에서 출처 목록을 조회한다.
    기존 외부 ID를 제외한 뒤 상세 조회로 source_ref를 얻는다. 조회 오류를 신규 항목 없음으로 바꾸지 않는다.
-4. `AudioJob config`의 모델·보존 기간·후처리 대상을 확인한다. 자동 실행에서는 destination이 없어야 한다.
+5. `AudioJob config`의 모델·보존 기간·후처리 대상을 확인한다. 자동 실행에서는 destination이 없어야 한다.
+   다운로드·전사·요약 요청은 별도 ImportFile로 시작하지 않는다.
    새 녹음 한 건을 `AudioJob submit`으로 제출하면 worker가 보관 → 전사 → 후처리를 이어간다.
-5. 제출 응답의 status는 접수 결과이고 job.status는 실행 상태다. job.status가 completed이면
+6. 제출 응답의 status는 접수 결과이고 job.status는 실행 상태다. job.status가 completed이면
    stage가 cleaning이어도 이미 끝난 작업이다. 접수·중복·완료를 구분해 job ID를 보고한다. 완료된 결과는 원본·전사·대화·요약 Artifact로 안내한다.
 
 source_ref는 원본 URL 대신 제공되는 참조이며 저장 완료를 뜻하지 않는다. URL은 의도적으로 숨겨진다.
