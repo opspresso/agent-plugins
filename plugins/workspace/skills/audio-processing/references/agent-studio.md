@@ -13,7 +13,7 @@
 {"request":{"operation":"list","cursor":null,"limit":20}}
 ```
 
-진행 중인 작업이 있으면 ID와 상태를 보고하고 종료한다. 완료된 같은 녹음은 결과를 재사용한다.
+같은 녹음의 진행 중인 작업은 ID와 상태를 재사용하고, 완료된 같은 녹음은 결과를 재사용한다.
 list에 nextCursor가 있으면 필요 범위까지 이어 조회한다. 실패·차단은 원인을 보고하고 임의 재처리하지 않는다.
 
 ```json
@@ -24,6 +24,9 @@ enabled·revision·model·retention·postprocess를 확인한다. 설정이 없�
 설정만 알린다. 외부 기록을 요청하지 않았으면 destination이 없는 설정을 사용한다.
 연결된 출처 MCP에서 목록과 상세를 조회한다. source_ref는 서버가 발급한 참조이며 외부 파일 ID나 URL이 아니다.
 Plaud plugin의 기본 파일 매핑이 적용되면 get_file 응답에서 source_ref를 받는다.
+복수 녹음은 maxActive(대기+진행)와 maxPerOccurrence가 허용하는 만큼 각각 submit한다.
+worker는 프로젝트별 접수 순서대로 한 건씩 실행하므로 처리 완료를 기다렸다가 다음 녹음을 제출할 필요가 없다.
+접수 한도를 바꾸거나 우회하지 않는다. 한도가 1이면 한 건만 접수하고 나머지는 미접수로 보고한다.
 
 ## 새 녹음은 통합 작업 하나로 처리한다
 
@@ -66,7 +69,7 @@ config_revision·전사 model·language·destination은 이 형태에 없다.
 ```
 
 접수 응답의 accepted/duplicate는 job.status와 다르다. queued/running/waiting이면 실제 ID를 보고하고
-종료한다. 한 실행에서 반복 polling하지 않는다. completed라면 마지막 stage가 importing이나 cleaning이어도
+남은 요청 대상의 접수를 마친 뒤 종료한다. 한 실행에서 반복 polling하지 않는다. completed라면 마지막 stage가 importing이나 cleaning이어도
 끝난 작업이다. 원본·전사·요약 Artifact 링크를 안내한다. 처리되지 않은 단계는 완료로 보고하지 않는다.
 
 ```json
@@ -76,5 +79,5 @@ config_revision·전사 model·language·destination은 이 형태에 없다.
 transcript는 전사문, processed는 후처리 본문이다. nextCursor가 있으면 이어 읽는다.
 원문에 없는 화자·시각·결정은 만들지 않는다. 이 도구에 없는 retry/cancel operation을 만들지 않는다.
 occurrence_limit은 현재 실행의 접수 한도 소진이다. 기다리거나 반복 제출해도 풀리지 않는다.
-active_limit은 진행 중인 작업 한도다. 기존 작업 ID를 보고하고 종료한다.
+active_limit은 대기·진행을 합친 접수 한도다. 기존 작업 ID와 미접수 대상을 보고하고 종료한다.
 연결 변경·OAuth 오류는 설정을 확인하며 새 revision으로 우회하지 않는다.

@@ -1,9 +1,9 @@
 ---
 description: >
-  Find Plaud recordings by name or date and retrieve recording details and temporary
-  audio download URLs through the connected account. Plaud transcripts and summaries
-  are existing provider output, not internal transcription results. Downloading and
-  transcribing the audio requires a separate capable tool; this server does not record audio.
+  Find Plaud recordings by name or date through the connected account. In Agent Studio,
+  mapped get_file returns a private source_ref for audio-processing and AudioJob
+  transcription and summary; no manual download URL is needed. Plaud transcripts and
+  notes are existing provider output, not new internal transcription. This server does not transcribe audio.
 ---
 
 # plaud
