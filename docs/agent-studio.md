@@ -43,10 +43,12 @@ for eligibility and OAuth configuration. Google MCP endpoints are in Developer
 Preview; Slack requires an eligible registered app. Both need installation-side
 account connections before authenticated reads can be verified.
 
-The current companion client's strict metadata checks reject Google's issuer
-trailing-slash difference and Slack's origin-level resource identifier. The setup
-notes describe these discovery blockers; verify compatible provider/client
-behavior before starting account authorization. Manifest sync does not resolve them.
+Google discovery requires the companion client's explicit handling of the
+`https://accounts.google.com/` → `https://accounts.google.com` issuer alias;
+older clients reject the metadata. Callback issuer validation remains exact.
+Slack's origin-level resource identifier still conflicts with the current client
+checks. The setup notes describe the required client behavior; manifest sync
+does not update the client or resolve account authorization.
 
 The `email-triage`, `calendar-management` and `workspace-search` skills use only
 the capabilities offered to the run. Native Google IDs are source identifiers,

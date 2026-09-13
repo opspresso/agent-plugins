@@ -74,7 +74,7 @@ in `workspace`; select the subset needed by each agent. Google Workspace MCP is
 in **Developer Preview** and requires eligible access, API enablement and a
 registered OAuth client. See [Google Workspace setup](docs/integrations/google-workspace.md)
 and [Slack setup](plugins/workspace/org.opspresso.agent-studio/mcp/slack.md) for
-account connection, current Agent Studio OAuth discovery blockers and verification.
+account connection, Agent Studio OAuth compatibility requirements and verification.
 Adding these declarations does not connect accounts or grant access to private
 content.
 

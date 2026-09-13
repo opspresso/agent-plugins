@@ -28,7 +28,8 @@ integrations remain available for their respective sources.
 
 Check [discovery compatibility](#agent-studio-discovery-compatibility) before
 starting account authorization. The declarations are ready to sync; the current
-companion client's metadata checks prevent Google OAuth discovery from completing.
+client must support Google's explicitly recognized issuer alias. Older clients
+reject this metadata and need an update before Connect.
 
 1. Confirm preview access and enable the corresponding API and MCP service in
    the selected Google Cloud project. Configure consent and test users as needed.
@@ -63,18 +64,20 @@ advertise the authorization server as `https://accounts.google.com/`. Its
 [authorization-server metadata](https://accounts.google.com/.well-known/oauth-authorization-server)
 declares `issuer` as `https://accounts.google.com`, without the trailing slash.
 
-The companion Agent Studio client's
-`src/infrastructure/mcp/oauthMetadata.ts` requires an exact issuer match, so these
-documents fail its discovery validation. The
+The companion Agent Studio client's `src/infrastructure/mcp/oauthMetadata.ts`
+permits this exact, directed Google alias while keeping other issuer comparisons
+strict. It preserves the declared slashless issuer for credentials and callback
+validation; a callback with a different `iss` is still rejected. The
 [OpenID fallback](https://accounts.google.com/.well-known/openid-configuration)
-declares the same issuer without the slash. Public protocol and tool catalog
-checks still work and do not establish OAuth compatibility.
+declares the same issuer without the slash.
 
-Account connection requires compatible provider metadata or a reviewed client
-change. Do not bypass issuer validation, copy a token into the bundled manifest,
-or report the account connected to get past this failure. Verify the installed
-client version and discovery before continuing with Connect and authenticated
-reads. Slack has a separate resource-identifier mismatch described in its
+Clients without this handling fail with `Could not read authorization server
+metadata` at both Google metadata addresses. Deploy a client containing the
+Google discovery fix and run Discover again before Connect. Do not disable
+issuer validation or copy a token into the bundled manifest. Public protocol and
+tool catalog checks do not establish account authorization; verify an
+authenticated read after connection. Slack has a separate resource-identifier
+mismatch described in its
 [connection notes](../../plugins/workspace/org.opspresso.agent-studio/mcp/slack.md).
 
 ## Verify the installed connection
