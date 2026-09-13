@@ -2,11 +2,11 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "workspace",
   "version": "1.0.0",
-  "description": "Draft communication, technical specifications and evidence-based meeting minutes. Optional Plaud and Notion integrations support recording and workspace access.",
+  "description": "Draft communication and technical specifications, triage email, manage calendars, search workspace sources and prepare meeting minutes. Optional Google Workspace, Slack, Notion and Plaud integrations require account setup; Google MCP is in Developer Preview.",
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
   "license": "MIT",
-  "keywords": ["workspace", "writing", "documentation", "meetings", "audio"],
+  "keywords": ["workspace", "writing", "documentation", "meetings", "audio", "email", "calendar", "search", "google-workspace", "slack"],
   "extensions": {
     "org.opspresso.agent-studio": {
       "mcpSourceOutputs": {

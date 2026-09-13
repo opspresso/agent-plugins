@@ -48,7 +48,7 @@ repository because the supported registry is flat.
 |---|---|---|
 | devops | gitops-change, incident-triage | github |
 | research | document-authoring, spreadsheet-authoring | aws-knowledge |
-| workspace | korean-writing, korean-humanize, tech-spec, meeting-minutes, audio-processing, personal-records | notion, plaud |
+| workspace | korean-writing, korean-humanize, tech-spec, meeting-minutes, audio-processing, personal-records, email-triage, calendar-management, workspace-search | notion, plaud, gmail, google-drive, google-calendar, google-docs, google-sheets, google-slides, slack |
 | design | html-wireframe, html-prototype, html-explainer, frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
 | engineering | code-review, pr-description, engineering-writing | — |
 | agent-craft | prompt-writer, skill-writer, mcp-writer, simple-orchestration, structured-output | — |
@@ -66,6 +66,17 @@ credentials, model selections, private addresses, regions and runtime bindings
 belong to the installation. Never put credentials in manifests, URLs or skill text.
 This repository permits only `streamable-http` declarations with `type` and `url`;
 that is a repository policy, not the full MCP transport specification.
+
+The recommended productivity set is Gmail and Google Drive for mail and source
+files, Google Calendar for scheduling, Docs/Sheets/Slides for native content, and
+Slack for team discussions. These are official provider-hosted endpoints bundled
+in `workspace`; select the subset needed by each agent. Google Workspace MCP is
+in **Developer Preview** and requires eligible access, API enablement and a
+registered OAuth client. See [Google Workspace setup](docs/integrations/google-workspace.md)
+and [Slack setup](plugins/workspace/org.opspresso.agent-studio/mcp/slack.md) for
+account connection, current Agent Studio OAuth discovery blockers and verification.
+Adding these declarations does not connect accounts or grant access to private
+content.
 
 Infrastructure and search deployments vary by installation. Register these
 separately using their real endpoint and adjust the suggested description to the

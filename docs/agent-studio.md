@@ -34,6 +34,26 @@ not enable it. Search result IDs belong to Agent Memory, not Studio artifacts.
 model selections and version bindings belong to the installing side. Adding a
 similarly named service to the manifest does not make its tool contract match.
 
+### Google Workspace and Slack
+
+The `workspace` plugin bundles Gmail, Drive, Calendar, Docs, Sheets, Slides and
+Slack. Use [Google Workspace setup](integrations/google-workspace.md) and
+[Slack connection notes](../plugins/workspace/org.opspresso.agent-studio/mcp/slack.md)
+for eligibility and OAuth configuration. Google MCP endpoints are in Developer
+Preview; Slack requires an eligible registered app. Both need installation-side
+account connections before authenticated reads can be verified.
+
+The current companion client's strict metadata checks reject Google's issuer
+trailing-slash difference and Slack's origin-level resource identifier. The setup
+notes describe these discovery blockers; verify compatible provider/client
+behavior before starting account authorization. Manifest sync does not resolve them.
+
+The `email-triage`, `calendar-management` and `workspace-search` skills use only
+the capabilities offered to the run. Native Google IDs are source identifiers,
+not builtin `File` artifact IDs. Bind Drive search alongside native editors when
+users identify documents by name, and verify actual import/export support before
+promising Office files or downloads.
+
 ### Plaud recordings to meeting minutes
 
 The `workspace` plugin declares the official [Plaud MCP](https://docs.plaud.ai/plaud-mcp-cli/mcp)
