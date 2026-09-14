@@ -158,3 +158,23 @@ an orphan; it does not delete the registration, credentials or deployment.
 Inspect affected bindings before deciding whether to retain a separate entry or
 remove it through the installing side. Repository edits do not authorize those
 external actions.
+
+## Persistent Workspace and Sandbox tasks
+
+The execution plugin supplies reusable task guidance, not a shell or account credentials.
+Enable `projects[].agentTools` in Studio's deployment-owned `WORKSPACE_CONFIG` and run
+the Workspace worker. The `Workspace` builtin is available only to signed-in members
+of an enabled project; bind workspace-task and sandbox-task to the agent version.
+The actual tool schemas remain authoritative.
+
+`options` reads configured runtimes and the optional repository. `start` queues a
+new Workspace; `run` continues a returned workspace_id. For work without Git,
+repository and base_branch are null. `status` and bounded `wait` return output,
+checks, Diff and a cursor. Keep queued/running distinct from success. `cancel` stops
+a run and `close` saves state and removes compute. The native task continues if the
+parent Agent response ends; follow the returned workspace_path.
+
+The builtin cannot consume Git or deployment approvals. Use the Workspace's
+review UI for Commit, Draft PR, PR, merge and workflow actions. General agent
+descriptions and system prompts identify capabilities; account, repository,
+branch and requested file changes belong in each user's task input.

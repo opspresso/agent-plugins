@@ -51,6 +51,7 @@ repository because the supported registry is flat.
 | workspace | korean-writing, korean-humanize, tech-spec, meeting-minutes, audio-processing, personal-records, email-triage, calendar-management, workspace-search | notion, plaud, gmail, google-drive, google-calendar, google-docs, google-sheets, google-slides, slack |
 | design | html-wireframe, html-prototype, html-explainer, frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
 | engineering | code-review, pr-description, engineering-writing | — |
+| execution | workspace-task, sandbox-task | — |
 | agent-craft | prompt-writer, skill-writer, mcp-writer, simple-orchestration, structured-output | — |
 | saju | saju-analysis | — |
 
