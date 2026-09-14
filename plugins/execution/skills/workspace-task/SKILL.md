@@ -24,7 +24,8 @@ compatibility: >
   새 `start`나 별도 저장소 복제로 이전 파일과 세션을 잃지 않는다.
 - 새 작업은 `start`에 `runtime`, `repository`, `base_branch`, `task`를 보낸다.
   Git 없는 작업은 `repository`와 `base_branch`를 모두 `null`로 둔다.
-  저장소 작업은 사용자가 요청한 저장소가 설정된 저장소와 일치하는지 확인한다.
+  저장소 작업은 `options.repositories`의 허용 목록에서 사용자가 요청한 저장소를 선택한다.
+  기본 `repository`와 다른 허용 저장소도 실제 요청의 `repository` 값으로 전달한다.
 - `task`에는 실제 요청, 변경 범위와 검사 방법을 완결된 지시문으로 전달한다.
   코딩 Runtime에는 자연어 작업을, `command` Runtime에는 실행 가능한 비대화형 스크립트를 전달한다.
   선택하지 않은 도구·운영 자격증명을 사용할 수 있다고 가정하지 않는다.
@@ -46,10 +47,13 @@ compatibility: >
 
 ## 검토와 게시
 
+clone이나 로컬 재구현 요청은 원격 저장소 생성·fork·공개 게시의 허가가 아니다.
+Workspace 기능이 없으면 GitHub의 쓰기 도구로 대체하지 말고 필요한 실행 환경을 알린다.
+
 Commit·Draft PR·PR·병합·배포는 사용자의 요청 범위 안에서만 준비한다. Agent Studio에서는
 `workspace_path`의 Git·배포 화면에서 현재 변경을 검토하고 명시적으로 승인한다.
 Workspace 도구는 그 승인을 대신 누르거나 소비하지 않는다. GitHub 도구로 이 승인 경계를 우회하지 않는다.
 main 반영은 PR과 검사 성공을 확인하며 배포는 기존 CI/CD 경로를 따른다.
 
-최종 답변에는 실제 변경, 확인한 검사, 남은 작업과 Workspace 링크를 담는다.
+최종 답변에는 실제 변경, 확인한 검사, 남은 작업을 담고 `workspace_path`를 주소로 하는 클릭 가능한 Markdown 링크를 제공한다.
 없는 파일·테스트·커밋·PR·릴리스를 완료된 것으로 보고하지 않는다.
