@@ -50,10 +50,25 @@ compatibility: >
 clone이나 로컬 재구현 요청은 원격 저장소 생성·fork·공개 게시의 허가가 아니다.
 Workspace 기능이 없으면 GitHub의 쓰기 도구로 대체하지 말고 필요한 실행 환경을 알린다.
 
-Commit·Draft PR·PR·병합·배포는 사용자의 요청 범위 안에서만 준비한다. Agent Studio에서는
-`workspace_path`의 Git·배포 화면에서 현재 변경을 검토하고 명시적으로 승인한다.
+Commit·Push·Draft PR·PR·병합·배포는 사용자의 요청 범위 안에서만 준비한다.
+Agent Studio에서 커밋·푸시 요청을 받으면 `run`으로 Git 명령을 전달하지 않는다.
+`Workspace`의 `prepare_git`로 승인할 동작을 준비한다. 커밋과 푸시를 함께 요청한 예는 다음과 같다.
+
+```json
+{"request":{"operation":"prepare_git","workspace_id":"반환받은 ID","action":{"kind":"commit-and-push","message":"feat: implement requested changes"}}}
+```
+
+커밋만 요청하면 `kind: "commit"`과 `message`, 이미 커밋한 변경의 푸시만 요청하면
+`{"kind":"push"}`를 사용한다. `pending`은 게시 성공이 아니다. 반환된 `approval_path`를
+클릭 가능한 링크로 제공하고 승인을 기다린다. 승인 후 `status`의 `git_action.status`와
+`git_action.result`로 실제 결과를 확인한다. Push는 Workspace 작업 브랜치에 게시하며 PR을 자동 생성하지 않는다.
+PR·병합·배포는 `workspace_path`의 Git·배포 화면에서 검토하고 승인한다.
 Workspace 도구는 그 승인을 대신 누르거나 소비하지 않는다. GitHub 도구로 이 승인 경계를 우회하지 않는다.
 main 반영은 PR과 검사 성공을 확인하며 배포는 기존 CI/CD 경로를 따른다.
+
+Sandbox의 `/control/git`는 의도적으로 보호한다. `index.lock` 쓰기 거절은 설치 오류가 아니다.
+chmod·chown·임시 `GIT_INDEX_FILE`·별도 Git 디렉터리·GitHub API로 재시도하지 않는다.
+`prepare_git`가 없는 환경은 승인 화면 링크와 필요한 기능을 알려 주고 멈춘다.
 
 최종 답변에는 실제 변경, 확인한 검사, 남은 작업을 담고 `workspace_path`를 주소로 하는 클릭 가능한 Markdown 링크를 제공한다.
 없는 파일·테스트·커밋·PR·릴리스를 완료된 것으로 보고하지 않는다.

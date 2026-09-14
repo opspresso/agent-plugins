@@ -38,6 +38,9 @@ Agent Studio에서는 먼저 `Workspace`의 `options`를 읽는다. `command`는
   파일이 생성됐다는 사실만으로 내용이 맞다고 판단하지 않는다.
 - Git 작업: 최종 Diff와 변경 파일 목록을 읽어 요청 밖 변경을 제거한다.
   커밋·push·PR·배포는 별도 명시적 사용자 요청과 해당 Runtime의 승인 기능을 따른다.
+  Agent Studio의 커밋·push는 `Workspace.prepare_git`로 검토를 준비하고 `approval_path`에서 승인한다.
+  Native Runtime에 Git 쓰기를 시키지 않는다. `/control/git`·`index.lock` 권한 거절에는
+  임시 인덱스·권한 변경·GitHub 쓰기 도구로 재시도하지 않고 승인 경로를 안내한다.
 
 Sandbox의 출력 경로를 호스트 파일이나 Artifact URL로 표현하지 않는다. 다운로드 도구가 실제로
 제공되지 않으면 Workspace 링크·파일 경로와 확인한 내용을 알려 준다.
