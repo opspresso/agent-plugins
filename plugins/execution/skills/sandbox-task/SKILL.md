@@ -24,11 +24,16 @@ compatibility: >
 4. 명령은 종료할 수 있는 비대화형 형태로 구성하고 표준 출력·오류와 종료 코드를 남긴다.
    결과물을 다음 단계에서 다시 읽어 형식과 내용을 확인한다.
 
-Agent Studio에서는 먼저 `Workspace`의 `options`를 읽는다. `command`는 `task` 문자열 전체를
+Agent Studio에서는 먼저 `Workspace`의 `options`를 읽고 `current_workspace`와 `workdir`를 확인한다.
+선택된 Workspace가 있으면 ID를 생략한 `run`으로 이어간다. `start`를 반복해도 새 작업이 접수되지 않는다.
+파일은 `workdir`의 상대 경로에 쓴다. `workspace_path`는 웹 링크이며 `cd` 대상이 아니다.
+`command`는 `task` 문자열 전체를
 스크립트로 실행한다. 자연어 요청을 쉘 스크립트 자리에 넣지 않는다. 직접 스크립트로 표현하기
 어려운 작업은 설정된 코딩 Runtime에 자연어 `task`를 전달한다. 기존 Workspace가 있으면
 `run`으로 이어가며, ID가 없는 새 작업만 `start`를 쓴다. Git 없는 작업에는 저장소와 브랜치를
 모두 `null`로 전달한다. `wait`·`status`의 실제 결과로 완료를 판단한다.
+셸은 `-eu`로 실행된다. 실패를 의도적으로 처리할 경우 조건문으로 명시하고, 실패한 `cd` 이후
+다른 위치에서 쓰기를 계속하지 않는다. 코드 구현에는 허용된 Native 코딩 Runtime을 우선 사용한다.
 
 ## 작업 종류에 맞게 검증한다
 
