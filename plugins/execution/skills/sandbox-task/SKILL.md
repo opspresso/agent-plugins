@@ -43,7 +43,11 @@ Agent Studio에서는 먼저 `Workspace`의 `options`를 읽고 `current_workspa
   파일이 생성됐다는 사실만으로 내용이 맞다고 판단하지 않는다.
 - Git 작업: 최종 Diff와 변경 파일 목록을 읽어 요청 밖 변경을 제거한다.
   커밋·push·PR·배포는 별도 명시적 사용자 요청과 해당 Runtime의 승인 기능을 따른다.
-  Agent Studio의 커밋·push는 `Workspace.prepare_git`로 검토를 준비하고 `approval_path`에서 승인한다.
+  Agent Studio의 커밋·push·PR·main 병합은 `Workspace.prepare_git`로 검토를 준비하고 `approval_path`에서 승인한다.
+  `pull-request`는 title/body/draft를 받는다. `merge`의 pullRequestNumber/headSha에는 status.pull_request의 number/headSha를 넣는다.
+  PR 없이 main 푸시를 명시적으로 요청하면 작업 브랜치 푸시 후 `push-main`을 준비한다. fast-forward만 허용한다.
+  PR 생성 때문에 native task를 실행하거나 Workspace를 닫고 다시 만들지 않는다. 종료된 Workspace도
+  `prepare_git`가 복원한다. 게시·PR 요청에는 `workspace-task`의 검토와 게시 절차를 따른다.
   Native Runtime에 Git 쓰기를 시키지 않는다. `/control/git`·`index.lock` 권한 거절에는
   임시 인덱스·권한 변경·GitHub 쓰기 도구로 재시도하지 않고 승인 경로를 안내한다.
 

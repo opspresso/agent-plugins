@@ -20,7 +20,7 @@ compatibility: >
   기능이 없으면 실행했다고 말하지 말고 필요한 연결과 수행 가능한 준비 작업을 알려 준다.
 - Agent Studio의 `Workspace`는 `{"request":{"operation":"options"}}`로 현재 프로젝트의
   Runtime, 저장소와 검사 명령을 확인한다. 이 응답은 사용자의 변경·게시 허가가 아니다.
-- `options.current_workspace`가 있으면 `run`으로 이어간다. 이때 `workspace_id`는 생략할 수 있다.
+- `options.current_workspace`가 있으면 파일 수정은 `run`, Git 게시 요청은 `prepare_git`로 이어간다. 이때 `workspace_id`는 생략할 수 있다.
   같은 채팅·프로젝트에서 `start`를 다시 불러도 새 Workspace나 작업은 생성되지 않는다.
   `reused: true`, `task_queued: false`는 현재 선택을 반환한 것이므로 요청을 실행했다고 말하지 않는다.
 - 사용자가 기존 Workspace를 지정하면 `use_workspace`와 해당 `workspace_id`로 선택한다.
@@ -59,6 +59,9 @@ compatibility: >
 사용자가 중지를 요청하면 `cancel`, 작업 공간 종료를 요청하면 `close`를 사용한다.
 일반 턴 완료만으로 Workspace를 닫지 않는다. 비활성 Sandbox가 정리된 뒤에도 후속 `run`은 저장된
 파일과 native Session에서 복원된다. Git에서 무시하는 의존성·빌드 출력은 재생성한다.
+`close`는 선택을 해제하지 않는다. 종료된 Workspace도 `run`과 `prepare_git`로 같은 파일을 복원한다.
+PR을 만들거나 Runtime을 바꾸려고 닫기·새 시작·선택 해제를 반복하지 않는다. `attach_repository`는
+저장소를 연결하는 기능이며 `null`로 Git을 해제할 수 없다.
 
 ## 검토와 게시
 
@@ -77,9 +80,21 @@ Agent Studio에서 커밋·푸시 요청을 받으면 `run`으로 Git 명령을 
 `{"kind":"push"}`를 사용한다. `pending`은 게시 성공이 아니다. 반환된 `approval_path`를
 클릭 가능한 링크로 제공하고 승인을 기다린다. 승인 후 `status`의 `git_action.status`와
 `git_action.result`로 실제 결과를 확인한다. Push는 Workspace 작업 브랜치에 게시하며 PR을 자동 생성하지 않는다.
-PR·병합·배포는 `workspace_path`의 Git·배포 화면에서 검토하고 승인한다.
+PR 생성 요청은 다음처럼 `prepare_git`에 제목·본문·Draft 여부를 전달한다.
+
+```json
+{"request":{"operation":"prepare_git","action":{"kind":"pull-request","title":"Implement requested changes","body":"Summary and actual validation results","draft":false}}}
+```
+
+승인 후 `status.pull_request`에서 PR 번호·URL·현재 `headSha`와 `ci`를 확인한다. 병합 요청은
+`{"kind":"merge","pullRequestNumber":7,"headSha":"status에서 확인한 정확한 SHA"}`를 준비한다.
+사용자가 PR 없이 main 직접 푸시를 요청하면 먼저 작업 브랜치의 커밋·푸시를 확인하고
+`{"kind":"push-main"}`을 준비한다. main 직접 푸시는 fast-forward만 허용하며 이력이 갈라지면
+PR 경로로 해결한다. 사용자 요청 없이 PR 병합을 main 직접 푸시로 대체하지 않는다.
+각 동작은 반환된 승인 링크에서 검토한다. 배포는 Git·배포 화면의 허용된 workflow를 사용한다.
 Workspace 도구는 그 승인을 대신 누르거나 소비하지 않는다. GitHub 도구로 이 승인 경계를 우회하지 않는다.
-main 반영은 PR과 검사 성공을 확인하며 배포는 기존 CI/CD 경로를 따른다.
+검사가 대기 중·실패 상태면 main 반영을 진행하지 않는다. `ci: "none"`은 보고된 검사가 없다는 뜻이며
+CI 성공이 아니다. 이 상태로 승인할 때의 의미를 알리고 GitHub 브랜치 규칙을 따른다.
 
 Sandbox의 `/control/git`는 의도적으로 보호한다. `index.lock` 쓰기 거절은 설치 오류가 아니다.
 chmod·chown·임시 `GIT_INDEX_FILE`·별도 Git 디렉터리·GitHub API로 재시도하지 않는다.
