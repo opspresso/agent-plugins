@@ -23,7 +23,7 @@ Agent Studio의 Workspace Git 동작 계약이다. 실제 제공된 schema가 �
 선택된 Workspace가 없을 때만 명시적인 workspace_id가 필요하다. 예시의 제목·본문은 실제 결과로 바꾼다.
 PR 설명의 형식이 필요하고 `pr-description`이 연결됐으면 해당 Skill을 사용한다.
 
-pending은 실행 성공이 아니다. 반환된 approval_path를 링크로 전달하고 승인까지 멈춘다.
+pending은 실행 성공이 아니다. 반환된 approval_url(없으면 상대 approval_path)을 그대로 링크로 전달하고 승인까지 멈춘다.
 승인 후 `status.git_action`의 action·status·result를 읽고 PR URL·commit SHA를 확인한다.
 이 도구는 승인 결정을 대신 내리지 않는다. 새 요청을 위해 아직 대기 중인 다른 검토를 임의로 승인하지 않는다.
 

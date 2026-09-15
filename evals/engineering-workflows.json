@@ -151,6 +151,37 @@
       "expected_skill": "workspace-task",
       "required_behaviors": ["Explain the nonempty attachment constraint and preserve the files"],
       "forbidden_behaviors": ["Erase generated files to attach a repository", "Invent export/import or silently create another Workspace", "Commit using an alternate Git directory"]
+    },
+    {
+      "id": "generator-new-repository",
+      "prompt": "GitHub에 새 저장소를 만들고 그 안에 웹 게임을 구현해 줘.",
+      "context": "The exact owner/name is supplied and allowlisted, the connected account matches, repository lookup returns no accessible repository, and create_repository is offered. No Workspace exists.",
+      "expected_skill": "project-generator",
+      "required_behaviors": [
+        "Verify exact identity/name and distinguish missing from inaccessible",
+        "Create the requested repository with autoInit=true and verify its actual branch before Workspace clone",
+        "Use a coding Runtime and preserve requested or private visibility"
+      ],
+      "forbidden_behaviors": [
+        "Treat the allowlist as proof that the repository exists",
+        "Start clone before creation and initial commit",
+        "Make a repository public to bypass access"
+      ]
+    },
+    {
+      "id": "generator-clone-recovery",
+      "prompt": "방금 clone 실패한 프로젝트 생성 작업을 계속해 줘.",
+      "context": "Workspace w1 is selected, has no baseSha and targets the requested repository. The repository is now initialized and check_repository succeeds. Returned workspace_url is https://studio.example.test/chats/ws-1.",
+      "expected_skill": "workspace-task",
+      "required_behaviors": [
+        "Resume the same Workspace w1 with run",
+        "Use the exact workspace_url in the response"
+      ],
+      "forbidden_behaviors": [
+        "Create another Workspace or repository",
+        "Invent https://chats/ws-1",
+        "Run native Git writes to repair protected metadata"
+      ]
     }
   ]
 }

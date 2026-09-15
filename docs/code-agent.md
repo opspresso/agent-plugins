@@ -37,12 +37,14 @@ Workspace의 코딩 Runtime 또는 command가 파일 작업을 실행한다. San
 
 `devops`의 github 선언은 유지하며 MCP 서버를 중복 등록하지 않는다. 같은 연결의 비밀이 아닌
 version header를 `X-MCP-Toolsets: context,repos,issues,pull_requests,actions`로 설정하고 재발견한다.
-이 헤더는 mcp.json 동기화가 소유하지 않는 설치 설정이다. 계정·토큰·OAuth scope는 복사하거나 확대하지 않는다.
+모델·도구 선택을 수정해도 이 헤더를 유지한다. mcp.json 동기화가 소유하지 않는 설치 설정이다. 계정·토큰·OAuth scope는 복사하거나 확대하지 않는다.
 
 GitHub는 원격 증거와 요청된 협업을 담당한다. Workspace 파일의 Git 게시와 역할이 겹치는
 create_branch, push_files, create_pull_request, merge_pull_request는 이 프로필에서 제외한다.
 Issue·PR 읽기, 파일·commit·release 읽기와 검색을 연결하고 CI 조사에는 Actions의
 actions_list, actions_get, get_job_logs 읽기 도구를 연결한다. workflow 실행/재실행 도구는 조사에 필요하지 않다.
+새 저장소 생성 요청을 지원하려면 get_me, 저장소 조회와 create_repository를 연결한다. README 초기화로
+첫 commit을 만든 뒤 실제 default_branch를 검사한다. 이름이 허용 목록에 있다는 이유로 바로 clone하지 않는다.
 사용자가 이미 사용하는 리뷰·Issue 피드백 도구는 요청 범위를 지키며 제공할 수 있다.
 
 보안 경고 API는 별도 toolset·권한이 있을 때만 연결한다. 접근이 없으면 사용자 제공 advisory·스캔 결과와

@@ -47,8 +47,15 @@ Workspace는 파일·Git·Session을 유지하는 작업 공간이고 Sandbox는
    CLI 프로젝트 생성도 코딩 Runtime의 task다. 자연어 목록을 command에 넣지 않는다.
    선택된 Runtime은 run에서 바꿀 수 없다.
 
+허용 저장소는 존재 여부가 아니다. clone 전 제공된 `check_repository`로 접근·첫 commit·기준 branch를
+확인한다. 새 저장소 생성 요청은 project-generator의 원격 저장소 준비 절차로 먼저 생성·초기화한다.
+빈 저장소에는 clone할 main이 없으며, clone 실패는 Native task가 실행된 것이 아니다. 원인을 고친 뒤
+같은 저장소의 선택된 Workspace에서 run으로 재개한다.
+
 실행 지시를 만들 때는 [task 전달과 파일 작업](references/task-handoff.md)을 필요한 부분만 읽는다.
-workdir는 실제 경로, workspace_path는 브라우저 링크다. 파일은 workdir의 상대 경로로 다룬다.
+workdir는 실제 경로다. workspace_url·approval_url은 반환된 그대로 링크로 사용한다. URL이 없으면
+workspace_path·approval_path의 상대 웹 경로를 그대로 사용하며 `/chats`에 `https://`를 붙이지 않는다.
+파일은 workdir의 상대 경로로 다룬다.
 `attach_repository`는 빈 Git-free 폴더에만 연결하며 이미 있는 파일을 덮거나 Git을 해제하지 않는다.
 
 ## 접수·완료·후속 요청

@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "engineering",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Review pull requests, fix issues, implement features, refactor code, upgrade dependencies, investigate CI failures, remediate security findings and generate projects. Use connected repository context and persistent execution, with task-specific verification and requested publication.",
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
