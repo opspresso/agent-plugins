@@ -41,10 +41,10 @@ Workspace는 파일·Git·Session을 유지하는 작업 공간이고 Sandbox는
 2. 선택된 공간은 `run`으로 이어간다. `workspace_id`를 생략할 수 있다. 사용자가 다른 기존 공간을
    지정했을 때만 `use_workspace`로 선택한다. start를 반복해도 새 작업이 접수되지 않는다.
 3. 선택이 없을 때 `start`에 runtime, repository, base_branch, task를 보낸다. 저장소 작업은 두 Git
-   선택 값을 모두 지정한다. 둘 다 null이면 Git-free이며 default_repository는 자동 clone 대상이 아니다.
-4. 사용자가 Runtime을 지정하지 않은 자연어 작업은 허용된 codex를 우선하고 없으면 claude/opencode를
-   사용한다. command는 실제 셸 스크립트가 주어졌거나 검증된 짧은 명령이 확정된 경우에 선택한다.
-   CLI 프로젝트 생성도 코딩 Runtime의 task다. 자연어 목록을 command에 넣지 않는다.
+   선택 값을 모두 지정한다. 둘 다 null이면 Git-free다. 기본 저장소는 없으며 Runtime 미지정 시 options의 default_runtime을 따른다.
+4. 사용자가 Runtime을 지정하지 않으면 options의 default_runtime을 따른다. 현재 허용 Runtime 목록에
+   없으면 Models의 모델 연결 또는 프로젝트 기본 Runtime 설정을 확인한다. command에는 실제 실행할
+   셸 스크립트를 구성해서 보내며 자연어 목록을 넣지 않는다. 코딩 Runtime에는 완결된 자연어 task를 보낸다.
    선택된 Runtime은 run에서 바꿀 수 없다.
 
 새 저장소를 만들기 전 `check_repository_access`로 정확한 owner/name의 정책을 확인한다.

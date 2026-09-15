@@ -162,12 +162,13 @@ external actions.
 ## Persistent Workspace and Sandbox tasks
 
 The execution plugin supplies reusable task guidance, not a shell or account credentials.
-Enable `projects[].agentTools` in Studio's deployment-owned `WORKSPACE_CONFIG` and run
-the Workspace worker. The `Workspace` builtin is available only to signed-in members
+Enable `parameters.workspaceTools` in the active agent version. Configure repositories, access mode
+and default runtime in the project’s Workspace tools tab; choose native runtime models in Models.
+The operator connects the Sandbox backend and Workspace worker. The `Workspace` builtin is available only to signed-in members
 of an enabled project; bind workspace-task and sandbox-task to the agent version.
 The actual tool schemas remain authoritative.
 
-`options` reads configured runtimes and the optional repository. `start` queues a
+`options` reads available runtimes, default_runtime and registered repositories. There is no default repository. `start` queues a
 new Workspace; `run` continues a returned workspace_id. For work without Git,
 repository and base_branch are null. `status` and bounded `wait` return output,
 checks, Diff and a cursor. Keep queued/running distinct from success. `cancel` stops

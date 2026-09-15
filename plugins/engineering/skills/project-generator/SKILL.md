@@ -17,11 +17,12 @@ description: >
 짧게 확인하고, 이미 정해진 부분은 진행한다.
 
 Agent Studio에서는 먼저 `Workspace.options`를 읽는다.
-자연어로 요청된 프로젝트 생성은 허용된 codex를 우선하고 없으면 claude/opencode에 위임한다.
+사용자 지정 Runtime을 우선하고, 미지정이면 options의 default_runtime을 따른다. 코딩 Runtime에는
+완결된 자연어 task를 전달하며 command인 경우 실제 실행할 셸 스크립트를 구성한다.
 CLI·명령행 도구를 만든다는 뜻과 command Runtime에서 이미 작성된 셸을 실행한다는 뜻을 구분한다.
 
 - 기존 저장소에 생성·게시할 요청이면 최초 `start`에 허용된 repository와 base_branch를 지정한다.
-- Git 없이 생성할 요청이면 두 값을 null로 시작한다. 설정의 default_repository를 임의로 사용하지 않는다.
+- Git 없이 생성할 요청이면 두 값을 null로 시작한다. 등록 목록의 첫 저장소를 임의로 선택하지 않는다.
 - 현재 공간이 있으면 파일 목록을 확인하고 `run`으로 이어간다. 기존 파일을 덮지 않는 상대 경로를 사용한다.
 - `attach_repository`는 **빈 Git-free workdir에만** 가능하다. Git 없는 공간에 먼저 생성한 파일을
   나중에 자동 attach·push할 수 있다고 약속하지 않는다. Git 게시가 필요하면 생성 전에 대상을 정한다.
