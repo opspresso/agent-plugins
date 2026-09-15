@@ -24,7 +24,18 @@ Agent Studio의 Workspace Git 동작 계약이다. 실제 제공된 schema가 �
 PR 설명의 형식이 필요하고 `pr-description`이 연결됐으면 해당 Skill을 사용한다.
 
 pending은 실행 성공이 아니다. 반환된 approval_url(없으면 상대 approval_path)을 그대로 링크로 전달하고 승인까지 멈춘다.
-승인 후 `status.git_action`의 action·status·result를 읽고 PR URL·commit SHA를 확인한다.
+`source_chat_url`이 반환된 Chat 요청은 승인 성공·실패·거절 결과가 원래 채팅에 전달되고 Agent가 자동 재개된다.
+사용자에게 같은 요청을 다시 보내도록 요구하거나 승인 여부를 계속 polling하지 않는다. 재개 시
+`status.git_action`의 action·status·result를 읽고 PR URL·commit SHA를 확인한다.
+
+사용자가 커밋·푸시 → PR → main 병합을 요청했다면 승인된 단계의 성공 뒤 다음 단계의 `prepare_git`를
+준비한다. 커밋·푸시가 끝났다는 이유로 PR 요청까지 완료했다고 하지 않으며, PR 생성이 끝났다는 이유로
+main 병합 요청까지 완료했다고 하지 않는다. 각 승인은 해당 action만 실행한다. 다음 승인 링크를 제공할 때
+그 동작과 이미 완료한 단계를 정확히 구분한다. 최종 요청이 끝나면 실제 결과를 보고한다.
+
+`source_chat_url`이 없는 Playground·직접 Workspace 요청은 자동으로 이어질 원래 Chat이 없다.
+자동 진행을 약속하지 않고 같은 공간의 상태 확인 방법을 제공한다. 재개가 실패·중단됐다는 상태가 있으면
+저장된 채팅 답변과 Workspace의 실제 결과를 먼저 확인한다. 성공한 Git 동작은 다시 실행하지 않는다.
 이 도구는 승인 결정을 대신 내리지 않는다. 새 요청을 위해 아직 대기 중인 다른 검토를 임의로 승인하지 않는다.
 
 main 반영은 대기 중·실패한 검사가 있으면 막힌다. ci=none은 **보고된 검사 없음**이며 성공이 아니다.
