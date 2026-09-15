@@ -17,6 +17,8 @@ description: >
 짧게 확인하고, 이미 정해진 부분은 진행한다.
 
 Agent Studio에서는 먼저 `Workspace.options`를 읽는다.
+자연어로 요청된 프로젝트 생성은 허용된 codex를 우선하고 없으면 claude/opencode에 위임한다.
+CLI·명령행 도구를 만든다는 뜻과 command Runtime에서 이미 작성된 셸을 실행한다는 뜻을 구분한다.
 
 - 기존 저장소에 생성·게시할 요청이면 최초 `start`에 허용된 repository와 base_branch를 지정한다.
 - Git 없이 생성할 요청이면 두 값을 null로 시작한다. 설정의 default_repository를 임의로 사용하지 않는다.

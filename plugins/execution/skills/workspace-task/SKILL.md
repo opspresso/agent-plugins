@@ -42,8 +42,10 @@ Workspace는 파일·Git·Session을 유지하는 작업 공간이고 Sandbox는
    지정했을 때만 `use_workspace`로 선택한다. start를 반복해도 새 작업이 접수되지 않는다.
 3. 선택이 없을 때 `start`에 runtime, repository, base_branch, task를 보낸다. 저장소 작업은 두 Git
    선택 값을 모두 지정한다. 둘 다 null이면 Git-free이며 default_repository는 자동 clone 대상이 아니다.
-4. 코드 구현·복잡한 수정은 코딩 Runtime에 완결된 자연어 task로 전달한다. command는 정확한 셸
-   스크립트용이다. 자연어 목록을 command에 넣지 않는다. 선택된 Runtime은 run에서 바꿀 수 없다.
+4. 사용자가 Runtime을 지정하지 않은 자연어 작업은 허용된 codex를 우선하고 없으면 claude/opencode를
+   사용한다. command는 실제 셸 스크립트가 주어졌거나 검증된 짧은 명령이 확정된 경우에 선택한다.
+   CLI 프로젝트 생성도 코딩 Runtime의 task다. 자연어 목록을 command에 넣지 않는다.
+   선택된 Runtime은 run에서 바꿀 수 없다.
 
 실행 지시를 만들 때는 [task 전달과 파일 작업](references/task-handoff.md)을 필요한 부분만 읽는다.
 workdir는 실제 경로, workspace_path는 브라우저 링크다. 파일은 workdir의 상대 경로로 다룬다.

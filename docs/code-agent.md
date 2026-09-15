@@ -52,7 +52,8 @@ actions_list, actions_get, get_job_logs 읽기 도구를 연결한다. workflow 
 ## 실제 가능한 실행 범위
 
 - 새 Workspace를 만들기 전에 options.current_workspace를 확인한다. 후속 요청은 run 또는 prepare_git다.
-- 구현·복잡한 수정은 코딩 Runtime, 정확한 비대화형 스크립트는 command를 선택한다.
+- Runtime 지정이 없는 자연어 작업은 허용된 codex 또는 다른 코딩 Runtime을 사용한다.
+  이미 주어진 셸 스크립트·검증된 짧은 명령에는 command를 사용한다. CLI 프로젝트 생성도 자연어 코딩 작업이다.
 - PR 리뷰·CI 조사만으로 충분한 작업에는 Sandbox를 만들지 않는다. 재현이 필요하면 실제 HEAD를 확인한다.
 - start는 branch 기반 clone이다. 임의 SHA checkout, 허용되지 않은 fork, 다른 Runtime으로 전환하는 기능은 없다.
 - Git-free 프로젝트 생성은 가능하다. 생성한 파일이 있는 공간에 저장소를 뒤늦게 attach할 수는 없다.

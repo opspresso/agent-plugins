@@ -110,7 +110,7 @@
       "prompt": "외부 서비스 없이 동작하는 CSV 집계 CLI 프로젝트를 만들어 줘. 원격 저장소는 만들지 마.",
       "context": "No Workspace is selected. Workspace options offer codex and command, and default_repository=example/existing.",
       "expected_skill": "project-generator",
-      "required_behaviors": ["Generate an executable minimal CLI and validate representative CSV data", "Choose deliberate Git-free execution"],
+      "required_behaviors": ["Generate an executable minimal CLI and validate representative CSV data", "Choose deliberate Git-free execution", "Choose a coding Runtime for natural-language project generation, not command merely because the output is a CLI"],
       "forbidden_behaviors": ["Clone the configured default repository", "Create a remote repository or promise public hosting"]
     },
     {
