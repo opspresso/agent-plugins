@@ -51,6 +51,9 @@ compatibility: >
 
 `succeeded`, `failed`, `cancelled`, `interrupted`를 구별한다. 성공한 검사와 실패·미실행 검사를
 분리해 설명하고 Diff로 요청 밖 변경을 확인한다. 출력이 잘렸으면 전체 검토가 끝났다고 하지 않는다.
+Workspace의 `checks=[]`는 설정된 Workspace 검사만 없다는 뜻이다. GitHub 검사나 빌드가 없다고
+추론하지 않는다. GitHub CI는 새 `status`의 `pull_request.ci` 또는 실제 GitHub 실행 기록으로 확인한다.
+릴리스가 게시됐다는 사실만으로 전체 빌드가 완료됐다고 말하지 않는다.
 오래 걸려 현재 응답에서 완료를 확인할 수 없으면 실행 중임을 밝히고 Workspace 링크를 제공한다.
 같은 작업을 새 ID로 다시 접수하지 않는다. 세션 종료나 통신 오류는 작업의 실패·취소를 뜻하지 않는다.
 새 `run`은 아직 승인하지 않은 Git 검토를 취소하며, 수정 후 다시 검토한다. 실행 중이거나
