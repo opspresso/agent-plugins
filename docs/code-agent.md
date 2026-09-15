@@ -64,6 +64,7 @@ actions_list, actions_get, get_job_logs 읽기 도구를 연결한다. workflow 
   첨부·Artifact의 자동 mount, 공개 미리보기, 다운로드 export, 호스트 접근은 제공되지 않는 한 약속하지 않는다.
 - Chat 승인 응답에 source_chat_url이 있으면 승인 결과가 원래 채팅에 전달되고 같은 SDK 이력으로 재개된다.
   다단계 요청은 각 성공 후 다음 검토로 이어가며, 실패·거절·결과 불명인 동작을 자동 반복하지 않는다.
+  PR 검사 pending은 ci_watch로 최대 30분 관찰하고 검사 결과가 같은 채팅을 재개한다.
   Playground·직접 Workspace 요청에는 원래 Chat을 임의로 지정하지 않는다.
 - Workspace checks, 직접 실행한 검사와 GitHub CI를 구분한다. Git 게시·CI·릴리스·배포도 서로 다른 결과다.
 
