@@ -48,9 +48,11 @@ Workspace는 파일·Git·Session을 유지하는 작업 공간이고 Sandbox는
    선택된 Runtime은 run에서 바꿀 수 없다.
 
 새 저장소를 만들기 전 `check_repository_access`로 정확한 owner/name의 정책을 확인한다.
-`repository_owners`는 해당 소유자의 현재·향후 저장소를 허용한다. 차단되면 반환된
-`repository_policy_url`을 관리자에게 전달한다. 관리자는 Project Settings의 Workspace 저장소 접근에서
-변경하며 일반 Agent가 정책을 임의로 넓히지 않는다. 없는 관리 메뉴를 안내하거나 다른 저장소를 생성하지 않는다.
+모드는 selected(등록 목록), owners(지정 소유자), all(GitHub 계정의 전체 접근), new(등록 목록과 신규 자동 등록)다.
+`new`에서 allowed=false, creation_allowed=true이면 기존 접근은 막혀 있지만 요청한 신규 생성은 가능하다.
+새 저장소는 Workspace의 create_repository를 사용한다. 서버가 생성·초기화하고 신규 모드의 허용 목록에
+등록한다. MCP 생성 결과나 생성 시각을 등록 근거로 주장하지 않는다. 둘 다 차단되면 반환된
+`repository_policy_url`을 관리자에게 전달한다. 일반 Agent가 정책 모드를 변경하거나 없는 관리 메뉴를 안내하지 않는다.
 허용은 존재 여부가 아니다. clone 전 `check_repository`로 서버 계정의 접근·첫 commit·기준 branch를
 확인한다. 새 저장소 생성 요청은 허용을 확인한 뒤 project-generator의 원격 준비 절차로 생성·초기화한다.
 빈 저장소에는 clone할 main이 없으며, clone 실패는 Native task가 실행된 것이 아니다. 원인을 고친 뒤

@@ -32,18 +32,22 @@ CLI·명령행 도구를 만든다는 뜻과 command Runtime에서 이미 작성
 요청됐으면 파일 작업 전에 아래 순서를 완료한다.
 
 1. 연결된 GitHub 계정과 요청한 owner/name을 확인한다. Workspace가 제공되면 원격 생성 전에
-   `check_repository_access`로 이 이름이 허용되는지 확인한다. `repository_owners`는 해당 소유자의 새
-   저장소도 허용하지만 GitHub 자격증명은 아니다. 차단되면 `repository_policy_url`을 그대로 전달하고
-   관리자가 정책을 변경할 때까지 생성을 보류한다. 관리 메뉴·권한을 추측하거나 다른 이름의 저장소를 만들지 않는다.
+   `check_repository_access`의 기존 접근 `allowed`와 생성 권한 `creation_allowed`를 구분한다.
+   `new` 모드는 미등록 이름의 기존 접근은 거절하지만 Workspace를 통한 신규 생성은 허용할 수 있다.
+   둘 다 거절되면 `repository_policy_url`을 전달하고 정책 변경까지 보류한다. 관리 메뉴·권한을
+   추측하거나 다른 이름의 저장소를 만들지 않는다.
    도구가 없는 환경에서는 실제 제공된 저장소 정책을 확인하고 범위가 불명확하면 외부 생성 전에 확인한다.
 2. 제공된 조회 도구로 같은 이름의 저장소를 확인한다.
    404는 비공개 저장소 접근 거절일 수도 있다. 다른 이름·fork·공개 전환으로 우회하지 않는다.
-3. 요청한 새 저장소가 없고 생성 도구·권한이 있으면 `create_repository`를 호출한다. 실제 schema에 따라
-   `autoInit: true`로 README와 첫 commit을 만든다. 공개 범위는 사용자 요청을 따르며, 정해지지 않았으면
-   private를 유지한다. 생성 응답의 full_name과 실제 default_branch를 확인한다.
+3. Workspace의 `create_repository`가 제공되면 이를 사용한다. `repository: "owner/name"`,
+   `description`, `private`를 전달하며 서버가 README와 첫 commit을 만든다. `new` 모드는 성공한
+   저장소를 자동 등록한다. 공개 범위는 사용자 요청을 따르고 정해지지 않았으면 private=true다.
+   반환된 status·allowed·repository_url·base_branch를 확인한다. Workspace 생성 기능이 없으면
+   해당 환경의 실제 저장소 권한 범위에서 제공된 GitHub 생성 도구로 초기화할 수 있으나 Workspace 자동 등록은 약속하지 않는다.
+   결과 불명·전송 중단에는 생성 호출을 반복하지 않는다. 이미 존재하는 저장소를 신규라고 주장해 등록하지 않는다.
 4. 기존 저장소가 비어 있으면 clone할 branch가 없다. 첫 commit을 만드는 지원 경로와 요청 범위를 확인하고
    초기화한다. 존재하는 파일을 덮거나 Native Git 보호 경계를 우회하지 않는다.
-5. 제공되는 경우 `Workspace.check_repository`로 서버 계정의 접근과 기준 branch를 확인한다.
+5. 제공되는 경우 `Workspace.check_repository`로 서버 계정의 접근과 반환된 base_branch를 확인한다.
    GitHub MCP 계정과 Workspace 서버 계정의 접근은 별개다. 정책을 바꾼 뒤에는 options와 검사를 다시 읽는다.
 6. 준비된 저장소를 선택해 최초 start하거나, 이미 선택된 실패 Workspace가 같은 저장소라면 run으로 재개한다.
    clone 실패를 새 Workspace 생성으로 해결하지 않는다. 네트워크·401·403·404·빈 저장소·없는 branch를

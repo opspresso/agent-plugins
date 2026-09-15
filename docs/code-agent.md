@@ -4,7 +4,8 @@ Agent Studio의 프로젝트 이름과 관계없이 적용하는 공용 프로�
 Workspace의 코딩 Runtime 또는 command가 파일 작업을 실행한다. Sandbox는 별도 MCP 서버가 아니다.
 모델·계정·Worker·이미지는 설치 측 설정이며 플러그인이 생성하거나 변경하지 않는다.
 저장소 접근은 관리자가 Project Settings → Workspace 저장소 접근 또는 Settings에서 관리한다.
-저장소별 허용과 정확한 소유자별 허용을 지원하며, 소유자 허용은 그 계정의 새 저장소에도 적용된다.
+저장소 고정·소유자 지정·모든 저장소·신규 자동 허용을 지원한다. 신규 모드는 Workspace 도구가
+실제로 생성한 저장소를 자동 등록하며, 기존 저장소는 관리자가 명시적으로 허용한다.
 
 ## 설명과 시스템 프롬프트
 
@@ -42,12 +43,12 @@ version header를 `X-MCP-Toolsets: context,repos,issues,pull_requests,actions`�
 모델·도구 선택을 수정해도 이 헤더를 유지한다. mcp.json 동기화가 소유하지 않는 설치 설정이다. 계정·토큰·OAuth scope는 복사하거나 확대하지 않는다.
 
 GitHub는 원격 증거와 요청된 협업을 담당한다. Workspace 파일의 Git 게시와 역할이 겹치는
-create_branch, push_files, create_pull_request, merge_pull_request는 이 프로필에서 제외한다.
+create_repository, create_branch, push_files, create_pull_request, merge_pull_request는 이 프로필에서 제외한다.
 Issue·PR 읽기, 파일·commit·release 읽기와 검색을 연결하고 CI 조사에는 Actions의
 actions_list, actions_get, get_job_logs 읽기 도구를 연결한다. workflow 실행/재실행 도구는 조사에 필요하지 않다.
-새 저장소 생성 요청을 지원하려면 get_me, 저장소 조회와 create_repository를 연결한다. 생성 전에
-Workspace.check_repository_access로 정확한 owner/name을 검사하고 차단되면 반환된 repository_policy_url을 안내한다. README 초기화로
-첫 commit을 만든 뒤 실제 default_branch를 검사한다. 이름이 허용 목록에 있다는 이유로 바로 clone하지 않는다.
+새 저장소 생성에는 Workspace.create_repository를 사용하고 계정·저장소 조회를 위해 get_me와 조회 도구를
+연결한다. 생성 전에 check_repository_access의 allowed·creation_allowed를 구분하고 서버 생성 결과의
+base_branch를 검사한다. 이름이 허용 목록에 있다는 이유로 바로 clone하지 않는다.
 사용자가 이미 사용하는 리뷰·Issue 피드백 도구는 요청 범위를 지키며 제공할 수 있다.
 
 보안 경고 API는 별도 toolset·권한이 있을 때만 연결한다. 접근이 없으면 사용자 제공 advisory·스캔 결과와
