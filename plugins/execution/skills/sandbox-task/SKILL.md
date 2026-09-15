@@ -29,8 +29,8 @@ Agent Studio에서는 먼저 `Workspace`의 `options`를 읽고 `current_workspa
 원격 자료를 읽는 것만으로 충분한 작업에는 Sandbox를 만들지 않는다. 실제 파일 처리나 검증이 필요할 때 사용한다.
 파일은 `workdir`의 상대 경로에 쓴다. `workspace_path`는 웹 링크이며 `cd` 대상이 아니다.
 `command`는 `task` 문자열 전체를
-스크립트로 실행한다. 자연어 요청을 쉘 스크립트 자리에 넣지 않는다. Runtime 지정이 없는 자연어 작업은
-허용된 codex 또는 다른 코딩 Runtime에 완결된 `task`로 전달한다. 실행 스크립트가 이미 주어졌거나
+스크립트로 실행한다. 자연어 요청을 쉘 스크립트 자리에 넣지 않는다. Runtime 지정이 없으면 options의
+default_runtime을 따른다. 코딩 Runtime에는 완결된 자연어 `task`를 전달하고 command에는 실제 실행할 셸을 구성한다. 실행 스크립트가 이미 주어졌거나
 검증된 짧은 명령이 확정된 경우에 command를 사용한다. CLI 프로젝트를 만드는 작업은 command 선택의 이유가 아니다.
 command 오류가 나면 task에 설명·Markdown이 들어갔는지 먼저 확인하며 설치·언어 문제로 단정하지 않는다. 기존 Workspace가 있으면
 `run`으로 이어가며, ID가 없는 새 작업만 `start`를 쓴다. Git 없는 작업에는 저장소와 브랜치를

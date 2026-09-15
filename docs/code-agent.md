@@ -59,7 +59,7 @@ base_branch를 검사한다. 이름이 허용 목록에 있다는 이유로 바�
 ## 실제 가능한 실행 범위
 
 - 새 Workspace를 만들기 전에 options.current_workspace를 확인한다. 후속 요청은 run 또는 prepare_git다.
-- Runtime 지정이 없는 자연어 작업은 허용된 codex 또는 다른 코딩 Runtime을 사용한다.
+- Runtime 지정이 없으면 options.default_runtime을 따른다. 사용할 수 없는 기본값은 Models·프로젝트 설정에서 수정한다.
   이미 주어진 셸 스크립트·검증된 짧은 명령에는 command를 사용한다. CLI 프로젝트 생성도 자연어 코딩 작업이다.
 - PR 리뷰·CI 조사만으로 충분한 작업에는 Sandbox를 만들지 않는다. 재현이 필요하면 실제 HEAD를 확인한다.
 - start는 branch 기반 clone이다. 임의 SHA checkout, 허용되지 않은 fork, 다른 Runtime으로 전환하는 기능은 없다.
