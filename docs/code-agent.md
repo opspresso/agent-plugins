@@ -2,7 +2,9 @@
 
 Agent Studio의 프로젝트 이름과 관계없이 적용하는 공용 프로필이다. 프로젝트는 요청을 조율하고,
 Workspace의 코딩 Runtime 또는 command가 파일 작업을 실행한다. Sandbox는 별도 MCP 서버가 아니다.
-모델·계정·저장소 허용 목록·Worker·이미지는 설치 측 설정이며 플러그인이 생성하거나 변경하지 않는다.
+모델·계정·Worker·이미지는 설치 측 설정이며 플러그인이 생성하거나 변경하지 않는다.
+저장소 접근은 관리자가 Project Settings → Workspace 저장소 접근 또는 Settings에서 관리한다.
+저장소별 허용과 정확한 소유자별 허용을 지원하며, 소유자 허용은 그 계정의 새 저장소에도 적용된다.
 
 ## 설명과 시스템 프롬프트
 
@@ -43,7 +45,8 @@ GitHub는 원격 증거와 요청된 협업을 담당한다. Workspace 파일의
 create_branch, push_files, create_pull_request, merge_pull_request는 이 프로필에서 제외한다.
 Issue·PR 읽기, 파일·commit·release 읽기와 검색을 연결하고 CI 조사에는 Actions의
 actions_list, actions_get, get_job_logs 읽기 도구를 연결한다. workflow 실행/재실행 도구는 조사에 필요하지 않다.
-새 저장소 생성 요청을 지원하려면 get_me, 저장소 조회와 create_repository를 연결한다. README 초기화로
+새 저장소 생성 요청을 지원하려면 get_me, 저장소 조회와 create_repository를 연결한다. 생성 전에
+Workspace.check_repository_access로 정확한 owner/name을 검사하고 차단되면 반환된 repository_policy_url을 안내한다. README 초기화로
 첫 commit을 만든 뒤 실제 default_branch를 검사한다. 이름이 허용 목록에 있다는 이유로 바로 clone하지 않는다.
 사용자가 이미 사용하는 리뷰·Issue 피드백 도구는 요청 범위를 지키며 제공할 수 있다.
 
@@ -59,7 +62,7 @@ actions_list, actions_get, get_job_logs 읽기 도구를 연결한다. workflow 
 - PR 리뷰·CI 조사만으로 충분한 작업에는 Sandbox를 만들지 않는다. 재현이 필요하면 실제 HEAD를 확인한다.
 - start는 branch 기반 clone이다. 임의 SHA checkout, 허용되지 않은 fork, 다른 Runtime으로 전환하는 기능은 없다.
 - Git-free 프로젝트 생성은 가능하다. 생성한 파일이 있는 공간에 저장소를 뒤늦게 attach할 수는 없다.
-  게시할 프로젝트는 생성 전에 허용된 저장소를 정한다. 새 GitHub 저장소도 Workspace 허용 목록에 자동 등록되지 않는다.
+  게시할 프로젝트는 생성 전에 저장소 또는 소유자가 허용되는지 확인한다. GitHub 연결 자체가 Workspace 정책을 바꾸지는 않는다.
 - CSV·JSON·로그 분석, 파일 변환, 일괄 처리와 보고서 재료 생성도 같은 공간에서 수행한다.
   첨부·Artifact의 자동 mount, 공개 미리보기, 다운로드 export, 호스트 접근은 제공되지 않는 한 약속하지 않는다.
 - Chat 승인 응답에 source_chat_url이 있으면 승인 결과가 원래 채팅에 전달되고 같은 SDK 이력으로 재개된다.

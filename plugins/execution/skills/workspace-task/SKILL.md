@@ -47,8 +47,12 @@ Workspace는 파일·Git·Session을 유지하는 작업 공간이고 Sandbox는
    CLI 프로젝트 생성도 코딩 Runtime의 task다. 자연어 목록을 command에 넣지 않는다.
    선택된 Runtime은 run에서 바꿀 수 없다.
 
-허용 저장소는 존재 여부가 아니다. clone 전 제공된 `check_repository`로 접근·첫 commit·기준 branch를
-확인한다. 새 저장소 생성 요청은 project-generator의 원격 저장소 준비 절차로 먼저 생성·초기화한다.
+새 저장소를 만들기 전 `check_repository_access`로 정확한 owner/name의 정책을 확인한다.
+`repository_owners`는 해당 소유자의 현재·향후 저장소를 허용한다. 차단되면 반환된
+`repository_policy_url`을 관리자에게 전달한다. 관리자는 Project Settings의 Workspace 저장소 접근에서
+변경하며 일반 Agent가 정책을 임의로 넓히지 않는다. 없는 관리 메뉴를 안내하거나 다른 저장소를 생성하지 않는다.
+허용은 존재 여부가 아니다. clone 전 `check_repository`로 서버 계정의 접근·첫 commit·기준 branch를
+확인한다. 새 저장소 생성 요청은 허용을 확인한 뒤 project-generator의 원격 준비 절차로 생성·초기화한다.
 빈 저장소에는 clone할 main이 없으며, clone 실패는 Native task가 실행된 것이 아니다. 원인을 고친 뒤
 같은 저장소의 선택된 Workspace에서 run으로 재개한다.
 
