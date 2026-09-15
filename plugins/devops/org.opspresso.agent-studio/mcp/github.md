@@ -70,6 +70,20 @@ A repository allowlist is not proof of existence, and 404 can mean inaccessible.
 Repository creation, issue closure, workflow reruns, review submission and alert
 dismissal each require the user's corresponding request and actual offered tools.
 
+## GitHub webhook delivery to Agent Studio
+
+The project's Settings → Webhook URL (`/api/webhook/{project}`) starts the published
+project. In GitHub, choose `application/json` and enter that project's webhook
+secret in the Secret field. GitHub sends `X-Hub-Signature-256`, not a custom
+`X-Trigger-Secret` header. Use the existing secret; do not put it in the URL or logs.
+A signed ping checks the connection without running an agent, and GitHub delivery
+IDs deduplicate redeliveries. Check the trigger history after the HTTP 202 response.
+
+`/api/workspaces/github/webhook` is a separate signed metadata callback. It updates
+Workspace PR state and does not start Issue work. Its deployment-owned secret is
+not the project trigger's secret. Neither webhook grants a user identity or
+Workspace publication approval. Use the capabilities actually offered to the run.
+
 ## Skill bindings
 
 DevOps `gitops-change` uses GitHub for repository changes and pull requests.

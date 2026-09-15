@@ -68,6 +68,13 @@ actions_list, actions_get, get_job_logs 읽기 도구를 연결한다. workflow 
   Playground·직접 Workspace 요청에는 원래 Chat을 임의로 지정하지 않는다.
 - Workspace checks, 직접 실행한 검사와 GitHub CI를 구분한다. Git 게시·CI·릴리스·배포도 서로 다른 결과다.
 
+## GitHub Webhook
+
+프로젝트 Settings의 Webhook URL을 GitHub Payload URL로 사용하고 Content type은 application/json으로
+설정한다. 프로젝트가 발급한 시크릿을 GitHub Secret에 넣으면 서명으로 인증하므로 커스텀 헤더가 필요 없다.
+202는 접수 결과이며 실제 응답은 Trigger 이력에서 확인한다. Webhook은 machine actor로 실행되며
+개인 사용자 Workspace 실행 권한이나 Git 승인 권한을 자동으로 얻지 않는다.
+
 ## 검증
 
 저장소 정적 검사와 [행동 평가](../evals/engineering-workflows.json)를 사용한다. 시나리오 검토와
