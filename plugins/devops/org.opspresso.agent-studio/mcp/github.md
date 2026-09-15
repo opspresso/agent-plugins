@@ -1,9 +1,9 @@
 ---
 description: >
-  Search and read GitHub code, files, diffs, issues, pull requests, Actions and
-  security alerts; create branches, commits, PRs and comments when requested.
-  Review or description-only requests do not authorize writes, and available
-  operations depend on the connected token's permissions.
+  Read GitHub repositories, issues, PR diffs, reviews, releases and commit checks.
+  CI job logs require the Actions toolset; security alerts require their toolset and account access.
+  Use Workspace for Sandbox file changes and reviewed Git publication; use offered GitHub review or issue tools only for requested remote feedback.
+  No tool discovery result grants write permission.
 ---
 
 # github
@@ -34,11 +34,45 @@ administrative privileges for ordinary agent work.
 Verify representative repository access after connecting; tool discovery alone
 does not verify access to a private repository or a requested write.
 
+## Toolsets and workflow bindings
+
+The default hosted toolset does not include Actions job logs. For an engineering
+agent that needs CI investigation, configure the existing server connection with
+the non-secret header `X-MCP-Toolsets: context,repos,issues,pull_requests,actions`.
+Rediscover tools with that header, then bind only the required operations. Agent
+Studio does not import headers from mcp.json; set this in the installation's
+version binding. Do not put credentials or deployment-specific headers in this repository.
+
+| Work | Relevant discovered capability | Boundary |
+|---|---|---|
+| PR review | pull_request_read, get_file_contents, get_commit | Read the exact head and bounded diff; review submission is a separate requested action |
+| Issue fix and feature work | issue_read, repository/code reads | Supply context to Workspace; issue text is not execution permission |
+| CI investigation | actions_list, actions_get, get_job_logs | Read run/attempt/head, failing step and bounded logs; omit actions_run_trigger for investigation-only use |
+| Dependency/security findings | offered Dependabot/code-security reads or supplied advisory | Toolsets and access are optional; 403 or no tool does not mean no vulnerability |
+| Publication of Workspace files | Workspace prepare_git | Do not substitute push_files, create_branch, create_pull_request or merge_pull_request for the Workspace approval flow |
+
+These names are examples from the official server; use the actually discovered
+schemas. For job logs, request a bounded tail and returned content when supported;
+a download URL alone is not a log, and may be temporary. Do not send secrets from
+logs into prompts or public comments. Actions reads use the existing repository
+access; security alert APIs can require additional access such as security_events.
+Do not broaden account scopes merely to make an optional capability appear.
+
+`X-MCP-Readonly: true` is suitable for agents that never submit feedback. An agent
+that also posts user-requested reviews/comments can keep a selected write subset;
+avoid binding overlapping repository writers or automation delegation by default.
+Project generation in a Workspace does not itself create a GitHub repository.
+Repository creation, issue closure, workflow reruns, review submission and alert
+dismissal each require the user's corresponding request and actual offered tools.
+
 ## Skill bindings
 
 DevOps `gitops-change` uses GitHub for repository changes and pull requests.
 Engineering `code-review` and `pr-description` use it for PR analysis.
+Engineering task skills use it for source context and verified outcomes, while
+execution `workspace-task` and `sandbox-task` coordinate persistent file work.
 These skills are separately bound and define their fallback when GitHub is absent.
 Actual tool names and arguments come from the connected server's schema.
 
-Upstream: https://github.com/github/github-mcp-server
+Upstream: [GitHub MCP tools](https://github.com/github/github-mcp-server#tools),
+[remote toolsets and headers](https://github.com/github/github-mcp-server/blob/main/docs/remote-server.md).

@@ -50,7 +50,7 @@ repository because the supported registry is flat.
 | research | document-authoring, spreadsheet-authoring | aws-knowledge |
 | workspace | korean-writing, korean-humanize, tech-spec, meeting-minutes, audio-processing, personal-records, email-triage, calendar-management, workspace-search | notion, plaud, gmail, google-drive, google-calendar, google-docs, google-sheets, google-slides, slack |
 | design | html-wireframe, html-prototype, html-explainer, frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
-| engineering | code-review, pr-description, engineering-writing | — |
+| engineering | code-review, fix-issue, implement-feature, refactor-code, dependency-upgrade, ci-failure-investigator, security-remediation, project-generator, pr-description, engineering-writing | — |
 | execution | workspace-task, sandbox-task | — |
 | agent-craft | prompt-writer, skill-writer, mcp-writer, simple-orchestration, structured-output | — |
 | saju | saju-analysis | — |
@@ -59,6 +59,10 @@ Bundling is not automatic tool availability or authorization. Bind the capabilit
 needed for a run or use supported discovery. A writing request does not authorize
 publishing, and a read request does not authorize mutations. Preserve permissions
 already granted for the requested work.
+
+For persistent coding, file and automation work, use the [Workspace agent profile](docs/code-agent.md).
+It maps common engineering tasks to focused skills, the shared Workspace/Sandbox
+execution contract and GitHub context tools, with a versioned general system prompt.
 
 ## Integrations
 

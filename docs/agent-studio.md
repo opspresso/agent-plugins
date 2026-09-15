@@ -174,7 +174,15 @@ checks, Diff and a cursor. Keep queued/running distinct from success. `cancel` s
 a run and `close` saves state and removes compute. The native task continues if the
 parent Agent response ends; follow the returned workspace_path.
 
-The builtin cannot consume Git or deployment approvals. Use the Workspace's
-review UI for Commit, Draft PR, PR, merge and workflow actions. General agent
+The builtin prepares commit, commit-and-push, push, pull-request, merge and push-main
+reviews through prepare_git, but cannot consume approvals. Use the Workspace's
+review UI to execute them or configured workflow actions. General agent
 descriptions and system prompts identify capabilities; account, repository,
 branch and requested file changes belong in each user's task input.
+
+Read options.current_workspace before creating compute. Repeated start returns the
+selection without queueing another task; run continues it. close keeps files and
+selection, and run/prepare_git can restore a closed Workspace. attach_repository
+requires an empty Git-free workdir. A Workspace path is a browser URL, not a file path.
+See the [Workspace agent profile](code-agent.md) for task bindings, runtime limits,
+GitHub Actions toolset configuration and the general system prompt.

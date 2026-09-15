@@ -26,6 +26,7 @@ compatibility: >
 
 Agent Studio에서는 먼저 `Workspace`의 `options`를 읽고 `current_workspace`와 `workdir`를 확인한다.
 선택된 Workspace가 있으면 ID를 생략한 `run`으로 이어간다. `start`를 반복해도 새 작업이 접수되지 않는다.
+원격 자료를 읽는 것만으로 충분한 작업에는 Sandbox를 만들지 않는다. 실제 파일 처리나 검증이 필요할 때 사용한다.
 파일은 `workdir`의 상대 경로에 쓴다. `workspace_path`는 웹 링크이며 `cd` 대상이 아니다.
 `command`는 `task` 문자열 전체를
 스크립트로 실행한다. 자연어 요청을 쉘 스크립트 자리에 넣지 않는다. 직접 스크립트로 표현하기
@@ -41,6 +42,9 @@ Agent Studio에서는 먼저 `Workspace`의 `options`를 읽고 `current_workspa
   종료 코드와 실패 원인을 확인하며 검사를 통과시키려고 테스트를 약화하지 않는다.
 - 데이터·문서 처리: 입력과 출력의 레코드 수, 필수 필드, 단위·날짜·문자 인코딩과 대표 값을 확인한다.
   파일이 생성됐다는 사실만으로 내용이 맞다고 판단하지 않는다.
+  원본과 출력 경로를 구분하고 덮어쓰기 범위를 확인한다. 실제 파일 전달 도구가 없으면 사용자 첨부나
+  Studio Artifact가 Sandbox에 들어 있다고 가정하지 않는다. CSV·JSON·로그 분석과 파일 변환은
+  제공된 파일·텍스트에서 시작하고, 문서 편집·다운로드는 현재 제공된 File/SaveFile 등의 계약을 따른다.
 - Git 작업: 최종 Diff와 변경 파일 목록을 읽어 요청 밖 변경을 제거한다.
   커밋·push·PR·배포는 별도 명시적 사용자 요청과 해당 Runtime의 승인 기능을 따른다.
   Agent Studio의 커밋·push·PR·main 병합은 `Workspace.prepare_git`로 검토를 준비하고 `approval_path`에서 승인한다.

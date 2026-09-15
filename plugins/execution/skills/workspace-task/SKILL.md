@@ -1,107 +1,72 @@
 ---
 name: workspace-task
 description: >
-  파일·코드·분석·자동화 작업을 지속형 Workspace에서 시작하거나 이전 작업에 이어서 수행할 때 쓴다.
-  원래 채팅에 연결된 Workspace와 세션을 재사용하고 실행 상태, Diff와 검사 결과를 확인한다.
-  실행에는 Workspace 도구 또는 동등한 격리 실행 기능이 필요하다.
+  코드·파일·데이터·자동화 작업을 지속형 Workspace에서 실행하거나 이어갈 때 쓴다.
+  기존 공간과 Session을 재사용하고 작업 접수·검증·Git 게시 단계를 조율한다.
+  실행에는 Workspace 도구가 필요하며 원격 자료를 읽는 것만으로 충분한 요청에는 공간을 만들지 않는다.
 compatibility: >
-  Agent Studio에서는 프로젝트에 활성화된 Workspace 빌트인을 사용한다.
-  Skill 설치만으로 실행 권한이나 저장소 연결이 생기지 않는다.
+  Agent Studio의 Workspace 빌트인과 활성화된 Worker를 사용한다.
+  Skill 설치가 Runtime·저장소 권한·계정 연결을 만들지는 않는다.
 ---
 
-# 지속형 Workspace 작업
+# 지속형 Workspace 작업 조율
 
-사용자가 정한 작업을 실행하고 후속 요청에 파일과 세션을 이어 준다. 저장소, 기준 브랜치,
-변경 파일, 산출물과 게시 범위는 현재 사용자 요청에서 얻는다. 특정 계정이나 저장소를 기본값으로 정하지 않는다.
+Workspace는 파일·Git·Session을 유지하는 작업 공간이고 Sandbox는 그 파일을 실행하는 일시적 자원이다.
+조율 Agent는 사용자 의도와 결과를 관리하고, 코딩 Runtime은 파일 수정·검사를 수행한다.
+계정·저장소·브랜치·작업 파일은 사용자 요청에서 얻는다.
 
-## 실행 경로
+## 필요한 경로 선택
 
-- 현재 제공된 도구 목록에서 Workspace 기능을 확인한다. 다른 클라이언트는 실제 도구 schema를 따른다.
-  기능이 없으면 실행했다고 말하지 말고 필요한 연결과 수행 가능한 준비 작업을 알려 준다.
-- Agent Studio의 `Workspace`는 `{"request":{"operation":"options"}}`로 현재 프로젝트의
-  Runtime, 저장소와 검사 명령을 확인한다. 이 응답은 사용자의 변경·게시 허가가 아니다.
-- `options.current_workspace`가 있으면 파일 수정은 `run`, Git 게시 요청은 `prepare_git`로 이어간다. 이때 `workspace_id`는 생략할 수 있다.
-  같은 채팅·프로젝트에서 `start`를 다시 불러도 새 Workspace나 작업은 생성되지 않는다.
-  `reused: true`, `task_queued: false`는 현재 선택을 반환한 것이므로 요청을 실행했다고 말하지 않는다.
-- 사용자가 기존 Workspace를 지정하면 `use_workspace`와 해당 `workspace_id`로 선택한다.
-  이 동작은 파일을 복사하거나 실행하지 않는다. 작업마다 임의로 다른 Workspace를 선택하지 않는다.
-- 새 작업은 `start`에 `runtime`, `repository`, `base_branch`, `task`를 보낸다.
-  Git 없는 작업은 `repository`와 `base_branch`를 모두 `null`로 둔다.
-  저장소 작업은 `options.repositories`의 허용 목록에서 사용자가 요청한 저장소를 선택한다.
-  `default_repository`는 설정의 기본값일 뿐 연결 상태가 아니다. 실제 요청한 저장소를 `repository`로 전달한다.
-- `task`에는 실제 요청, 변경 범위와 검사 방법을 완결된 지시문으로 전달한다.
-  코드 구현·수정에는 허용된 Codex·Claude·OpenCode Runtime을 우선 사용한다.
-  `command`는 단순 파일·데이터 처리와 정확한 비대화형 스크립트에 사용한다.
-  선택하지 않은 도구·운영 자격증명을 사용할 수 있다고 가정하지 않는다.
+원격 PR·Issue·CI 자료만 읽으면 되는 작업은 제공된 MCP로 시작한다. 실제 파일 수정·재현·검증이
+필요할 때 Workspace를 사용한다. 작업의 판단 기준은 연결된 해당 Skill을 읽는다.
 
-파일 작업은 `workdir`에서 상대 경로로 수행한다. `workspace_path`와 `/chats/...`는 브라우저
-링크이며 디렉터리가 아니다. 경로를 확인하려고 새 Workspace를 만들지 않는다.
-`SaveFile`로 만든 Artifact가 Workspace 파일로도 저장됐다고 가정하지 않는다.
+| 요청 | 작업 Skill |
+|---|---|
+| PR·diff 리뷰 | code-review |
+| 버그·Issue 수정 | fix-issue |
+| 기존 제품 기능 구현 | implement-feature |
+| 동작을 유지하는 구조 개선 | refactor-code |
+| 의존성 업그레이드 | dependency-upgrade |
+| CI 실패 조사·요청된 수정 | ci-failure-investigator |
+| 지정된 보안 문제 대응 | security-remediation |
+| 새 프로젝트 생성 | project-generator |
+| 파일·데이터 처리·스크립트 자동화 | sandbox-task |
 
-처음 Git 없이 시작했다면 `attach_repository`에 사용자가 요청한 `repository`, `base_branch`를
-보내 같은 Workspace에 연결할 수 있다. 작업 폴더가 비어 있을 때만 가능하며 기존 파일은
-덮어쓰지 않는다. 기존 파일 때문에 거절되면 새 `start`로 우회하지 말고 보존할 파일과 다음
-조치를 확인한다. 이미 연결된 저장소와 Runtime을 바꾸려면 별도 Chat/Workspace가 필요하다.
+없는 Skill을 임의로 호출하지 않는다. 해당 작업을 직접 수행할 도구·자료가 있으면 그 범위에서
+진행하고 한계를 알린다. Skill 선택 때문에 새로운 게시·수정 범위를 추가하지 않는다.
 
-## 진행과 후속 요청
+## 공간과 Runtime
 
-`start`와 `run`의 `queued`는 접수 상태다. `workspace_id`, `run_id`, `workspace_path`를 보관하고
-`wait`에 반환된 ID와 `after_seq`를 넘긴다. 최초 cursor는 0이며 이후에는 `next_seq`를 쓴다.
-`status`도 같은 주소와 cursor로 결과를 읽는다. `has_more`면 같은 Run의 나머지 출력을 읽는다.
+1. `{"request":{"operation":"options"}}`로 workdir, 허용 Runtime·저장소와 current_workspace를 읽는다.
+2. 선택된 공간은 `run`으로 이어간다. `workspace_id`를 생략할 수 있다. 사용자가 다른 기존 공간을
+   지정했을 때만 `use_workspace`로 선택한다. start를 반복해도 새 작업이 접수되지 않는다.
+3. 선택이 없을 때 `start`에 runtime, repository, base_branch, task를 보낸다. 저장소 작업은 두 Git
+   선택 값을 모두 지정한다. 둘 다 null이면 Git-free이며 default_repository는 자동 clone 대상이 아니다.
+4. 코드 구현·복잡한 수정은 코딩 Runtime에 완결된 자연어 task로 전달한다. command는 정확한 셸
+   스크립트용이다. 자연어 목록을 command에 넣지 않는다. 선택된 Runtime은 run에서 바꿀 수 없다.
 
-`succeeded`, `failed`, `cancelled`, `interrupted`를 구별한다. 성공한 검사와 실패·미실행 검사를
-분리해 설명하고 Diff로 요청 밖 변경을 확인한다. 출력이 잘렸으면 전체 검토가 끝났다고 하지 않는다.
-Workspace의 `checks=[]`는 설정된 Workspace 검사만 없다는 뜻이다. GitHub 검사나 빌드가 없다고
-추론하지 않는다. GitHub CI는 새 `status`의 `pull_request.ci` 또는 실제 GitHub 실행 기록으로 확인한다.
-릴리스가 게시됐다는 사실만으로 전체 빌드가 완료됐다고 말하지 않는다.
-오래 걸려 현재 응답에서 완료를 확인할 수 없으면 실행 중임을 밝히고 Workspace 링크를 제공한다.
-같은 작업을 새 ID로 다시 접수하지 않는다. 세션 종료나 통신 오류는 작업의 실패·취소를 뜻하지 않는다.
-새 `run`은 아직 승인하지 않은 Git 검토를 취소하며, 수정 후 다시 검토한다. 실행 중이거나
-결과가 불확실한 Git 동작이 막고 있으면 상태를 확인하고 알린다. 새 Workspace로 우회하지 않는다.
+실행 지시를 만들 때는 [task 전달과 파일 작업](references/task-handoff.md)을 필요한 부분만 읽는다.
+workdir는 실제 경로, workspace_path는 브라우저 링크다. 파일은 workdir의 상대 경로로 다룬다.
+`attach_repository`는 빈 Git-free 폴더에만 연결하며 이미 있는 파일을 덮거나 Git을 해제하지 않는다.
 
-사용자가 중지를 요청하면 `cancel`, 작업 공간 종료를 요청하면 `close`를 사용한다.
-일반 턴 완료만으로 Workspace를 닫지 않는다. 비활성 Sandbox가 정리된 뒤에도 후속 `run`은 저장된
-파일과 native Session에서 복원된다. Git에서 무시하는 의존성·빌드 출력은 재생성한다.
-`close`는 선택을 해제하지 않는다. 종료된 Workspace도 `run`과 `prepare_git`로 같은 파일을 복원한다.
-PR을 만들거나 Runtime을 바꾸려고 닫기·새 시작·선택 해제를 반복하지 않는다. `attach_repository`는
-저장소를 연결하는 기능이며 `null`로 Git을 해제할 수 없다.
+## 접수·완료·후속 요청
 
-## 검토와 게시
+queued/running은 완료가 아니다. 반환된 run_id로 wait/status를 읽고 after_seq=0부터 next_seq로
+출력을 이어간다. has_more면 남은 결과를 읽는다. 같은 작업을 새 ID로 재접수하지 않는다.
+진전 없는 상태 조회를 연속 반복하지 말고 현재 상태와 링크를 제공한다. 부모 응답이 끝나도 작업은 계속된다.
+reused=true, task_queued=false는 기존 공간만 반환한 것이다. 새 작업은 run으로 요청한다.
 
-clone이나 로컬 재구현 요청은 원격 저장소 생성·fork·공개 게시의 허가가 아니다.
-Workspace 기능이 없으면 GitHub의 쓰기 도구로 대체하지 말고 필요한 실행 환경을 알린다.
+실행의 성공·실패·취소·중단과 실제 변경을 확인한다. 오류는 입력·환경·상태의 확인된 원인을 고친 뒤
+같은 공간에서 이어간다. 경로·도구·권한 오류를 새 Workspace나 다른 Git 경로로 우회하지 않는다.
+사용자가 작업 중지를 요청하면 cancel, 공간 종료를 요청하면 close를 사용한다. close는 선택과
+파일을 보존하며 run·prepare_git가 종료된 공간도 복원한다. 일반 턴 완료나 PR 생성 때문에 닫지 않는다.
 
-Commit·Push·Draft PR·PR·병합·배포는 사용자의 요청 범위 안에서만 준비한다.
-Agent Studio에서 커밋·푸시 요청을 받으면 `run`으로 Git 명령을 전달하지 않는다.
-`Workspace`의 `prepare_git`로 승인할 동작을 준비한다. 커밋과 푸시를 함께 요청한 예는 다음과 같다.
+## 검증·게시·전달
 
-```json
-{"request":{"operation":"prepare_git","workspace_id":"반환받은 ID","action":{"kind":"commit-and-push","message":"feat: implement requested changes"}}}
-```
+Workspace의 checks, native task에서 직접 실행한 검사와 GitHub CI는 별개의 근거다.
+checks=[]로 GitHub 검사가 없다고 하지 않는다. GitHub CI는 새 status의 pull_request.ci나
+해당 SHA·run·attempt의 실제 실행 기록으로 확인한다. 릴리스 게시만으로 전체 빌드 완료를 추론하지 않는다.
 
-커밋만 요청하면 `kind: "commit"`과 `message`, 이미 커밋한 변경의 푸시만 요청하면
-`{"kind":"push"}`를 사용한다. `pending`은 게시 성공이 아니다. 반환된 `approval_path`를
-클릭 가능한 링크로 제공하고 승인을 기다린다. 승인 후 `status`의 `git_action.status`와
-`git_action.result`로 실제 결과를 확인한다. Push는 Workspace 작업 브랜치에 게시하며 PR을 자동 생성하지 않는다.
-PR 생성 요청은 다음처럼 `prepare_git`에 제목·본문·Draft 여부를 전달한다.
-
-```json
-{"request":{"operation":"prepare_git","action":{"kind":"pull-request","title":"Implement requested changes","body":"Summary and actual validation results","draft":false}}}
-```
-
-승인 후 `status.pull_request`에서 PR 번호·URL·현재 `headSha`와 `ci`를 확인한다. 병합 요청은
-`{"kind":"merge","pullRequestNumber":7,"headSha":"status에서 확인한 정확한 SHA"}`를 준비한다.
-사용자가 PR 없이 main 직접 푸시를 요청하면 먼저 작업 브랜치의 커밋·푸시를 확인하고
-`{"kind":"push-main"}`을 준비한다. main 직접 푸시는 fast-forward만 허용하며 이력이 갈라지면
-PR 경로로 해결한다. 사용자 요청 없이 PR 병합을 main 직접 푸시로 대체하지 않는다.
-각 동작은 반환된 승인 링크에서 검토한다. 배포는 Git·배포 화면의 허용된 workflow를 사용한다.
-Workspace 도구는 그 승인을 대신 누르거나 소비하지 않는다. GitHub 도구로 이 승인 경계를 우회하지 않는다.
-검사가 대기 중·실패 상태면 main 반영을 진행하지 않는다. `ci: "none"`은 보고된 검사가 없다는 뜻이며
-CI 성공이 아니다. 이 상태로 승인할 때의 의미를 알리고 GitHub 브랜치 규칙을 따른다.
-
-Sandbox의 `/control/git`는 의도적으로 보호한다. `index.lock` 쓰기 거절은 설치 오류가 아니다.
-chmod·chown·임시 `GIT_INDEX_FILE`·별도 Git 디렉터리·GitHub API로 재시도하지 않는다.
-`prepare_git`가 없는 환경은 승인 화면 링크와 필요한 기능을 알려 주고 멈춘다.
-
-최종 답변에는 실제 변경, 확인한 검사, 남은 작업을 담고 `workspace_path`를 주소로 하는 클릭 가능한 Markdown 링크를 제공한다.
-없는 파일·테스트·커밋·PR·릴리스를 완료된 것으로 보고하지 않는다.
+Git 게시 요청에는 [Git 검토와 승인](references/git-actions.md)을 읽는다. 새 run은 미승인 검토를
+취소하므로 파일 수정을 마친 뒤 검토한다. 실행 중·결과 불명 상태의 게시를 자동 반복하지 않는다.
+실제 변경, 검증 근거, 미완료 작업과 클릭 가능한 Workspace/PR/산출물 링크를 전달한다.

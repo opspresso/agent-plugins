@@ -47,6 +47,7 @@ compatibility: >
 
 이전 리뷰와 CI 상태는 현재 변경의 근거 확인이나 중복 지적 방지에 필요할 때 읽는다.
 확인한 검사와 미확인 범위를 구분해 보고한다.
+PR의 정확한 revision, fork 또는 Sandbox 재현을 다룰 때는 [PR과 Workspace 리뷰](references/pull-requests.md)를 읽는다.
 
 ## 3. 신호에서 렌즈 고르기
 
