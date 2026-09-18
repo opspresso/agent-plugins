@@ -10,7 +10,7 @@ on:
 
 jobs:
   validate:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       # No setup-python step: the script is standard library only, and the
