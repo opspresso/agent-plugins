@@ -5,13 +5,14 @@ description: >
 
 # argocd
 
-Operator reference for a separately registered integration. This file is not
-auto-synced as a bundled MCP declaration. Use the description as a starting
-point and adjust it to the deployed tools and permission boundary.
+Bundled endpoint: `http://mcp-argocd.agent-mcps.svc.cluster.local/mcp`.
+The `argocd-env-demo` k3s deployment exposes this service inside the cluster.
+See [in-cluster MCP setup](../../../../docs/agent-studio.md#in-cluster-mcp-services)
+for network access, plugin sync and agent bindings.
 
-Register the endpoint of the Argo CD MCP deployment reachable from the client.
-Configure upstream URL, credentials and RBAC in that deployment. Do not assume a
-cluster namespace, TLS termination mode, account role or write-tool setting.
+Configure upstream URL, credentials and RBAC in the deployment. The MCP endpoint
+uses internal HTTP; the upstream Argo CD API token remains deployment-managed.
+Keep the description aligned with the deployed tools and permission boundary.
 
 Check inherited default roles as well as account-specific roles. Tool visibility
 is not authorization. Verify an application read and the intended permission

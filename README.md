@@ -2,8 +2,9 @@
 
 A collection of task-focused plugins using [Agent Plugins 1.0.0](https://agent-plugins.org/)
 and [Agent Skills](https://agentskills.io/specification). Each plugin groups related
-capabilities; the repository does not prescribe a cloud, organization, industry,
-language or deployment topology. Everything is [MIT-licensed](LICENSE).
+capabilities. Skills are reusable across environments; bundled MCP endpoints
+include the supported `argocd-env-demo` deployment profile.
+Everything is [MIT-licensed](LICENSE).
 
 ## Scope and runtime
 
@@ -26,7 +27,7 @@ audio jobs, memory and sync ownership.
 ```text
 plugins/<plugin>/
   plugin.json
-  mcp.json                            # optional, shared service endpoints only
+  mcp.json                            # optional, bundled service endpoints
   skills/<skill>/
     SKILL.md                          # selection description and task workflow
     references/                       # optional conditional guidance/templates
@@ -34,7 +35,7 @@ plugins/<plugin>/
     <server>.md
 docs/
   agent-studio.md                      # client/runtime contracts for operators
-  integrations/<server>.md             # separately registered service guidance
+  integrations/<server>.md             # installation setup guidance
 scripts/                              # repository validation, not skill payloads
 ```
 
@@ -46,7 +47,7 @@ repository because the supported registry is flat.
 
 | Plugin | Skills | Bundled MCP servers |
 |---|---|---|
-| devops | gitops-change, incident-triage | github |
+| devops | gitops-change, incident-triage | argocd, cloudwatch, grafana, kubernetes, github |
 | research | document-authoring, spreadsheet-authoring | aws-knowledge |
 | workspace | korean-writing, korean-humanize, tech-spec, meeting-minutes, audio-processing, personal-records, email-triage, calendar-management, workspace-search | notion, plaud, gmail, google-drive, google-calendar, google-docs, google-sheets, google-slides, slack |
 | design | html-wireframe, html-prototype, html-explainer, frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
@@ -66,9 +67,10 @@ execution contract and GitHub context tools, with a versioned general system pro
 
 ## Integrations
 
-Shared manifests contain actual provider-hosted endpoints. Account connections,
-credentials, model selections, private addresses, regions and runtime bindings
-belong to the installation. Never put credentials in manifests, URLs or skill text.
+Manifests contain provider-hosted endpoints and the declared in-cluster MCP
+services deployed by `argocd-env-demo`. Account connections, credentials, model
+selections, regions and runtime bindings belong to the installation.
+Never put credentials in manifests, URLs or skill text.
 This repository permits only `streamable-http` declarations with `type` and `url`;
 that is a repository policy, not the full MCP transport specification.
 
@@ -83,18 +85,21 @@ account connection, Agent Studio OAuth compatibility requirements and verificati
 Adding these declarations does not connect accounts or grant access to private
 content.
 
-Infrastructure and search deployments vary by installation. Register these
-separately using their real endpoint and adjust the suggested description to the
-exposed tools:
+The `devops` plugin declares these MCP services from the `argocd-env-demo` k3s
+deployment in the `agent-mcps` namespace, with matching Studio descriptions:
 
-- [Argo CD](docs/integrations/argocd.md)
-- [CloudWatch](docs/integrations/cloudwatch.md)
-- [Grafana](docs/integrations/grafana.md)
-- [Kubernetes](docs/integrations/kubernetes.md)
+- [Argo CD](plugins/devops/org.opspresso.agent-studio/mcp/argocd.md)
+- [CloudWatch](plugins/devops/org.opspresso.agent-studio/mcp/cloudwatch.md)
+- [Grafana](plugins/devops/org.opspresso.agent-studio/mcp/grafana.md)
+- [Kubernetes](plugins/devops/org.opspresso.agent-studio/mcp/kubernetes.md)
 
-These operator references are not auto-synced declarations. The plugins do not
-assume their hostnames, namespaces, upstream identities or RBAC. Removing a
-bundled declaration does not remove an existing installation; see
+Plugin sync registers `http://mcp-<name>.agent-mcps.svc.cluster.local/mcp` for
+these four services. They require cluster DNS/network access and Agent Studio's
+internal-host allowlist; see [in-cluster setup](docs/agent-studio.md#in-cluster-mcp-services).
+Upstream identities, credentials and RBAC remain deployment-managed. Other
+installations can register their own endpoints under distinct names so sync does
+not overwrite them. Removing a bundled declaration does not remove an existing
+installation; see
 [sync ownership](docs/agent-studio.md#registration-and-sync-ownership).
 
 AWS Knowledge supplies AWS documentation, not general research or live account
@@ -151,7 +156,8 @@ node --test scripts/test_html_report.mjs
 CI runs all three without installing dependencies. The Python checker enforces
 manifest/skill field constraints and the Studio deployment profile: names,
 frontmatter parsing, attachment limits, bundled MCP documentation and URL policy.
-It rejects non-loopback HTTP endpoints without a namespace-specific exception.
+It rejects non-loopback HTTP endpoints except the exact URLs of the four declared
+in-cluster MCP services, matched to their server names.
 Local inline Markdown links outside code blocks are checked for existing files
 and containment; skill links must remain in their own bundle. This is not a full
 Markdown parser or a remote-link availability check.

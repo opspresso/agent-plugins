@@ -5,11 +5,12 @@ description: >
 
 # cloudwatch
 
-Operator reference for a separately registered integration. This file is not
-auto-synced as a bundled MCP declaration. Use the description as a starting
-point and adjust it to the deployed tools and permission boundary.
+Bundled endpoint: `http://mcp-cloudwatch.agent-mcps.svc.cluster.local/mcp`.
+The `argocd-env-demo` k3s deployment exposes AWS Labs CloudWatch MCP through
+Streamable HTTP inside the cluster. See
+[in-cluster MCP setup](../../../../docs/agent-studio.md#in-cluster-mcp-services)
+for network access, plugin sync and agent bindings.
 
-Deploy or connect a CloudWatch MCP implementation and register its actual endpoint.
 Choose the account, region and credential source on the installing side; these
 may be workload identity, a role or another supported credential chain. Do not
 copy a profile name, IAM policy or region from another installation.

@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "devops",
-  "version": "1.1.2",
-  "description": "Investigate service incidents and change Git-managed desired state using the target environment’s observability and deployment tools. Bundles GitHub access; infrastructure integrations are configured separately.",
+  "version": "1.2.0",
+  "description": "Investigate service incidents and change Git-managed desired state using the target environment’s observability and deployment tools. Bundles GitHub and the in-cluster Argo CD, CloudWatch, Grafana and Kubernetes MCP services deployed by argocd-env-demo.",
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
   "license": "MIT",

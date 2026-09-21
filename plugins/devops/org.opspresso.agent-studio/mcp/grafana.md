@@ -5,13 +5,14 @@ description: >
 
 # grafana
 
-Operator reference for a separately registered integration. This file is not
-auto-synced as a bundled MCP declaration. Use the description as a starting
-point and adjust it to the deployed tools and permission boundary.
+Bundled endpoint: `http://mcp-grafana.agent-mcps.svc.cluster.local/mcp`.
+The `argocd-env-demo` k3s deployment exposes this service inside the cluster.
+See [in-cluster MCP setup](../../../../docs/agent-studio.md#in-cluster-mcp-services)
+for network access, plugin sync and agent bindings.
 
-Register a reachable Grafana MCP endpoint. Configure Grafana authentication,
-datasources and exposed tool categories in the deployment. Do not assume username
-and password authentication or that all datasources describe Kubernetes.
+Configure Grafana authentication, datasources and exposed tool categories in
+the deployment. Do not assume username and password authentication or that all
+datasources describe Kubernetes.
 
 Keep the registered description consistent with enabled categories. Validate a
 representative datasource query after changes. Successful tool discovery does

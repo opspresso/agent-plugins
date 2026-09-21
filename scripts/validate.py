@@ -47,6 +47,13 @@ SKILL_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 MCP_NAME = re.compile(r"^[a-z0-9-]+$")
 MCP_CWD = re.compile(r"^(?:\./|\$\{PLUGIN_ROOT\}(?:/|$)|\$\{PLUGIN_DATA\}(?:/|$))")
 
+# Canonical ClusterIP endpoints deployed by argocd-env-demo. This exception is
+# limited to each named server's exact URL, not the entire cluster DNS suffix.
+INTERNAL_MCP_URLS = {
+    name: f"http://mcp-{name}.agent-mcps.svc.cluster.local/mcp"
+    for name in ("argocd", "cloudwatch", "grafana", "kubernetes")
+}
+
 FRONTMATTER = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n?", re.S)
 KEY = re.compile(r"^([A-Za-z_-]+):\s*(.*)$")
 
@@ -253,8 +260,9 @@ def check_mcp(manifest: Path) -> None:
                         loopback = ipaddress.ip_address(parsed.hostname).is_loopback
                     except ValueError:
                         loopback = parsed.hostname == "localhost"
-                    if not loopback:
-                        fail(manifest, f"{name}: a non-loopback endpoint must use HTTPS")
+                    if not loopback and url != INTERNAL_MCP_URLS.get(name):
+                        fail(manifest, f"{name}: a non-loopback endpoint must use HTTPS "
+                             "unless it matches that server's declared in-cluster MCP URL")
         else:
             fail(manifest, f"{name}: type must be stdio, streamable-http or sse (got {kind!r})")
             continue

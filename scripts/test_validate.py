@@ -365,7 +365,7 @@ class ValidateManifestTest(TestCase):
                 self.assertTrue(any("invalid host or port" in p for p in validate.problems))
                 self.assertTrue(any("second: server must be an object" in p for p in validate.problems))
 
-    def test_mcp_url_policy_has_no_deployment_namespace_exception(self) -> None:
+    def test_mcp_url_policy_requires_https_outside_known_deployments(self) -> None:
         cases = [
             ("http://service.agent-mcps.svc.cluster.local/mcp", False),
             ("http://service.other.svc.cluster.local/mcp", False),
@@ -386,6 +386,44 @@ class ValidateManifestTest(TestCase):
                 with patch.object(validate, "check_mcp_docs"):
                     validate.check_mcp(manifest)
                 self.assertEqual(accepted, not validate.problems)
+
+    def test_mcp_accepts_known_in_cluster_endpoints(self) -> None:
+        for name in ("argocd", "cloudwatch", "grafana", "kubernetes"):
+            with self.subTest(name=name), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                manifest = self.write_json(Path(temporary) / "mcp.json", {
+                    "$schema": validate.MCP_SCHEMA,
+                    "mcpServers": {name: {
+                        "type": "streamable-http",
+                        "url": f"http://mcp-{name}.agent-mcps.svc.cluster.local/mcp",
+                    }},
+                })
+                with patch.object(validate, "check_mcp_docs"):
+                    validate.check_mcp(manifest)
+                self.assertEqual([], validate.problems)
+
+    def test_mcp_internal_exception_requires_matching_name_and_exact_url(self) -> None:
+        cases = [
+            ("other", "http://mcp-argocd.agent-mcps.svc.cluster.local/mcp"),
+            ("argocd", "http://mcp-grafana.agent-mcps.svc.cluster.local/mcp"),
+            ("argocd", "http://mcp-argocd.other.svc.cluster.local/mcp"),
+            ("argocd", "http://mcp-argocd.agent-mcps.svc.cluster.local.example.com/mcp"),
+            ("argocd", "http://mcp-argocd.agent-mcps.svc.cluster.local:3000/mcp"),
+            ("argocd", "http://mcp-argocd.agent-mcps.svc.cluster.local/other"),
+            ("argocd", "http://mcp-argocd.agent-mcps.svc.cluster.local/mcp?token=value"),
+            ("argocd", "http://user:password@mcp-argocd.agent-mcps.svc.cluster.local/mcp"),
+            ("argocd", "http://mcp-argocd.agent-mcps.svc.cluster.local/mcp#fragment"),
+        ]
+        for name, url in cases:
+            with self.subTest(name=name, url=url), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                manifest = self.write_json(Path(temporary) / "mcp.json", {
+                    "$schema": validate.MCP_SCHEMA,
+                    "mcpServers": {name: {"type": "streamable-http", "url": url}},
+                })
+                with patch.object(validate, "check_mcp_docs"):
+                    validate.check_mcp(manifest)
+                self.assertTrue(validate.problems)
 
     def test_mcp_rejects_quoted_empty_extension_description(self) -> None:
         with TemporaryDirectory() as temporary:

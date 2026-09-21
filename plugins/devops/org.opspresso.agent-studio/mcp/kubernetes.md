@@ -5,14 +5,14 @@ description: >
 
 # kubernetes
 
-Operator reference for a separately registered integration. This file is not
-auto-synced as a bundled MCP declaration. Use the description as a starting
-point and adjust it to the deployed tools and permission boundary.
+Bundled endpoint: `http://mcp-kubernetes.agent-mcps.svc.cluster.local/mcp`.
+The `argocd-env-demo` k3s deployment exposes this service inside the cluster.
+See [in-cluster MCP setup](../../../../docs/agent-studio.md#in-cluster-mcp-services)
+for network access, plugin sync and agent bindings.
 
-Register the endpoint of a Kubernetes MCP deployment and identify its target
-cluster and identity. Select toolsets and RBAC for the intended task. Do not
-assume Secret reads, deletion, exec, Helm or workload writes are allowed or denied
-merely because a tool appears or is absent in discovery.
+Identify the deployment's target cluster and identity. Select toolsets and RBAC
+for the intended task. Do not assume Secret reads, deletion, exec, Helm or workload
+writes are allowed or denied merely because a tool appears or is absent in discovery.
 
 Review cluster-wide and namespaced permissions, including Secret-backed release
 storage when Helm is needed. A server may expose calls that return 403 under its

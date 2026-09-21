@@ -30,9 +30,36 @@ using those names. Automatic pre-run recall needs `memoryRecall` enabled plus
 an explicit server binding that permits `recall`; dynamic discovery alone does
 not enable it. Search result IDs belong to Agent Memory, not Studio artifacts.
 
-`mcp.json` contains shared deployment addresses. Organization URLs, credentials,
-model selections and version bindings belong to the installing side. Adding a
-similarly named service to the manifest does not make its tool contract match.
+`mcp.json` contains provider-hosted and declared in-cluster deployment addresses.
+Other organization URLs, credentials, model selections and version bindings
+belong to the installing side. Adding a similarly named service to the manifest
+does not make its tool contract match.
+
+### In-cluster MCP services
+
+The `devops` plugin declares four MCP services deployed by the sibling
+`argocd-env-demo` repository in k3s:
+
+| Server | Streamable HTTP endpoint |
+|---|---|
+| `argocd` | `http://mcp-argocd.agent-mcps.svc.cluster.local/mcp` |
+| `cloudwatch` | `http://mcp-cloudwatch.agent-mcps.svc.cluster.local/mcp` |
+| `grafana` | `http://mcp-grafana.agent-mcps.svc.cluster.local/mcp` |
+| `kubernetes` | `http://mcp-kubernetes.agent-mcps.svc.cluster.local/mcp` |
+
+These are ClusterIP services in the `agent-mcps` namespace. The URLs use the
+Service's HTTP port 80, not the container's target port. They require cluster
+DNS and network reachability from Agent Studio. The k3s Studio configuration sets
+`MCP_INTERNAL_HOST_SUFFIXES=agent-mcps.svc.cluster.local`; other installations
+must configure the appropriate network access before using these declarations.
+This setting permits internal connections; it does not grant upstream access.
+Credentials and RBAC remain in the service deployments.
+
+Sync the `devops` plugin to import the endpoints and matching MCP descriptions,
+then bind the servers to the intended agent version or enable supported dynamic
+discovery. Verify tool discovery and a representative authorized read for each
+service from Studio. Registration alone does not verify the upstream credentials
+or make the tools available to every agent.
 
 ### Google Workspace and Slack
 
@@ -142,14 +169,18 @@ applies in UTF-16 code units. Confirm actual offered tools and their schemas.
 ## Registration and sync ownership
 
 Bundled MCP declarations contain only `type` and `url`; credentials belong to
-the installing side. Register installation-specific integrations separately so
-plugin sync does not own their endpoint or credential configuration. Do not
-publish private endpoints or invent replacement URLs in a shared manifest.
+the installing side. The four in-cluster services above are owned by the `devops`
+plugin and sync updates their endpoints and descriptions. Register other
+installation-specific integrations under distinct names so plugin sync does not
+own their endpoint configuration. Do not add credentials or invent replacement
+URLs in a manifest.
 
 For an authorized private endpoint, configure the installing client's network
 allowlist and the deployment's transport and authentication boundary. A suffix
-allowlist is not proof of service authentication. Shared manifests have no
-private-HTTP deployment exception.
+allowlist is not proof of service authentication. The repository validator allows
+internal HTTP only for the four declared server names and their exact URLs above;
+other non-loopback endpoints must use HTTPS. This validation exception does not
+change the client's network policy or the deployment's access controls.
 
 Sync creates and updates declared names. It can overwrite console edits to
 those entries, so change bundled content in this repository. Entries whose names
