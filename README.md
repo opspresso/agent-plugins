@@ -91,7 +91,6 @@ exposed tools:
 - [CloudWatch](docs/integrations/cloudwatch.md)
 - [Grafana](docs/integrations/grafana.md)
 - [Kubernetes](docs/integrations/kubernetes.md)
-- [Brave Search](docs/integrations/brave-search.md)
 
 These operator references are not auto-synced declarations. The plugins do not
 assume their hostnames, namespaces, upstream identities or RBAC. Removing a
