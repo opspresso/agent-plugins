@@ -38,6 +38,9 @@ Workspace는 파일·Git·Session을 유지하는 작업 공간이고 Sandbox는
 ## 공간과 Runtime
 
 1. `{"request":{"operation":"options"}}`로 workdir, 허용 Runtime·저장소와 current_workspace를 읽는다.
+   코딩 CLI는 실제 모델 연결과 네트워크가 필요하고 GitHub MCP와 서버 Git 인증은 별개다.
+   네트워크·인증 설정 오류가 나면 설치 측 막힘으로 보고한다. 자연어 작업을 command에 보내거나
+   같은 작업을 새 공간에 반복 접수하지 않는다.
 2. 선택된 공간은 `run`으로 이어간다. `workspace_id`를 생략할 수 있다. 사용자가 다른 기존 공간을
    지정했을 때만 `use_workspace`로 선택한다. start를 반복해도 새 작업이 접수되지 않는다.
 3. 선택이 없을 때 `start`에 runtime, repository, base_branch, task를 보낸다. 저장소 작업은 두 Git

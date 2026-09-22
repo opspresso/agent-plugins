@@ -62,10 +62,12 @@ Do not broaden account scopes merely to make an optional capability appear.
 that also posts user-requested reviews/comments can keep a selected write subset;
 avoid binding overlapping repository writers or automation delegation by default.
 Project generation in a Workspace does not itself create a GitHub repository.
-For requested repository creation, verify the connected identity and exact name,
-then use the offered `create_repository` with `autoInit: true` to create the first
-commit. Preserve the requested visibility; never make a repository public to fix
-access. Check its actual default branch and Workspace server access before clone.
+For requested repository creation, check the exact owner/name with Workspace
+`check_repository_access`, then use **Workspace `create_repository`** with the
+requested repository, description and visibility. The server initializes the
+first commit and records creation for the project's repository policy. GitHub MCP
+creation does not register the repository with Workspace. Never make a repository
+public to fix access. Check the returned base branch and Workspace server access before clone.
 A repository allowlist is not proof of existence, and 404 can mean inaccessible.
 Repository creation, issue closure, workflow reruns, review submission and alert
 dismissal each require the user's corresponding request and actual offered tools.

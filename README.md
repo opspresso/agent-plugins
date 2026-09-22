@@ -64,6 +64,7 @@ already granted for the requested work.
 For persistent coding, file and automation work, use the [Workspace agent profile](docs/code-agent.md).
 It maps common engineering tasks to focused skills, the shared Workspace/Sandbox
 execution contract and GitHub context tools, with a versioned general system prompt.
+For Plaud recording import, transcription and summaries, use the [Audio agent profile](docs/audio-agent.md).
 
 ## Integrations
 

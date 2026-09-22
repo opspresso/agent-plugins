@@ -35,9 +35,11 @@ compatibility: >
    반복 polling이나 새 revision으로 우회하지 않는다.
 3. 완료된 작업의 task·sourceIdentity·artifacts 관계를 확인한다. 미완료 후속 단계가 있으면 그 단계만 제출한다.
    완료된 단계와 만료된 원본을 자동 재처리하지 않는다.
-4. 새 작업이 필요하면 요청된 범위와 탐색 한도 안에서 출처 목록을 조회한다.
+4. 새 처리가 필요하면 먼저 `AudioJob config`로 현재 전사 모델 연결·보존 기간·후처리 설정을 확인한다.
+   모델이 삭제됐거나 연결이 잘못되면 해당 오류를 보고하고 새 파일 참조를 발급하거나 작업을 접수하지 않는다.
+   요청된 범위와 탐색 한도 안에서 출처 목록을 조회한다.
    기존 외부 ID를 제외한 뒤 상세 조회로 source_ref를 얻는다. 조회 오류를 신규 항목 없음으로 바꾸지 않는다.
-5. `AudioJob config`의 모델·보존 기간·후처리 대상을 확인한다. 자동 실행에서는 destination이 없어야 한다.
+5. 확인한 config의 revision으로 접수한다. 자동 실행에서는 destination이 없어야 한다.
    다운로드·전사·요약 요청은 별도 ImportFile로 시작하지 않는다.
    녹음마다 `AudioJob submit`으로 제출하면 worker가 보관 → 전사 → 후처리를 이어간다.
    여러 후보는 설정의 maxActive(대기+진행)·maxPerOccurrence를 따라 각각 접수하고 worker가 프로젝트별로 한 건씩 처리한다.

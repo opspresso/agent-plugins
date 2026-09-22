@@ -11,6 +11,7 @@ Agent Studio의 Workspace Git 동작 계약이다. 실제 제공된 schema가 �
 | PR 생성·기존 PR 설명/Draft 변경 | kind=pull-request, title, body, draft | 커밋 필요, 작업 브랜치 게시 포함, 해당 브랜치의 열린 PR 재사용 |
 | 이 Workspace의 PR을 main으로 병합 | kind=merge, pullRequestNumber, headSha | status.pull_request의 number/headSha 사용, 열린 Ready PR의 정확한 HEAD 필요 |
 | PR 없이 main 직접 푸시 | kind=push-main | 먼저 작업 브랜치에 커밋·푸시, 검토한 main에 fast-forward만 허용 |
+| 허용된 workflow로 배포 | kind=deploy, workflow, ref=main, inputs | options.deployment_workflows의 경로 사용, inputs는 중복 없는 name/value 배열 |
 
 ```json
 {"request":{"operation":"prepare_git","action":{"kind":"commit-and-push","message":"feat: implement requested changes"}}}
@@ -51,7 +52,18 @@ force push로 덮지 않는다. PR 경로에서 충돌과 필요한 수정·검�
 
 Workspace가 소유하지 않은 외부 PR은 이 merge 동작의 대상이 아니다. 그 PR의 읽기·리뷰는 MCP로
 수행할 수 있지만 로컬 Workspace가 해당 HEAD를 소유한다고 가정하지 않는다.
-배포는 Git·배포 화면에 설정된 workflow 경로를 사용한다. Skill이나 Sandbox에 배포 권한이 생기는 것은 아니다.
+배포 요청은 `options.deployment_workflows`에서 실제 허용 경로를 확인하고 아래 형태로 검토를 준비한다.
+경로가 없으면 프로젝트의 워크스페이스 도구 설정이 필요하다. 임의 workflow를 허용하거나
+Sandbox·MCP로 대신 실행하지 않는다. 제공된 schema에 deploy가 없으면 Git·배포 화면의 경로를 안내한다.
+
+```json
+{"request":{"operation":"prepare_git","action":{"kind":"deploy","workflow":"deploy.yml","ref":"main","inputs":[{"name":"environment","value":"preview"}]}}}
+```
+
+workflow와 inputs는 실제 저장소 정의와 요청으로 바꾼다. 입력이 필요 없으면 `[]`를 사용한다.
+커밋·PR 병합 승인은 배포 승인이 아니다. 배포 승인 성공도 workflow 접수만 증명한다. 해당 GitHub
+실행의 SHA·환경·결과와 실제 서비스 상태를 확인한 뒤 배포 완료를 보고한다. 실행 조회가 없으면
+접수 상태로 보고하며 중복 dispatch하지 않는다. Skill이나 Sandbox에 배포 권한이 생기는 것은 아니다.
 
 /control/git와 index.lock 쓰기 거절은 보호된 Git 경계다. native task에 git add·commit·push·merge·fetch·checkout을
 시키거나 chmod·임시 index·다른 Git 디렉터리·GitHub 파일 쓰기로 우회하지 않는다. 필요한 파일 수정과

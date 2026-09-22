@@ -41,6 +41,7 @@ Agent Version에서 워크스페이스 도구를 활성화한다. 모델은 Mode
 
 `devops`의 github 선언은 유지하며 MCP 서버를 중복 등록하지 않는다. 같은 연결의 비밀이 아닌
 version header를 `X-MCP-Toolsets: context,repos,issues,pull_requests,actions`로 설정하고 재발견한다.
+Workspace가 Git 게시·배포를 담당하는 기본 프로필에는 `X-MCP-Readonly: true`도 설정한다.
 모델·도구 선택을 수정해도 이 헤더를 유지한다. mcp.json 동기화가 소유하지 않는 설치 설정이다. 계정·토큰·OAuth scope는 복사하거나 확대하지 않는다.
 
 GitHub는 원격 증거와 요청된 협업을 담당한다. Workspace 파일의 Git 게시와 역할이 겹치는
@@ -50,7 +51,8 @@ actions_list, actions_get, get_job_logs 읽기 도구를 연결한다. workflow 
 새 저장소 생성에는 Workspace.create_repository를 사용하고 계정·저장소 조회를 위해 get_me와 조회 도구를
 연결한다. 생성 전에 check_repository_access의 allowed·creation_allowed를 구분하고 서버 생성 결과의
 base_branch를 검사한다. 이름이 허용 목록에 있다는 이유로 바로 clone하지 않는다.
-사용자가 이미 사용하는 리뷰·Issue 피드백 도구는 요청 범위를 지키며 제공할 수 있다.
+리뷰·Issue 피드백 게시까지 필요한 별도 프로필은 요청 범위에 맞는 쓰기 도구만 명시적으로 연결한다.
+읽기 전용 기본 프로필은 해당 게시를 지원한다고 약속하지 않는다.
 
 보안 경고 API는 별도 toolset·권한이 있을 때만 연결한다. 접근이 없으면 사용자 제공 advisory·스캔 결과와
 현재 코드·의존성으로 대응한다. 접근 거절을 보안 문제가 없다는 뜻으로 해석하지 않는다.
