@@ -15,4 +15,4 @@ selected operation's scopes; discovery of a write tool does not grant write acce
 
 Verify with calendar listing and a bounded event query. Confirm the calendar ID,
 timezone, all-day interpretation and recurring-instance behavior before binding
-event-changing tools to a version. A connection check must not invite attendees.
+event-changing tools to an Agent. A connection check must not invite attendees.

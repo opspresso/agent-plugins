@@ -2,7 +2,7 @@
 name: simple-orchestration
 description: >
   여러 전문 작업을 연결된 서브에이전트에 나누고 결과를 통합할 때 쓴다.
-  독립 작업은 병렬로, 앞선 결과가 필요한 작업은 순차로 조정한다.
+  독립 작업은 지원되면 병렬로, 앞선 결과가 필요한 작업은 순차로 조정한다.
   위임 도구가 없거나 한 에이전트가 짧게 끝낼 요청은 직접 처리한다.
 compatibility: >
   위임이 허용되고 실제 위임 도구와 적합한 에이전트가 제공돼야 한다.
@@ -28,7 +28,7 @@ compatibility: >
 
 위임 허용 여부, 사용 가능한 에이전트, 동시 실행 수, context 전달, 결과·오류·취소 방식을
 현재 환경에서 확인한다. 모든 런타임이 같은 도구 이름이나 공유 파일시스템을 갖는다고 가정하지 않는다.
-Agent Studio의 `dispatch_agents`·`transfer_to_agent`를 사용할 때만
+호스트 앱의 `delegate_<name>`·`handoff_<name>`을 사용할 때만
 [references/agent-studio.md](references/agent-studio.md)를 읽는다.
 
 ## 절차

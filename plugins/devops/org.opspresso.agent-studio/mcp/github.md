@@ -11,7 +11,7 @@ description: >
 ## Endpoint and authentication
 
 The hosted endpoint is `https://api.githubcopilot.com/mcp/`.
-A project's OAuth connection takes precedence; otherwise the registry's
+An Agent's OAuth connection takes precedence; otherwise the registry's
 `Authorization` header supplies a fallback token.
 
 The first sync supplies neither credential. Run Discover to configure OAuth
@@ -25,8 +25,8 @@ The server exposes reads and writes across repositories, issues, PRs, Actions
 and security alerts. Token scopes determine which calls succeed. A read-only
 token can still discover write tools and receive 403 when calling them.
 
-Fallback credentials act as one shared account for projects without OAuth.
-Per-project OAuth uses the connected account's identity. Restrict fallback
+Fallback credentials act as one shared account for Agents without OAuth.
+Per-Agent OAuth uses the connected account's identity. Restrict fallback
 repository access and permissions to the required operations, and enforce
 merge/review restrictions with branch protection. Do not supply bypass or
 administrative privileges for ordinary agent work.
@@ -39,9 +39,9 @@ does not verify access to a private repository or a requested write.
 The default hosted toolset does not include Actions job logs. For an engineering
 agent that needs CI investigation, configure the existing server connection with
 the non-secret header `X-MCP-Toolsets: context,repos,issues,pull_requests,actions`.
-Rediscover tools with that header, then bind only the required operations. Agent
-Studio does not import headers from mcp.json; set this in the installation's
-version binding. Do not put credentials or deployment-specific headers in this repository.
+Rediscover tools with that header, then bind only the required operations. The
+host app does not import headers from mcp.json; set this in the Agent's MCP
+binding. Do not put credentials or deployment-specific headers in this repository.
 
 | Work | Relevant discovered capability | Boundary |
 |---|---|---|
@@ -65,17 +65,17 @@ Project generation in a Workspace does not itself create a GitHub repository.
 For requested repository creation, check the exact owner/name with Workspace
 `check_repository_access`, then use **Workspace `create_repository`** with the
 requested repository, description and visibility. The server initializes the
-first commit and records creation for the project's repository policy. GitHub MCP
+first commit and records creation for the Agent's repository policy. GitHub MCP
 creation does not register the repository with Workspace. Never make a repository
 public to fix access. Check the returned base branch and Workspace server access before clone.
 A repository allowlist is not proof of existence, and 404 can mean inaccessible.
 Repository creation, issue closure, workflow reruns, review submission and alert
 dismissal each require the user's corresponding request and actual offered tools.
 
-## GitHub webhook delivery to Agent Studio
+## GitHub webhook delivery to the host app
 
-The project's Settings → Webhook URL (`/api/webhook/{project}`) starts the published
-project. In GitHub, choose `application/json` and enter that project's webhook
+The Agent's Settings → Webhook URL (`/api/webhook/{project}`) starts the current
+Agent configuration. In GitHub, choose `application/json` and enter that Agent's webhook
 secret in the Secret field. GitHub sends `X-Hub-Signature-256`, not a custom
 `X-Trigger-Secret` header. Use the existing secret; do not put it in the URL or logs.
 A signed ping checks the connection without running an agent, and GitHub delivery
@@ -83,7 +83,7 @@ IDs deduplicate redeliveries. Check the trigger history after the HTTP 202 respo
 
 `/api/workspaces/github/webhook` is a separate signed metadata callback. It updates
 Workspace PR state and does not start Issue work. Its deployment-owned secret is
-not the project trigger's secret. Neither webhook grants a user identity or
+not the Agent trigger's secret. Neither webhook grants a user identity or
 Workspace publication approval. Use the capabilities actually offered to the run.
 
 ## Skill bindings

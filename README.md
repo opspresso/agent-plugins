@@ -14,12 +14,13 @@ conditional references. Meeting minutes work from supplied notes or transcripts;
 Plaud is an optional recording source. Specialized skills such as Korean editing
 and saju retain their explicit scope rather than becoming general-purpose rules.
 
-Agent Studio is the supported integration profile. Its builtin file, image and
+The `agent-studio` application is the supported host integration. Its display
+name is configured per deployment. Its builtin file, image and
 audio tool recipes remain specific to that runtime; this repository does not
 claim every skill executes unchanged in every client. General authoring skills
 separate client-specific contracts into references. In another runtime, verify
 the available capabilities and schemas before adapting those recipes.
-See [Agent Studio integration](docs/agent-studio.md) for loading, file delivery,
+See [host app integration](docs/agent-studio.md) for loading, file delivery,
 audio jobs, memory and sync ownership.
 
 ## Layout
@@ -82,12 +83,12 @@ in `workspace`; select the subset needed by each agent. Google Workspace MCP is
 in **Developer Preview** and requires eligible access, API enablement and a
 registered OAuth client. See [Google Workspace setup](docs/integrations/google-workspace.md)
 and [Slack setup](plugins/workspace/org.opspresso.agent-studio/mcp/slack.md) for
-account connection, Agent Studio OAuth compatibility requirements and verification.
+account connection, host app OAuth compatibility requirements and verification.
 Adding these declarations does not connect accounts or grant access to private
 content.
 
 The `devops` plugin declares these MCP services from the `argocd-env-demo` k3s
-deployment in the `agent-mcps` namespace, with matching Studio descriptions:
+deployment in the `agent-mcps` namespace, with matching host app descriptions:
 
 - [Argo CD](plugins/devops/org.opspresso.agent-studio/mcp/argocd.md)
 - [CloudWatch](plugins/devops/org.opspresso.agent-studio/mcp/cloudwatch.md)
@@ -95,7 +96,7 @@ deployment in the `agent-mcps` namespace, with matching Studio descriptions:
 - [Kubernetes](plugins/devops/org.opspresso.agent-studio/mcp/kubernetes.md)
 
 Plugin sync registers `http://mcp-<name>.agent-mcps.svc.cluster.local/mcp` for
-these four services. They require cluster DNS/network access and Agent Studio's
+these four services. They require cluster DNS/network access and the host app's
 internal-host allowlist; see [in-cluster setup](docs/agent-studio.md#in-cluster-mcp-services).
 Upstream identities, credentials and RBAC remain deployment-managed. Other
 installations can register their own endpoints under distinct names so sync does
@@ -126,12 +127,12 @@ boundaries, workflow and conditional references.
 - Templates and style catalogs are defaults. Do not replace user branding,
   language or genre to make outputs conform to a preferred example.
 
-`name` must match the skill directory. References needed during a Studio run must
+`name` must match the skill directory. References needed during a host app run must
 be in the owning skill bundle; repository operator docs are not runtime files.
 An optional companion skill must not block a task that can be completed with
 inline guidance and available tools.
 
-## Descriptions and visibility in Agent Studio
+## Descriptions and visibility in the host app
 
 | Component | Visible before selection | Loaded content |
 |---|---|---|
@@ -155,7 +156,7 @@ node --test scripts/test_html_report.mjs
 ```
 
 CI runs all three without installing dependencies. The Python checker enforces
-manifest/skill field constraints and the Studio deployment profile: names,
+manifest/skill field constraints and the host app's integration profile: names,
 frontmatter parsing, attachment limits, bundled MCP documentation and URL policy.
 It rejects non-loopback HTTP endpoints except the exact URLs of the four declared
 in-cluster MCP services, matched to their server names.

@@ -21,7 +21,7 @@ Plaud가 실제 녹음 출처이고 해당 MCP가 제공되는 경우에만 사�
 
 ## 파일 참조와 접수
 
-실제 녹음 ID로 `get_file(file_id=...)`을 호출한다. Studio의 workspace plugin 기본 매핑은
+실제 녹음 ID로 `get_file(file_id=...)`을 호출한다. 호스트 앱의 workspace plugin 기본 매핑은
 `presigned_url`·`id`·`name`을 다음과 같은 도구 결과로 변환한다.
 
 ```json
@@ -29,11 +29,11 @@ Plaud가 실제 녹음 출처이고 해당 MCP가 제공되는 경우에만 사�
 ```
 
 `source_ref`가 있으면 정상이며 추가 매핑이나 URL 조회가 필요하지 않다.
-[Studio 도구](agent-studio.md)의 config → submit에 `source.kind="source"`, `source.id=source_ref`를 넣는다.
+[앱 도구](agent-studio.md)의 config → submit에 `source.kind="source"`, `source.id=source_ref`를 넣는다.
 외부 녹음 ID는 중복 확인·상세 조회용이며 source_ref나 Artifact ID를 대신하지 않는다.
-원본 임시 URL과 같은 녹음 ID의 갱신은 Studio가 처리한다. 매핑 실패는 정확한 오류를 보고한다.
+원본 임시 URL과 같은 녹음 ID의 갱신은 호스트 앱이 처리한다. 매핑 실패는 정확한 오류를 보고한다.
 
-요청한 전사·요약은 Studio의 설정된 모델과 worker가 수행한다. Plaud의 기존 transcript·note를
+요청한 전사·요약은 호스트 앱의 설정된 모델과 worker가 수행한다. Plaud의 기존 transcript·note를
 새로 전사한 결과로 대신하지 않는다. 조회 성공·작업 접수·전사 완료·요약 완료를 구분한다.
 
 공식 계약: [Plaud MCP](https://docs.plaud.ai/plaud-mcp-cli/mcp).

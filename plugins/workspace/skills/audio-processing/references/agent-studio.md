@@ -1,4 +1,4 @@
-# Studio 도구
+# 앱 도구
 
 현재 제공된 schema가 기준이다. AudioJob 인수는 `request` 객체 하나이며, operation에 맞는 형태만
 선택한다. 선택 항목은 필요 없으면 null로 지정한다. 빈 문자열, "none", 임의 날짜·모델·retention을
@@ -71,7 +71,7 @@ config_revision·전사 model·language·destination은 이 형태에 없다.
 
 접수 응답의 accepted/duplicate는 job.status와 다르다. queued/running/waiting이면 실제 ID를 보고하고
 남은 요청 대상의 접수를 마친 뒤 종료한다. 한 실행에서 반복 polling하지 않는다. completed라면 마지막 stage가 importing이나 cleaning이어도
-끝난 작업 이력이다. `artifacts`의 현재 사용 가능한 파일과 `artifactLinks`의 Studio 경로만 안내하고
+끝난 작업 이력이다. `artifacts`의 현재 사용 가능한 파일과 `artifactLinks`의 앱 경로만 안내하고
 `unavailableArtifacts`의 삭제·만료·누락·미준비 상태를 구분한다. `artifact:`나 `sandbox:` 링크를 만들어내지 않는다.
 이 필드를 제공하지 않는 구버전에서는 File 도구로 읽을 수 있는지 확인하고 접근 실패를 현재 완료 결과로 안내하지 않는다.
 과거 작업의 모델·완료 시각을 현재 설정으로 새로 실행한 결과와 구분한다. 처리되지 않은 단계는 완료로 보고하지 않는다.

@@ -1,6 +1,6 @@
 ---
 description: >
-  Find Plaud recordings by name or date through the connected account. In Agent Studio,
+  Find Plaud recordings by name or date through the connected account. In the host app,
   mapped get_file returns a private source_ref for audio-processing and AudioJob
   transcription and summary; no manual download URL is needed. Plaud transcripts and
   notes are existing provider output, not new internal transcription. This server does not transcribe audio.
@@ -11,13 +11,13 @@ description: >
 ## Connection
 
 Use the official remote endpoint `https://mcp.plaud.ai/mcp` with OAuth.
-After plugin sync, run Discover and connect the meeting agent's project to the
+After plugin sync, run Discover and connect the meeting Agent to the
 intended Plaud account. Plaud Cloud Sync must be enabled for its recordings to
 be available. Do not store credentials in this repository or share a fallback
-account across projects.
+account across Agents.
 
 Public metadata advertises authorization-code flow, PKCE S256, refresh tokens
-and dynamic client registration at `https://mcp.plaud.ai/register`. Agent Studio
+and dynamic client registration at `https://mcp.plaud.ai/register`. The host app
 can discover these settings; do not copy tokens from the local Plaud CLI.
 An unauthenticated MCP initialize returns 401 with a protected-resource metadata
 challenge. A browser GET to `/mcp` can return 404 and is not a connection test.
@@ -41,18 +41,18 @@ Use `meeting-minutes` for recording selection, internal-transcript provenance,
 decisions, action items and review. Its `agent-setup.md` supplies a project prompt
 and the required transcription integration boundary.
 
-The repository registers Plaud; Agent Studio supplies the optional `ImportFile`,
-`TranscribeAudio` and `AudioJob` builtins when the version enables `audioProcessing`.
+The repository registers Plaud; the host app supplies the optional `ImportFile`,
+`TranscribeAudio` and `AudioJob` builtins when the Agent enables `audioProcessing`.
 Bind `audio-processing` for the generic submission and recovery contract. The workspace
 plugin declares the default `get_file` projection in plugin.json under
-`extensions.org.opspresso.agent-studio.mcpSourceOutputs.plaud`. Studio applies it
-when the version has no explicit override: `presigned_url` is kept server-side and
+`extensions.org.opspresso.agent-studio.mcpSourceOutputs.plaud`. The host app applies it
+when the Agent binding has no explicit override: `presigned_url` is kept server-side and
 an opaque `source_ref` is returned to the model. No manual mapping is needed for
 this response shape. Default source identity is scoped to the authenticated connection.
 The declared `refreshArgument: file_id` refreshes the URL from the same recording.
-Version overrides take priority; an explicit empty array disables mapping. A changed
-response shape requires an updated plugin declaration or a deliberate version override.
-Studio refuses replay after the connection, effective mapping or returned item ID changes.
+Agent binding overrides take priority; an explicit empty array disables mapping. A changed
+response shape requires an updated plugin declaration or a deliberate binding override.
+The host app refuses replay after the connection, effective mapping or returned item ID changes.
 `FetchUrl` and document `File` remain unsuitable for audio transcription.
 
 The hosted Plaud MCP processes requests in the US, and recordings must already

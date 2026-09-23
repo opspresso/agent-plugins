@@ -5,7 +5,7 @@ description: >
   점검하고 셀을 수정한다. 수식 재계산은 지원하지 않는다.
   보고서 안의 단순 표는 document-authoring, JSON·CSV 텍스트 추출은 structured-output을 사용한다.
 compatibility: >
-  Agent Studio의 File 빌트인과 artifact 저장소가 필요하다. 기존 XLSX는 file_id로
+  호스트 앱의 File 빌트인과 artifact 저장소가 필요하다. 기존 XLSX는 file_id로
   접근하며 도구가 없으면 표와 수식을 Markdown으로 낸다.
 ---
 

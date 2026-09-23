@@ -15,7 +15,7 @@ GitHub MCP의 실제 제공 도구로 읽는다. `pull_request_read`의 methods�
 ## Sandbox가 필요한 경우
 
 MCP의 자료만으로 충분하면 Workspace를 만들지 않는다. 재현·테스트가 필요하면 연결된
-`workspace-task`로 현재 선택과 허용 저장소를 확인한다. Studio의 start는 branch를 기준으로 clone하며
+`workspace-task`로 현재 선택과 허용 저장소를 확인한다. 호스트 앱의 start는 branch를 기준으로 clone하며
 임의 commit checkout이나 PR ref fetch를 제공하지 않는다.
 
 대상 head repo/branch를 연결할 수 있고 현재 작업과 맞을 때만 실행한다. task의 첫 단계에서

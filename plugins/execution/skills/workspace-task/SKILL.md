@@ -5,7 +5,7 @@ description: >
   기존 공간과 Session을 재사용하고 작업 접수·검증·Git 게시 단계를 조율한다.
   실행에는 Workspace 도구가 필요하며 원격 자료를 읽는 것만으로 충분한 요청에는 공간을 만들지 않는다.
 compatibility: >
-  Agent Studio의 Workspace 빌트인과 활성화된 Worker를 사용한다.
+  호스트 앱의 Workspace 빌트인과 활성화된 Worker를 사용한다.
   Skill 설치가 Runtime·저장소 권한·계정 연결을 만들지는 않는다.
 ---
 

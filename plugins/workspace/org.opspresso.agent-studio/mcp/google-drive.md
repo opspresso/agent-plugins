@@ -1,9 +1,9 @@
 ---
 description: >
   Find Google Drive files, read content and inspect metadata or permissions;
-  create or copy files when requested and supported. Requires the project's
+  create or copy files when requested and supported. Requires the Agent's
   connected Google account and Workspace MCP Developer Preview access. A Drive
-  file ID is not an Agent Studio artifact ID; inaccessible files need supplied content.
+  file ID is not a host app artifact ID; inaccessible files need supplied content.
 ---
 
 # google-drive
@@ -19,5 +19,5 @@ Permission inspection does not imply permission editing. Native Docs, Sheets
 and Slides have their own MCP servers for structured operations.
 
 A returned file ID, download URL or resource URI does not establish an Agent
-Studio artifact. Verify the actual file delivery path before offering a download
+host app artifact. Verify the actual file delivery path before offering a download
 or passing content to the builtin `File` tool.

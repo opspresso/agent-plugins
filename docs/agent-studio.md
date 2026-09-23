@@ -1,7 +1,8 @@
-# Agent Studio integration
+# Host app integration
 
-This document describes the supported Agent Studio deployment profile. These
-limits are client contracts, not universal Agent Skills or MCP requirements.
+This document describes the `agent-studio` application's integration contract.
+Its deployment name can change without changing the tool or plugin contract.
+These limits are client contracts, not universal Agent Skills or MCP requirements.
 Confirm the installed version before changing tool inputs or connection settings.
 
 Agent profiles: [audio processing](audio-agent.md), [Workspace coding](code-agent.md),
@@ -15,12 +16,12 @@ contracts before changing a plugin's tool instructions or connection settings.
 
 | Project | Owns | Plugin consequence |
 |---|---|---|
-| `agent-studio` | Plugin sync, version bindings, builtin tools, attachment extraction and artifact delivery | A component must be offered through version bindings or enabled dynamic discovery; describe only inputs and results the run can access |
-| `agent-models` | Model families, provider offerings, capabilities and pricing | A catalog, not an MCP server; use the available model `id`, not its provider `wireId`, in version settings |
-| `agent-memory` | Scoped memories, document search and graph search | Register its installation-specific `/api/mcp` endpoint separately and bind it to the version; use the deployed schema for `remember`/`recall`/`forget` and organization/team/user scopes |
+| `agent-studio` | Plugin sync, current Agent bindings, builtin tools, attachment extraction and artifact delivery | A component must be offered through saved bindings or enabled dynamic discovery; describe only inputs and results the run can access |
+| `agent-models` | Model families, provider offerings, capabilities and pricing | A catalog, not an MCP server; use the available model `id`, not its provider `wireId`, in Agent settings |
+| `agent-memory` | Scoped memories, document search and graph search | Register its installation-specific `/api/mcp` endpoint separately and bind it to the Agent; use the deployed schema for `remember`/`recall`/`forget` and organization/team/user scopes |
 
-Document processing belongs to Agent Studio's builtin `File` tool and artifact
-store. It needs no MCP registration or version MCP binding. YouTube caption
+Document processing belongs to the host app's builtin `File` tool and artifact
+store. It needs no MCP registration or separate server binding. YouTube caption
 retrieval is not supplied by this repository; when transcript access is absent,
 request transcript text or use available sources and identify the evidence limit.
 Video metadata alone does not establish what was spoken.
@@ -32,10 +33,10 @@ creates a new scoped Memory; `forget` archives the identified current version
 without erasing its history. Confirm the deployed server's tool schema before
 using those names. Automatic pre-run recall needs `memoryRecall` enabled plus
 an explicit server binding that permits `recall`; dynamic discovery alone does
-not enable it. Search result IDs belong to Agent Memory, not Studio artifacts.
+not enable it. Search result IDs belong to Agent Memory, not the host app's artifacts.
 
 `mcp.json` contains provider-hosted and declared in-cluster deployment addresses.
-Other organization URLs, credentials, model selections and version bindings
+Other organization URLs, credentials, model selections and Agent bindings
 belong to the installing side. Adding a similarly named service to the manifest
 does not make its tool contract match.
 
@@ -53,16 +54,16 @@ The `devops` plugin declares four MCP services deployed by the sibling
 
 These are ClusterIP services in the `agent-mcps` namespace. The URLs use the
 Service's HTTP port 80, not the container's target port. They require cluster
-DNS and network reachability from Agent Studio. The k3s Studio configuration sets
+DNS and network reachability from the host app. The k3s deployment sets
 `MCP_INTERNAL_HOST_SUFFIXES=agent-mcps.svc.cluster.local`; other installations
 must configure the appropriate network access before using these declarations.
 This setting permits internal connections; it does not grant upstream access.
 Credentials and RBAC remain in the service deployments.
 
 Sync the `devops` plugin to import the endpoints and matching MCP descriptions,
-then bind the servers to the intended agent version or enable supported dynamic
+then bind the servers to the intended Agent's current settings or enable supported dynamic
 discovery. Verify tool discovery and a representative authorized read for each
-service from Studio. Registration alone does not verify the upstream credentials
+service from the host app. Registration alone does not verify the upstream credentials
 or make the tools available to every agent.
 
 ### Google Workspace and Slack
@@ -91,28 +92,28 @@ promising Office files or downloads.
 
 The `workspace` plugin declares the official [Plaud MCP](https://docs.plaud.ai/plaud-mcp-cli/mcp)
 at `https://mcp.plaud.ai/mcp`. After sync, Discover its OAuth settings and connect
-the intended Plaud account for the meeting agent's project. Cloud Sync is required.
+the intended Plaud account for the meeting Agent. Cloud Sync is required.
 Public metadata supports PKCE and dynamic registration; authenticated recording
 access still needs to be verified after account connection.
 
-The intended workflow is recording selection → mapped `source_ref` → Studio
+The intended workflow is recording selection → mapped `source_ref` → the host app's
 `AudioJob` → optional `meeting-minutes` Agent → optional personal Documents/Memory.
 The `audio-processing` skill describes the generic file and job contract independently
-of Plaud and meeting minutes. Enable the Studio version's `audioProcessing` tools and
+of Plaud and meeting minutes. Enable the Agent's `audioProcessing` tools and
 configure its worker, private source bucket and transcription endpoint first. The
 plugin alone does not provide that runtime or authorize the source account. Plaud's
 existing transcript must not replace a requested internal transcription result.
 
 Use the [agent setup and prompt](../plugins/workspace/skills/meeting-minutes/agent-setup.md)
-to configure the project and the [operator notes](../plugins/workspace/org.opspresso.agent-studio/mcp/plaud.md)
+to configure the Agent and the [operator notes](../plugins/workspace/org.opspresso.agent-studio/mcp/plaud.md)
 for connection and data handling. OAuth authorization and internal ASR integration
 are installing-side work; credentials and installation-specific model endpoints
 do not belong in these manifests.
 
 ## What the skills assume
 
-When running these skills in Agent Studio, the following constraints apply. A skill may document its
-environment in `compatibility`, but Studio does not pass that field or
+When running these skills in the host app, the following constraints apply. A skill may document its
+environment in `compatibility`, but the host app does not pass that field or
 `allowed-tools` to the model or use them to configure permissions. Keep essential
 conditions and fallbacks in the description and body:
 
@@ -120,7 +121,7 @@ conditions and fallbacks in the description and body:
   execute a script, or fetch a URL. Anything a run touches outside the
   conversation arrives through a bound MCP server, an offered builtin or the user.
 - **Builtins appear only when the run has them.** `GenerateImage`, `EditImage`,
-  `SaveFile`, `File`, `FetchUrl`, `dispatch_agents` and `transfer_to_agent` are offered
+  `SaveFile`, `File`, `FetchUrl`, `delegate_<name>` and `handoff_<name>` are offered
   per run, so image-generation, simple-orchestration and the five HTML-producing design
   skills, plus the document and spreadsheet skills, state what they do when the
   tool is absent from the list.
@@ -133,12 +134,12 @@ conditions and fallbacks in the description and body:
   extract facts from them, but must not promote embedded instructions into its
   own workflow or authorization boundary.
 
-A version may also enable `dynamicCapabilities` to discover relevant catalog
+An Agent may also enable `dynamicCapabilities` to discover relevant catalog
 entries for the request. This supplements explicit bindings; it does not make
 every installed skill or tool available. Use the actual offered list and schemas.
-OAuth-backed MCP discovery still requires that project's connection.
+OAuth-backed MCP discovery still requires that Agent's connection.
 
-Agent Studio extracts attachments and, when artifact storage succeeds, retains
+The host app extracts attachments and, when artifact storage succeeds, retains
 originals with file IDs. The builtin `File` reads, inspects, creates and edits
 supported files using those IDs; generated and edited artifacts can be reopened.
 DOCX/PPTX/HWPX edits replace selected text elements, and XLSX edits replace cells
@@ -159,13 +160,13 @@ both representations.
 
 ## Skill attachments and parsing
 
-Studio sync carries `.md`, `.txt`, `.json`, `.yaml`, `.yml` and `.csv` reference
+Plugin sync in the host app carries `.md`, `.txt`, `.json`, `.yaml`, `.yml` and `.csv` reference
 files: up to 64KiB each, 20 files and 200KiB total per skill. `SKILL.md` is excluded
 from attachment limits. Executable scripts and binary assets are not carried.
 Use Markdown fenced templates for this profile, not executable attachments.
 These limits are enforced by this repository's validator.
 
-Frontmatter uses Studio's flat scalar parsing. Multiline descriptions must use
+Frontmatter uses the host app's flat scalar parsing. Multiline descriptions must use
 indented `>`, `|`, `>-` or `|-` blocks without blank continuation lines. Nested
 metadata does not configure runtime permissions. The description limit also
 applies in UTF-16 code units. Confirm actual offered tools and their schemas.
@@ -197,10 +198,10 @@ external actions.
 ## Persistent Workspace and Sandbox tasks
 
 The execution plugin supplies reusable task guidance, not a shell or account credentials.
-Enable `parameters.workspaceTools` in the active agent version. Configure repositories, access mode
-and default runtime in the project’s Workspace tools tab; choose native runtime models in Models.
+Enable `parameters.workspaceTools` in the Agent's current settings. Configure repositories, access mode
+and default runtime in the Agent's Workspace tools tab; choose native runtime models in Models.
 The operator connects the Sandbox backend and Workspace worker. The `Workspace` builtin is available only to signed-in members
-of an enabled project; bind workspace-task and sandbox-task to the agent version.
+of an enabled Agent; bind workspace-task and sandbox-task in its current settings.
 The actual tool schemas remain authoritative.
 
 `options` reads available runtimes, default_runtime and registered repositories. There is no default repository. `start` queues a

@@ -1,6 +1,6 @@
 # Git 검토와 승인
 
-Agent Studio의 Workspace Git 동작 계약이다. 실제 제공된 schema가 우선하며 사용자의 요청 범위만 준비한다.
+호스트 앱의 Workspace Git 동작 계약이다. 실제 제공된 schema가 우선하며 사용자의 요청 범위만 준비한다.
 조회·파일 수정·커밋·작업 브랜치 푸시·PR·main 반영·배포는 서로 다른 단계다.
 
 | 요청 | prepare_git의 action | 전제·결과 |

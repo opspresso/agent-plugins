@@ -61,7 +61,7 @@ description: >
 참고 파일로 분리하고 읽을 조건을 본문에 적는다. 짧은 스킬을 형식만 맞추려고 나누지 않는다.
 
 실행 가능한 환경이면 반복 계산·검증에 스크립트를 쓸 수 있다. 텍스트만 동기화하는 환경에서는
-스크립트나 바이너리를 제공했다고 가정하지 않는다. 이 저장소 또는 Agent Studio가 대상이면
+스크립트나 바이너리를 제공했다고 가정하지 않는다. 이 저장소 또는 호스트 앱이 대상이면
 [references/agent-studio.md](references/agent-studio.md)를 읽는다.
 
 ## 파일 형식
@@ -77,7 +77,7 @@ description: >
 
 ## 검증과 전달
 
-이 저장소에서는 `python3 scripts/validate.py`로 이름·description·첨부와 Studio 배포 제약을
+이 저장소에서는 `python3 scripts/validate.py`로 이름·description·첨부와 앱 배포 제약을
 확인한다. 다른 저장소는 해당 검사기를 사용한다.
 참고 경로는 실제 스킬 첨부 목록과 대조한다. 검사기는 코드 블록 밖의 인라인 Markdown 파일
 링크를 확인하며 코드 예시·Skill 호출의 경로와 원격 URL은 별도로 점검한다.

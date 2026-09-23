@@ -10,7 +10,7 @@ GitHub 저장소에서 Payload URL을 `/api/webhook/{project}`로, Content type�
 등록한다. 시크릿은 저장소 파일·Agent 프롬프트·PR·로그에 넣지 않는다.
 저장소를 읽을 수 있어도 Pull requests 쓰기 권한이 없으면 댓글 게시가 실패한다.
 
-Studio가 서명·저장소·PR·HEAD를 검증하고 제공한 변경 내용으로 Agent를 실행한 후
+호스트 앱이 서명·저장소·PR·HEAD를 검증하고 제공한 변경 내용으로 Agent를 실행한 후
 해당 커밋에 COMMENT 리뷰를 게시한다. Agent가 댓글 도구나 게시 위치를 고르지 않으며
 이 모드에는 Skill 읽기만 제공된다. 변경 코드 실행·PR 승인·merge·배포는 포함하지 않는다.
 최대 파일 수·diff 문맥 한도와 누락 여부는 실제 실행 입력과 게시 본문에 표시된다.

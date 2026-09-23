@@ -43,7 +43,7 @@ SKILL_FIELDS = {"name", "description", "license", "compatibility", "metadata", "
 PLUGIN_NAME = re.compile(r"^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$")
 # Agent Skills is stricter: no dots, and no consecutive hyphens.
 SKILL_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
-# Agent Studio's registry slug rule, independent of plugin/skill spec names.
+# The host app's registry slug rule, independent of plugin/skill spec names.
 MCP_NAME = re.compile(r"^[a-z0-9-]+$")
 MCP_CWD = re.compile(r"^(?:\./|\$\{PLUGIN_ROOT\}(?:/|$)|\$\{PLUGIN_DATA\}(?:/|$))")
 
@@ -86,7 +86,7 @@ def recommend(where: Path, message: str) -> None:
 def parse_frontmatter(text: str, *, where: Path | None = None) -> dict[str, str] | None:
     """The flat `key: value` subset every client here actually reads.
 
-    Match Agent Studio's paired quotes, lowercase keys and folded scalars
+    Match the host app's paired quotes, lowercase keys and folded scalars
     (`>`, `|`, `>-`, `|-`). Nested mapping entries are not consumed.
     When validating a file, report prose the runtime would silently drop.
     """
@@ -106,7 +106,7 @@ def parse_frontmatter(text: str, *, where: Path | None = None) -> dict[str, str]
                 where is not None and line.strip() and not line.lstrip().startswith("#")
                 and not (key == "metadata" and line.startswith((" ", "\t")))
             ):
-                fail(where, f"frontmatter line {index + 1} is ignored by Agent Studio; "
+                fail(where, f"frontmatter line {index + 1} is ignored by the host app; "
                      "use an indented > or | scalar for multiline descriptions")
             continue
         key = header.group(1).lower()
@@ -196,7 +196,7 @@ def check_mcp(manifest: Path) -> None:
 
     for name, server in servers.items():
         if not MCP_NAME.fullmatch(name):
-            fail(manifest, f"{name!r}: server name must be an Agent Studio slug (lowercase letters, digits, hyphens)")
+            fail(manifest, f"{name!r}: server name must match the host app's slug format (lowercase letters, digits, hyphens)")
         if not isinstance(server, dict):
             fail(manifest, f"{name}: server must be an object")
             continue
@@ -204,7 +204,7 @@ def check_mcp(manifest: Path) -> None:
         if kind in {"stdio", "sse"}:
             fail(
                 manifest,
-                f"{name}: repository policy requires streamable-http for Agent Studio",
+                f"{name}: repository policy requires streamable-http for the host app",
             )
         if kind == "stdio":
             required, allowed = {"type", "command"}, {"type", "command", "args", "env", "cwd"}
@@ -285,7 +285,7 @@ def check_mcp_docs(plugin: Path, servers: set[str]) -> None:
             continue
         fields = parse_frontmatter(doc.read_text(), where=doc)
         if fields is None or not fields.get("description", "").strip():
-            fail(doc, "description is required in frontmatter for Agent Studio sync")
+            fail(doc, "description is required in frontmatter for host app sync")
     for name, doc in sorted(docs.items()):
         if name not in servers:
             fail(doc, f"no matching {name!r} server in mcp.json")
@@ -313,7 +313,7 @@ def check_skill(skill: Path) -> None:
     elif len(description) > MAX_DESCRIPTION:
         fail(skill, f"description is {len(description)} chars, over {MAX_DESCRIPTION}")
     elif len(description.encode("utf-16-le")) // 2 > MAX_DESCRIPTION:
-        fail(skill, f"description exceeds Agent Studio's {MAX_DESCRIPTION} UTF-16 code unit limit")
+        fail(skill, f"description exceeds the host app's {MAX_DESCRIPTION} UTF-16 code unit limit")
 
     compatibility = fields.get("compatibility", "")
     if len(compatibility) > MAX_COMPATIBILITY:
@@ -339,7 +339,7 @@ def check_bundle(directory: Path) -> None:
     total = 0
     for path in files:
         if path.is_symlink():
-            fail(path, "symlink attachments are not carried by Agent Studio sync")
+            fail(path, "symlink attachments are not carried by host app sync")
             continue
         size = path.stat().st_size
         total += size
