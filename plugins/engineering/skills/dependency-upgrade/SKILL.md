@@ -19,7 +19,7 @@ description: >
 5. 새 설치 상태에서 타입·관련 테스트·빌드를 확인한다. SDK·프로토콜 변경은 실제 호출·응답 계약을 검증한다.
    여러 의존성이 바뀌면 목적상 함께 필요한 묶음과 별개 변경을 구분한다.
 
-Agent Studio의 실행은 현재 Workspace와 코딩 Runtime에서 수행한다. 연결된 `workspace-task`의
+호스트 앱의 실행은 현재 Workspace와 코딩 Runtime에서 수행한다. 연결된 `workspace-task`의
 재사용·검증·승인 경로를 따른다. `command`를 사용한다면 task에는 실제 비대화형 명령만 넣는다.
 패키지 조회·설치에 필요한 자격증명을 요청문이나 저장소에 넣지 않는다.
 

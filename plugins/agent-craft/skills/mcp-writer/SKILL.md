@@ -79,7 +79,7 @@ description: >
 구조화 응답과 text가 실제로 어떻게 모델에게 전달되는지 검증하고, 필수 메타데이터가 누락되는
 경로에는 같은 의미를 전달할 수단을 둔다. 모든 클라이언트의 shell·파일 접근 부재를 가정하지 않는다.
 
-Agent Studio에 등록하는 작업이면 [references/agent-studio.md](references/agent-studio.md)를
+호스트 앱에 등록하는 작업이면 [references/agent-studio.md](references/agent-studio.md)를
 읽는다. 이 저장소의 설치 정책과 MCP 자체의 규격을 구분한다.
 
 ## 검증

@@ -24,20 +24,20 @@ with team discussion context; see its
 Bind only the services needed by the agent. Existing Notion, Plaud and GitHub
 integrations remain available for their respective sources.
 
-## Connect in Agent Studio
+## Connect in the host app
 
-Check [discovery compatibility](#agent-studio-discovery-compatibility) before
+Check [discovery compatibility](#host-app-discovery-compatibility) before
 starting account authorization. The declarations are ready to sync; the current
 client must support Google's explicitly recognized issuer alias. Older clients
 reject this metadata and need an update before Connect.
 
 1. Confirm preview access and enable the corresponding API and MCP service in
    the selected Google Cloud project. Configure consent and test users as needed.
-2. Create a web OAuth client with the callback URL shown by the actual Agent
-   Studio deployment. Use that deployment's callback, not a sample Claude or
+2. Create a web OAuth client with the callback URL shown by the actual host
+   app deployment. Use that deployment's callback, not a sample Claude or
    Antigravity callback.
 3. Sync the plugin, Discover each selected server's OAuth metadata and save the
-   client ID and secret in the project's connection settings. A registered
+   client ID and secret in the Agent's connection settings. A registered
    Google OAuth client is required; do not assume dynamic client registration.
 4. Select scopes for the intended tools and connect the intended account per
    server. Google documents `gmail.readonly` for mail reads and `drive.readonly`
@@ -56,7 +56,7 @@ scope examples do not authorize event changes. Preserve the client security
 checks; if metadata discovery or token renewal fails, report the specific
 provider/client incompatibility before enabling unattended use.
 
-## Agent Studio discovery compatibility
+## Host app discovery compatibility
 
 Google's public protected-resource documents, for example
 [Gmail metadata](https://gmailmcp.googleapis.com/.well-known/oauth-protected-resource/mcp/v1),
@@ -64,7 +64,7 @@ advertise the authorization server as `https://accounts.google.com/`. Its
 [authorization-server metadata](https://accounts.google.com/.well-known/oauth-authorization-server)
 declares `issuer` as `https://accounts.google.com`, without the trailing slash.
 
-The companion Agent Studio client's `src/infrastructure/mcp/oauthMetadata.ts`
+The host app's `src/infrastructure/mcp/oauthMetadata.ts`
 permits this exact, directed Google alias while keeping other issuer comparisons
 strict. It preserves the declared slashless issuer for credentials and callback
 validation; a callback with a different `iss` is still rejected. The
@@ -100,7 +100,7 @@ Record authorization failures, unavailable services and partial results separate
 from a successful empty query. Do not create drafts, send invitations or edit
 documents as a connection test.
 
-Google IDs and links are external source references. They are not Studio artifact
+Google IDs and links are external source references. They are not host app artifact
 IDs, and native edits do not automatically create downloadable Office files.
 Use the actual runtime's import/export capability when file delivery is requested.
 

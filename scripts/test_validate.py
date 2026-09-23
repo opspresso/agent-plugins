@@ -78,7 +78,7 @@ class ValidateSkillTest(TestCase):
                 validate.problems.clear()
                 skill_file = self.write_skill(Path(temporary), description=description)
                 validate.check_skill(skill_file)
-                self.assertTrue(any("ignored by Agent Studio" in p for p in validate.problems))
+                self.assertTrue(any("ignored by the host app" in p for p in validate.problems))
 
     def test_frontmatter_allows_metadata_and_comments(self) -> None:
         with TemporaryDirectory() as temporary:
@@ -287,7 +287,7 @@ class ValidateManifestTest(TestCase):
                 "---\ndescription: >\n  Search data\nDo not write\n---\nNotes\n"
             )
             validate.check_mcp_docs(root, {"server"})
-        self.assertTrue(any("ignored by Agent Studio" in p for p in validate.problems))
+        self.assertTrue(any("ignored by the host app" in p for p in validate.problems))
 
     def test_plugin_rejects_non_object_and_invalid_field_types(self) -> None:
         with TemporaryDirectory() as temporary:

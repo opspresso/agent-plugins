@@ -7,7 +7,7 @@ Agent와 역할을 분리하고 `incident-triage`를 명시적으로 연결한�
 
 ## 도구 범위
 
-MCP 서버가 도구를 제공한다는 사실과 해당 Agent에 제공할 범위는 구분한다. 프로젝트의
+MCP 서버가 도구를 제공한다는 사실과 해당 Agent에 제공할 범위는 구분한다. Agent의
 바인딩에 실제 발견한 조회 도구 이름을 명시한다. 빈 선택은 모든 도구를 뜻하므로 읽기 전용
 설정으로 사용하지 않는다. 동적 발견은 끄고 다른 MCP의 변경 도구가 추가되지 않도록 한다.
 
@@ -27,11 +27,11 @@ GitHub는 [코딩 프로필](code-agent.md#github-mcp-프로필)의 `X-MCP-Reado
 `X-MCP-Toolsets: context,repos,issues,pull_requests,actions`를 적용하고 실제 읽기 도구를
 다시 발견한다. 필요한 commit·파일·PR·Actions 조회만 선택한다. 자격 증명을 복사하거나
 권한을 확장하지 않는다. 리소스 읽기는 여전히 민감한 정보를 포함할 수 있으므로 서버의
-RBAC와 프로젝트 공개 범위도 설치 대상에 맞춰 유지한다.
+RBAC와 Agent 공개 범위도 설치 대상에 맞춰 유지한다.
 
 ## Slack
 
-기존 전용 Slack 앱을 연결하고 Agent Studio가 표시하는 프로젝트 이벤트 URL을 사용한다.
+전용 Slack 앱을 연결하고 호스트 앱이 표시하는 Agent 이벤트 URL을 사용한다.
 Channel keywords에 `[firing:`을 설정하면 대소문자 구분 없이 Grafana의 `[FIRING:1]`
 제목을 감지한다. `[RESOLVED]`는 이 키워드와 일치하지 않는다. 일반 질문은 @mention,
 DM 또는 Agent가 응답한 스레드의 사람 후속 질문으로 받는다.

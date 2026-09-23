@@ -1,9 +1,9 @@
 ---
 description: >
   Read Google Docs content and structure or update a specified document when
-  requested. Requires the project's connected Google account and Workspace MCP
+  requested. Requires the Agent's connected Google account and Workspace MCP
   Developer Preview access. Resolve ambiguous files through Drive; Google document
-  IDs cannot be used as Agent Studio artifact IDs.
+  IDs cannot be used as host app artifact IDs.
 ---
 
 # google-docs

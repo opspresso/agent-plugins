@@ -1,4 +1,4 @@
-# Agent Studio와 Agent Memory 설정
+# 호스트 앱과 Agent Memory 설정
 
 이 제품 조합을 구성할 때만 읽는다. 설치된 버전의 schema와 제공 기능을 먼저 확인한다.
 
@@ -31,23 +31,23 @@ Agent Memory는 설치 측에서 별도 MCP로 등록한다. 실제 런에 제�
 조회·저장을 약속하지 않고 현재 대화의 자료로 진행한다. `document_search`는 처리된
 문서 chunk, `knowledge_search`·`knowledge_neighborhood`는 그래프 근거를 찾는다.
 문서 업로드·기억 본문 수정·Graph 작성은 MCP에 없으므로 관리 화면이나 별도 API의 작업이다.
-검색 결과의 문서 ID는 Agent Studio의 `File` artifact ID가 아니다.
+검색 결과의 문서 ID는 호스트 앱의 `File` artifact ID가 아니다.
 
 `recall`의 text에는 ID와 version이 있지만 항목당 1,200자·전체 4,000자로 잘린다.
-Studio가 전달하지 않은 `structuredContent.hits`를 읽었다고 가정하지 않는다.
+호스트 앱이 전달하지 않은 `structuredContent.hits`를 읽었다고 가정하지 않는다.
 `forget`의 version을 1로 고정하거나 제목만 보고 ID를 만들지 않는다.
 
 자동 회상을 원하면 버전의 `memoryRecall`을 켜고 별도 등록한 서버를 명시적으로 binding하며
 허용 도구에 `recall`을 포함한다. 요청별 동적 발견만으로는 실행 전 자동 recall이 되지 않는다.
 
 조직 Agent token은 사용자 위임이 없으면 organization 범위만 접근한다. 로그인 사용자
-신원은 Agent Studio가 신뢰된 `X-User-Email` header로 전달한다. 모델이 email·tenant
+신원은 호스트 앱이 신뢰된 `X-User-Email` header로 전달한다. 모델이 email·tenant
 인자를 만들어 권한을 바꾸지 않으며 자격 증명은 설치 측에서 관리한다.
 사용자 scope는 인증 사용자, team scope는 확인된 teamId를 쓰고 조직 전체 공유를 기본값으로 삼지 않는다.
 
 ## 모델 설정을 함께 정할 때
 
-현재 Agent Studio에서 선택 가능한 모델과 필요한 능력(tool use·vision·이미지 생성 등)을
+현재 호스트 앱에서 선택 가능한 모델과 필요한 능력(tool use·vision·이미지 생성 등)을
 먼저 확인한다. `agent-models`는 모델·provider offering 카탈로그이며 MCP 서버가 아니다.
 가격과 모델 목록을 프롬프트에 복사해 고정하지 않는다. 버전 설정에는 카탈로그의 `id`를
 쓰고 provider 전송용 `wireId`와 혼동하지 않는다. `hidden` 모델을 새 기본값으로 권하지

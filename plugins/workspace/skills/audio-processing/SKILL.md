@@ -4,7 +4,7 @@ description: >
   오디오를 비공개 Artifact로 보관하고 지정 모델로 전사·후처리한다.
   정기 수집이나 기존 오디오 작업 이어가기에 사용한다.
 compatibility: >
-  Agent Studio의 ImportFile·TranscribeAudio·AudioJob과 비공개 파일 저장소가 필요하다.
+  호스트 앱의 ImportFile·TranscribeAudio·AudioJob과 비공개 파일 저장소가 필요하다.
   출처 조회와 개인 기록에는 해당 MCP 연결 및 검증된 사용자 문맥이 필요하다.
 ---
 
@@ -18,7 +18,7 @@ compatibility: >
 - 런타임이 `mode: extract | reduce`와 `source`를 전달했다면 후처리 실행이다.
   제공된 source만 정리하고 런타임이 요청한 출력 형식(Markdown 또는 JSON)을 따른다. 회의록이면 연결된 `meeting-minutes`를 읽는다.
   새 작업 제출·파일 저장·외부 기록을 하지 않는다. 산출물 저장은 worker가 담당한다.
-- 정기 수집이나 녹음 처리 요청이면 아래 절차를 따른다. 도구를 호출하기 전에 [Studio 도구](references/agent-studio.md)의 작업별 입력 예시를 읽는다.
+- 정기 수집이나 녹음 처리 요청이면 아래 절차를 따른다. 도구를 호출하기 전에 [앱 도구](references/agent-studio.md)의 작업별 입력 예시를 읽는다.
   사용자가 지정한 기간·대상은 메시지 길이와 관계없이 우선한다. "최근 일주일 녹음"은 최근 7일 범위이며 최근 2시간이나 최신 1건으로 축소하지 않는다.
   기간·대상이 없는 정기 실행에만 현재 실행 시각 기준 최근 2시간, 가장 최신 녹음 1건을 기본 범위로 사용한다.
   기존 작업 확인, 중복 방지, 통합 submit, 접수 후 종료 규칙은 이 스킬이 소유한다.

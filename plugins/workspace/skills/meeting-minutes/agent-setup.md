@@ -1,6 +1,6 @@
 # 한 Agent로 오디오 처리 구성
 
-Agent Studio의 비공개 파일 저장소와 audio worker를 설정한다. 운영 Agent는 하나면 된다.
+호스트 앱의 비공개 파일 저장소와 audio worker를 설정한다. 운영 Agent는 하나면 된다.
 
 - Agent에 `audio-processing`, `meeting-minutes` skill과 오디오 도구를 연결한다.
 - 실제 출처 MCP를 같은 Agent에 연결하고 해당 프로젝트에서 인증한다.

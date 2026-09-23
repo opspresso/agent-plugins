@@ -5,7 +5,7 @@ description: >
   File 빌트인으로 생성하며 DOCX·PPTX·HWPX는 파일 ID로 검사하고 텍스트를 수정한다.
   XLSX 계산표는 spreadsheet-authoring, HTML 리포트는 html-report를 사용한다.
 compatibility: >
-  Agent Studio의 File 빌트인과 artifact 저장소가 필요하다. 기존 파일은 file_id로
+  호스트 앱의 File 빌트인과 artifact 저장소가 필요하다. 기존 파일은 file_id로
   접근하며 도구가 없으면 본문을 Markdown으로 낸다.
 ---
 
@@ -49,7 +49,7 @@ File(operation="create", format="pptx", profile="executive",
 
 ### 파일 읽기·검사·편집
 
-Agent Studio는 첨부를 텍스트로 추출하고 저장소가 있으면 원본을 파일 ID와 함께 보관한다.
+호스트 앱은 첨부를 텍스트로 추출하고 저장소가 있으면 원본을 파일 ID와 함께 보관한다.
 저장 실패 경고나 파일 ID 부재를 확인하고 추출문만으로 원본 구조를 검사했다고 말하지 않는다.
 `FetchUrl`의 추출 결과만으로 파일 ID가 생긴다고 가정하지 않는다.
 

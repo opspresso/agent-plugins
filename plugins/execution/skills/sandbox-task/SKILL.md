@@ -5,7 +5,7 @@ description: >
   필요한 입력과 도구를 확인하고 파일·검사·Diff로 결과를 검증한다.
   실행에는 Workspace 도구 또는 실제 Sandbox 실행 기능이 필요하며 호스트 쉘을 가정하지 않는다.
 compatibility: >
-  Agent Studio의 Workspace 빌트인은 설정된 command·Codex·Claude·OpenCode Runtime을 사용한다.
+  호스트 앱의 Workspace 빌트인은 설정된 command·Codex·Claude·OpenCode Runtime을 사용한다.
   산출물 파일은 Workspace에 남으며 별도 Artifact 다운로드 기능이 있다고 가정하지 않는다.
 ---
 
@@ -24,7 +24,7 @@ compatibility: >
 4. 명령은 종료할 수 있는 비대화형 형태로 구성하고 표준 출력·오류와 종료 코드를 남긴다.
    결과물을 다음 단계에서 다시 읽어 형식과 내용을 확인한다.
 
-Agent Studio에서는 먼저 `Workspace`의 `options`를 읽고 `current_workspace`와 `workdir`를 확인한다.
+호스트 앱에서는 먼저 `Workspace`의 `options`를 읽고 `current_workspace`와 `workdir`를 확인한다.
 선택된 Workspace가 있으면 ID를 생략한 `run`으로 이어간다. `start`를 반복해도 새 작업이 접수되지 않는다.
 원격 자료를 읽는 것만으로 충분한 작업에는 Sandbox를 만들지 않는다. 실제 파일 처리나 검증이 필요할 때 사용한다.
 파일은 `workdir`의 상대 경로에 쓴다. `workspace_path`는 웹 링크이며 `cd` 대상이 아니다.
@@ -45,11 +45,11 @@ command 오류가 나면 task에 설명·Markdown이 들어갔는지 먼저 확�
 - 데이터·문서 처리: 입력과 출력의 레코드 수, 필수 필드, 단위·날짜·문자 인코딩과 대표 값을 확인한다.
   파일이 생성됐다는 사실만으로 내용이 맞다고 판단하지 않는다.
   원본과 출력 경로를 구분하고 덮어쓰기 범위를 확인한다. 실제 파일 전달 도구가 없으면 사용자 첨부나
-  Studio Artifact가 Sandbox에 들어 있다고 가정하지 않는다. CSV·JSON·로그 분석과 파일 변환은
+  앱 Artifact가 Sandbox에 들어 있다고 가정하지 않는다. CSV·JSON·로그 분석과 파일 변환은
   제공된 파일·텍스트에서 시작하고, 문서 편집·다운로드는 현재 제공된 File/SaveFile 등의 계약을 따른다.
 - Git 작업: 최종 Diff와 변경 파일 목록을 읽어 요청 밖 변경을 제거한다.
   커밋·push·PR·배포는 별도 명시적 사용자 요청과 해당 Runtime의 승인 기능을 따른다.
-  Agent Studio의 커밋·push·PR·main 병합은 `Workspace.prepare_git`로 검토를 준비하고 `approval_path`에서 승인한다.
+  호스트 앱의 커밋·push·PR·main 병합은 `Workspace.prepare_git`로 검토를 준비하고 `approval_path`에서 승인한다.
   `pull-request`는 title/body/draft를 받는다. `merge`의 pullRequestNumber/headSha에는 status.pull_request의 number/headSha를 넣는다.
   PR 없이 main 푸시를 명시적으로 요청하면 작업 브랜치 푸시 후 `push-main`을 준비한다. fast-forward만 허용한다.
   PR 생성 때문에 native task를 실행하거나 Workspace를 닫고 다시 만들지 않는다. 종료된 Workspace도

@@ -73,7 +73,7 @@ description: >
 
 모델은 대상 환경의 최신 목록과 필요한 능력·비용·입출력 조건으로 선택한다. 카탈로그 ID와
 공급자 요청 ID의 구분은 실제 설정 계약을 따른다. 제품명이나 가격표를 프롬프트에 고정하지 않는다.
-Agent Studio와 Agent Memory를 설정하는 경우에만
+호스트 앱과 Agent Memory를 설정하는 경우에만
 [references/agent-studio.md](references/agent-studio.md)를 읽는다.
 
 ## 검증

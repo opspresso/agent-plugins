@@ -16,7 +16,7 @@ description: >
 필요 없는 인증·결제·클라우드·외부 서비스를 기본으로 추가하지 않는다. 중요한 정보가 없으면
 짧게 확인하고, 이미 정해진 부분은 진행한다.
 
-Agent Studio에서는 먼저 `Workspace.options`를 읽는다.
+호스트 앱에서는 먼저 `Workspace.options`를 읽는다.
 사용자 지정 Runtime을 우선하고, 미지정이면 options의 default_runtime을 따른다. 코딩 Runtime에는
 완결된 자연어 task를 전달하며 command인 경우 실제 실행할 셸 스크립트를 구성한다.
 CLI·명령행 도구를 만든다는 뜻과 command Runtime에서 이미 작성된 셸을 실행한다는 뜻을 구분한다.
