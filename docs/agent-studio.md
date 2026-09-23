@@ -5,7 +5,8 @@ limits are client contracts, not universal Agent Skills or MCP requirements.
 Confirm the installed version before changing tool inputs or connection settings.
 
 Agent profiles: [audio processing](audio-agent.md), [Workspace coding](code-agent.md),
-[Kube SRE](kube-sre.md), and [general-purpose assistant](sample-agent.md).
+[Kube SRE](kube-sre.md), [general-purpose assistant](sample-agent.md), and
+[PR review automation](code-review-agent.md).
 
 ## Companion project contracts
 
