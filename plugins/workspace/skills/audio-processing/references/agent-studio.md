@@ -13,7 +13,7 @@
 {"request":{"operation":"list","cursor":null,"limit":20}}
 ```
 
-같은 녹음의 진행 중인 작업은 ID와 상태를 재사용하고, 완료된 같은 녹음은 결과를 재사용한다.
+같은 녹음의 진행 중인 작업은 ID와 상태를 재사용하고, 완료된 같은 녹음은 파일이 사용 가능할 때만 결과를 재사용한다.
 list에 nextCursor가 있으면 필요 범위까지 이어 조회한다. 실패·차단은 원인을 보고하고 임의 재처리하지 않는다.
 
 ```json
@@ -71,7 +71,10 @@ config_revision·전사 model·language·destination은 이 형태에 없다.
 
 접수 응답의 accepted/duplicate는 job.status와 다르다. queued/running/waiting이면 실제 ID를 보고하고
 남은 요청 대상의 접수를 마친 뒤 종료한다. 한 실행에서 반복 polling하지 않는다. completed라면 마지막 stage가 importing이나 cleaning이어도
-끝난 작업이다. 원본·전사·요약 Artifact 링크를 안내한다. 처리되지 않은 단계는 완료로 보고하지 않는다.
+끝난 작업 이력이다. `artifacts`의 현재 사용 가능한 파일과 `artifactLinks`의 Studio 경로만 안내하고
+`unavailableArtifacts`의 삭제·만료·누락·미준비 상태를 구분한다. `artifact:`나 `sandbox:` 링크를 만들어내지 않는다.
+이 필드를 제공하지 않는 구버전에서는 File 도구로 읽을 수 있는지 확인하고 접근 실패를 현재 완료 결과로 안내하지 않는다.
+과거 작업의 모델·완료 시각을 현재 설정으로 새로 실행한 결과와 구분한다. 처리되지 않은 단계는 완료로 보고하지 않는다.
 
 ```json
 {"request":{"operation":"read","job_id":"<실제 작업 ID>","result_kind":"processed","cursor":null,"limit":12000}}
