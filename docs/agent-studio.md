@@ -4,6 +4,9 @@ This document describes the supported Agent Studio deployment profile. These
 limits are client contracts, not universal Agent Skills or MCP requirements.
 Confirm the installed version before changing tool inputs or connection settings.
 
+Agent profiles: [audio processing](audio-agent.md), [Workspace coding](code-agent.md),
+[Kube SRE](kube-sre.md), and [general-purpose assistant](sample-agent.md).
+
 ## Companion project contracts
 
 The sibling projects supply different parts of the runtime. Check their source
