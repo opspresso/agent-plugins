@@ -1,12 +1,12 @@
 # PR 자동 리뷰 Agent
 
 [code-review-agent.md](prompts/code-review-agent.md) 프롬프트와 `code-review` Skill을 연결한다.
-프로젝트의 Webhook 동작에서 GitHub PR 리뷰를 선택하고 설치의 GitHub 계정이 접근 가능한
+Agent의 Webhook 동작에서 GitHub PR 리뷰를 선택하고 설치의 GitHub 계정이 접근 가능한
 저장소 전체 또는 명시적 `owner/repo` 목록을 설정한다. 공유 GitHub 연결로 댓글을 쓰는
-설정이므로 관리자가 활성화한다. 기본 프로젝트 공개 범위는 검토 자료의 접근 범위에 맞춘다.
+설정이므로 관리자가 활성화한다. 기본 Agent 공개 범위는 검토 자료의 접근 범위에 맞춘다.
 
-GitHub 저장소에서 Payload URL을 `/api/webhook/{project}`로, Content type을
-`application/json`으로 지정하고 해당 프로젝트 Webhook Secret과 Pull requests 이벤트를
+GitHub 저장소에서 Payload URL을 `/api/webhook/{agent}`로, Content type을
+`application/json`으로 지정하고 해당 Agent Webhook Secret과 Pull requests 이벤트를
 등록한다. 시크릿은 저장소 파일·Agent 프롬프트·PR·로그에 넣지 않는다.
 저장소를 읽을 수 있어도 Pull requests 쓰기 권한이 없으면 댓글 게시가 실패한다.
 
