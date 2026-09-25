@@ -3,11 +3,11 @@
 호스트 앱의 비공개 파일 저장소와 audio worker를 설정한다. 운영 Agent는 하나면 된다.
 
 - Agent에 `audio-processing`, `meeting-minutes` skill과 오디오 도구를 연결한다.
-- 실제 출처 MCP를 같은 Agent에 연결하고 해당 프로젝트에서 인증한다.
+- 실제 출처 MCP를 같은 Agent에 연결하고 해당 Agent에서 인증한다.
   Plaud plugin 기본 파일 매핑이 적용되어 source_ref가 제공되는지 확인한다. 별도 매핑은 기본 응답 형식과 다른 서버에만 설정한다.
 - 사용자 요청 시 개인 기록도 수행하려면 `personal-records` skill과 설치의 Agent Memory MCP를 같은 Agent에 연결한다.
-- 프로젝트 오디오 설정에 Transcription 모델·언어·retention을 지정한다.
-  postprocess에는 이 Agent의 projectName만 지정하고 destination은 지정하지 않는다. 현재 Agent 설정으로 후처리한다.
+- Agent 오디오 설정에 Transcription 모델·언어·retention을 지정한다.
+  postprocess에는 이 Agent의 agentName만 지정하고 destination은 지정하지 않는다. 현재 Agent 설정으로 후처리한다.
   작업 접수 시 실제 버전이 고정되므로 새 배포가 진행 중인 작업을 바꾸지 않는다.
 - 시간별 처리는 schedule과 소유자의 개인 실행 문맥을 설정한다. 시작 범위·탐색 한도는 schedule 메시지에 둔다.
 - subagent 연결은 필요하지 않다. worker는 같은 Agent 설정으로 후처리를 실행하고,

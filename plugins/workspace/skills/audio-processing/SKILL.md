@@ -11,7 +11,7 @@ compatibility: >
 # 오디오 처리
 
 한 Agent가 제공된 도구로 처리한다. 다운로드·전사·요약·기록 때문에 별도 Agent를 만들지 않는다.
-긴 처리는 worker에 맡기고 job ID로 이어간다. 모델·출처·보존 기간은 사용자 요청과 프로젝트 설정을 따른다.
+긴 처리는 worker에 맡기고 job ID로 이어간다. 모델·출처·보존 기간은 사용자 요청과 Agent 설정을 따른다.
 
 ## 입력에 따라 시작한다
 
@@ -31,7 +31,7 @@ compatibility: >
    단일 최신 녹음 요청에서 개수가 없으면 1건만 선택한다. 기간을 지정한 복수 녹음 요청은 범위 안의 후보를 확인한다.
    연결된 출처가 Plaud이면 [Plaud 조회](references/plaud.md)를 읽는다. 요청 범위를 임의로 넓히지 않는다.
 2. `AudioJob list`로 기존 작업을 확인한다. 같은 녹음의 진행 중인 작업은 재접수하지 않는다.
-   새 녹음은 프로젝트의 대기·진행 한도가 남아 있으면 큐에 넣을 수 있다. 실패·차단 작업은 원인을 보고한다.
+   새 녹음은 Agent의 대기·진행 한도가 남아 있으면 큐에 넣을 수 있다. 실패·차단 작업은 원인을 보고한다.
    반복 polling이나 새 revision으로 우회하지 않는다.
 3. 완료된 작업의 task·sourceIdentity·artifacts 관계와 현재 파일 사용 가능 여부를 확인한다.
    completed는 처리 이력이며 파일이 남아 있다는 뜻이 아니다. 삭제·만료된 결과는 재사용할 수 없다고 보고한다.
@@ -44,7 +44,7 @@ compatibility: >
 5. 확인한 config의 revision으로 접수한다. 자동 실행에서는 destination이 없어야 한다.
    다운로드·전사·요약 요청은 별도 ImportFile로 시작하지 않는다.
    녹음마다 `AudioJob submit`으로 제출하면 worker가 보관 → 전사 → 후처리를 이어간다.
-   여러 후보는 설정의 maxActive(대기+진행)·maxPerOccurrence를 따라 각각 접수하고 worker가 프로젝트별로 한 건씩 처리한다.
+   여러 후보는 설정의 maxActive(대기+진행)·maxPerOccurrence를 따라 각각 접수하고 worker가 Agent별로 한 건씩 처리한다.
    한도로 남은 후보는 접수하지 않은 것으로 보고하며,
    worker가 미접수 후보까지 이어 처리한다고 약속하지 않는다. 정기 실행은 다음 발생에서 같은 기간을 다시 조회하고 완료된 ID를 제외한다.
 6. 제출 응답의 status는 접수 결과이고 job.status는 실행 상태다. job.status가 completed이면

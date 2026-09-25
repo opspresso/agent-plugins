@@ -7,7 +7,7 @@
 ## 짧은 사용자 요청으로 시작한다
 
 "Plaud 최신 녹음을 전사하고 요약해 줘"처럼 대상과 결과만 받아도 아래 절차를 수행한다.
-스킬이 처리 순서를, MCP가 실제 출처 조회를, 프로젝트 설정이 모델·후처리·보존 기간을 담당한다.
+스킬이 처리 순서를, MCP가 실제 출처 조회를, Agent 설정이 모델·후처리·보존 기간을 담당한다.
 
 ```json
 {"request":{"operation":"list","cursor":null,"limit":20}}
@@ -25,7 +25,7 @@ enabled·revision·model·retention·postprocess를 확인한다. 설정이 없�
 연결된 출처 MCP에서 목록과 상세를 조회한다. source_ref는 서버가 발급한 참조이며 외부 파일 ID나 URL이 아니다.
 Plaud plugin의 기본 파일 매핑이 적용되면 get_file 응답에서 source_ref를 받는다.
 복수 녹음은 maxActive(대기+진행)와 maxPerOccurrence가 허용하는 만큼 각각 submit한다.
-worker는 프로젝트별 접수 순서대로 한 건씩 실행하므로 처리 완료를 기다렸다가 다음 녹음을 제출할 필요가 없다.
+worker는 Agent별 접수 순서대로 한 건씩 실행하므로 처리 완료를 기다렸다가 다음 녹음을 제출할 필요가 없다.
 접수 한도를 바꾸거나 우회하지 않는다. 한도가 1이면 한 건만 접수하고 나머지는 미접수로 보고한다.
 
 ## 새 녹음은 통합 작업 하나로 처리한다
@@ -55,11 +55,11 @@ source는 `{kind:"artifact"|"file"|"source",id:"<해당 참조>"}`이며 languag
 이미 전사된 Artifact는 AudioJob postprocess로 요약한다. 오디오 입력으로 다시 제출하지 않는다.
 
 ```json
-{"request":{"operation":"postprocess","artifact_id":"<전사 Artifact ID>","postprocess":{"projectName":"<후처리 Agent>"},"retention":{"unit":"months","value":3,"timezone":"Asia/Seoul"},"processing_revision":null}}
+{"request":{"operation":"postprocess","artifact_id":"<전사 Artifact ID>","postprocess":{"agentName":"<후처리 Agent>"},"retention":{"unit":"months","value":3,"timezone":"Asia/Seoul"},"processing_revision":null}}
 ```
 
 후처리 대상과 retention은 실제 config의 값을 사용한다. 별도 Agent를 만들 필요는 없다.
-postprocess에는 projectName만 전달한다. 현재 Agent 설정을 사용하므로 versionName을 추가하지 않는다.
+postprocess에는 agentName만 전달한다. 현재 Agent 설정을 사용하므로 versionName을 추가하지 않는다.
 config_revision·전사 model·language·destination은 이 형태에 없다.
 설정 대신 명시적 처리 옵션이 필요한 경우에만 operation process를 사용하고 해당 schema를 따른다.
 

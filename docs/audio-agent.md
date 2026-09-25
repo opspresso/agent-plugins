@@ -9,7 +9,7 @@ Plaud 녹음의 원본 보관·전사·요약을 하나의 Agent와 AudioJob wor
 - Agent의 오디오 처리 도구, Plaud MCP 연결과 `get_file`의 source_ref 매핑.
 - Models에 등록된 **transcription** 모델과 실제로 접근 가능한 provider endpoint·credential.
   채팅 모델 등록이나 과거 AudioJob 성공 이력만으로 현재 전사 모델의 준비를 판단하지 않는다.
-- 프로젝트 AudioJob config의 전사 모델·언어·보존 기간·동시 접수 한도와 후처리 projectName.
+- Agent AudioJob config의 전사 모델·언어·보존 기간·동시 접수 한도와 후처리 agentName.
   후처리는 같은 Agent의 현재 설정을 사용하며 versionName을 전달하지 않는다.
 - 비공개 파일 저장소와 audio-worker. EKS의 S3·Pod Identity와 k3s의 MinIO 연결은 각 설치 설정이다.
 
