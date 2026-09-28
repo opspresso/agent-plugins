@@ -109,6 +109,8 @@ def parse_frontmatter(text: str, *, where: Path | None = None) -> dict[str, str]
                      "use an indented > or | scalar for multiline descriptions")
             continue
         key = header.group(1).lower()
+        if where is not None and key in fields:
+            fail(where, f"duplicate frontmatter key {key!r}")
         value = re.sub(r"^([\"'])([\s\S]*)\1$", r"\2", header.group(2))
         if value in {">", "|", ">-", "|-"}:
             folded = []
@@ -262,6 +264,9 @@ def check_mcp_docs(plugin: Path, servers: set[str]) -> None:
 
 
 def check_skill(skill: Path) -> None:
+    if skill.is_symlink():
+        fail(skill, "symlink entrypoints are not carried by host app sync")
+        return
     directory = skill.parent.name
     text = skill.read_text()
     fields = parse_frontmatter(text, where=skill)
@@ -286,7 +291,9 @@ def check_skill(skill: Path) -> None:
         fail(skill, f"description exceeds the host app's {MAX_DESCRIPTION} UTF-16 code unit limit")
 
     compatibility = fields.get("compatibility", "")
-    if len(compatibility) > MAX_COMPATIBILITY:
+    if "compatibility" in fields and not compatibility.strip():
+        fail(skill, "compatibility must not be empty when provided")
+    elif len(compatibility) > MAX_COMPATIBILITY:
         fail(skill, f"compatibility is {len(compatibility)} chars, over {MAX_COMPATIBILITY}")
 
     for extra in sorted(set(fields) - SKILL_FIELDS):
@@ -393,13 +400,16 @@ def main() -> int:
     recommendations.clear()
 
     root = Path(__file__).resolve().parent.parent
-    plugins = sorted(p for p in (root / "plugins").iterdir() if p.is_dir())
+    plugins = sorted(p for p in (root / "plugins").glob("*") if p.is_dir() or p.is_symlink())
     if not plugins:
         print("no plugins found — is this the repository root?")
         return 1
 
     skills = 0
     for plugin in plugins:
+        if plugin.is_symlink():
+            fail(plugin, "symlink plugin directories are not carried by host app sync")
+            continue
         manifest = plugin / "plugin.json"
         if manifest.is_file():
             check_plugin(manifest)
@@ -412,10 +422,13 @@ def main() -> int:
         # One level only: the spec tells clients not to search deeper, so a skill
         # nested further down would pass a check nothing would ever load.
         for child in sorted((plugin / "skills").glob("*")) if (plugin / "skills").is_dir() else []:
+            if child.is_symlink():
+                fail(child, "symlink skill directories are not carried by host app sync")
+                continue
             if (child / "SKILL.md").is_file():
                 check_skill(child / "SKILL.md")
-                for document in sorted(child.rglob("*.md")):
-                    if not document.is_symlink():
+                for document in sorted(child.rglob("*")):
+                    if document.suffix.lower() == ".md" and document.is_file() and not document.is_symlink():
                         check_markdown_links(document, child)
                 skills += 1
             elif child.is_dir():

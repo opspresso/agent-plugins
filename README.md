@@ -158,6 +158,9 @@ node --test scripts/test_html_report.mjs
 CI runs all three without installing dependencies. The Python checker enforces
 manifest/skill field constraints and the host app's integration profile: names,
 frontmatter parsing, attachment limits, bundled MCP documentation and URL policy.
+Duplicate frontmatter keys, symlink skill entrypoints/directories and empty
+optional compatibility declarations fail validation. Markdown attachment links
+are checked regardless of extension case.
 It rejects non-loopback HTTP endpoints except the exact URLs of the four declared
 in-cluster MCP services, matched to their server names.
 Local inline Markdown links outside code blocks are checked for existing files
