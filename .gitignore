@@ -1,3 +1,25 @@
-node_modules/
+# misc
 .DS_Store
-__pycache__/
+*.pem
+*.tsbuildinfo
+next-env.d.ts
+
+# dependencies
+node_modules/
+.pnpm-store/
+
+# next.js
+.next/
+out/
+
+# production
+build/
+
+# env
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# prompt files
+*.prompt.md
