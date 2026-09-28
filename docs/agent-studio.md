@@ -78,9 +78,9 @@ account connections before authenticated reads can be verified.
 Google discovery requires the companion client's explicit handling of the
 `https://accounts.google.com/` → `https://accounts.google.com` issuer alias;
 older clients reject the metadata. Callback issuer validation remains exact.
-Slack's origin-level resource identifier still conflicts with the current client
-checks. The setup notes describe the required client behavior; manifest sync
-does not update the client or resolve account authorization.
+Slack discovery accepts the official endpoint's challenged origin-level resource
+identifier through a narrowly scoped alias. Older clients without these provider
+aliases need an update. Manifest sync does not update the client or authorize an account.
 
 The `email-triage`, `calendar-management` and `workspace-search` skills use only
 the capabilities offered to the run. Native Google IDs are source identifiers,
