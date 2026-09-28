@@ -11,9 +11,10 @@ const script = template.slice(start, template.indexOf('</script>', start));
 function sortable(values, { sort = 'num', lang = 'ko' } = {}) {
   const attributes = new Map();
   const events = new Map();
+  let reads = 0;
   const body = {
     rows: values.map(([text, value]) => ({
-      cells: [{ textContent: text, getAttribute: () => value ?? null }],
+      cells: [{ textContent: text, getAttribute: () => { reads += 1; return value ?? null; } }],
     })),
     appendChild(row) {
       this.rows.splice(this.rows.indexOf(row), 1);
@@ -38,8 +39,20 @@ function sortable(values, { sort = 'num', lang = 'ko' } = {}) {
     key: (key) => events.get('keydown')({ key, preventDefault() {} }),
     values: () => body.rows.map((row) => row.cells[0].textContent),
     order: () => attributes.get('aria-sort'),
+    reads: () => reads,
   };
 }
+
+test('numeric sort reads each key once per action and preserves tied rows', () => {
+  const values = Array.from({ length: 200 }, (_, index) => [`row ${index}`, String((199 - index) % 7)]);
+  const table = sortable(values);
+  table.click();
+  assert.equal(table.reads(), values.length);
+  assert.deepEqual(table.values(), [...values].sort((a, b) => Number(a[1]) - Number(b[1])).map(([text]) => text));
+  table.click();
+  assert.equal(table.reads(), values.length * 2);
+  assert.deepEqual(table.values(), [...values].sort((a, b) => Number(b[1]) - Number(a[1])).map(([text]) => text));
+});
 
 test('numeric sort preserves zero, signed values and missing values in both directions', () => {
   const table = sortable(['—', '0', '−3', '2', '-10', 'N/A', ''].map((value) => [value]));
