@@ -20,6 +20,8 @@ compatibility: >
 3. Document는 `document_ingest`에 선택한 본문과 확인된 제목을 전달한다.
    mimeType은 본문 형식에 맞는 `text/plain` 또는 `text/markdown`으로 지정한다.
    sourceUri는 `urn:agent-studio:artifact:<artifact_id>`, idempotencyKey는 `<artifact_id>:document`다.
+   같은 Artifact 재시도에서는 제목·본문·mimeType·scope와 키를 유지한다.
+   File 편집은 새 Artifact ID를 반환하므로 편집본은 그 새 ID로 기록한다.
    `document_ingest_status`로 실제 상태를 확인하고 접수와 ready를 구분한다.
 4. Memory는 요청된 범위에서 근거가 분명한 항목만 `remember`로 기록한다.
    source.uri에 같은 Artifact URI를 기록하고 idempotencyKey `<artifact_id>:memory:<항목번호>`를 유지한다.
