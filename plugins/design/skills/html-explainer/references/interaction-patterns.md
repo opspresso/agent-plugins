@@ -28,6 +28,7 @@
   <button type="button" data-move="-1">이전</button>
   <p class="progress" role="status"></p>
   <button type="button" data-move="1">다음</button>
+  <button type="button" class="reset">처음으로</button>
 </nav>
 ```
 
