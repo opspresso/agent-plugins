@@ -7,7 +7,8 @@ Confirm the installed version before changing tool inputs or connection settings
 
 Agent profiles: [audio processing](audio-agent.md), [Workspace coding](code-agent.md),
 [Kube SRE](kube-sre.md), [general-purpose assistant](sample-agent.md), and
-[PR review automation](code-review-agent.md).
+[PR review automation](code-review-agent.md). The [saju interpreter](saju-agent.md)
+profile keeps calculations separate from explanations in plain Korean.
 
 ## Companion project contracts
 
