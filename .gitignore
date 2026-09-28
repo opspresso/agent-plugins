@@ -21,5 +21,8 @@ build/
 !.env.example
 !.env.*.example
 
+# python
+__pycache__/
+
 # prompt files
 *.prompt.md

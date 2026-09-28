@@ -4,8 +4,9 @@
 
 ## 호스트 앱에 등록할 때
 
-- remote 서버는 `streamable-http`를 사용한다. 공유 공급자 endpoint만 `mcp.json`에 두고
-  설치별 서비스·주소는 설치 측에서 별도 등록한다. `/mcp`를 임의로 덧붙이지 않는다.
+- remote 서버는 `streamable-http`를 사용한다. 공급자 공통 endpoint와 저장소가 명시한
+  배포 프로필만 `mcp.json`에 두고 다른 설치별 주소는 설치 측에서 별도 등록한다.
+  저장소 검증기의 서버 이름·정확한 URL 정책을 확인하고 `/mcp`를 임의로 덧붙이지 않는다.
   AWS Knowledge처럼 루트에서 응답하는 서버도 있다.
 - secret이 들어갈 `headers`는 저장소에 넣지 않고 설치 측에서 설정한다.
 - 번들 서버 description은 같은 plugin의 `org.opspresso.agent-studio/mcp/<name>.md`에 둔다.

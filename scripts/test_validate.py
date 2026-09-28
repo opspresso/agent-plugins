@@ -89,6 +89,32 @@ class ValidateSkillTest(TestCase):
             validate.check_skill(skill_file)
         self.assertEqual([], validate.problems)
 
+    def test_duplicate_frontmatter_keys_are_reported(self) -> None:
+        with TemporaryDirectory() as temporary:
+            skill_file = self.write_skill(Path(temporary), extra="DESCRIPTION: Changed routing\n")
+            validate.check_skill(skill_file)
+        self.assertEqual(1, len(validate.problems))
+        self.assertIn("duplicate frontmatter key", validate.problems[0])
+
+    def test_present_compatibility_must_not_be_empty(self) -> None:
+        for value in ("", '""', ">-"):
+            with self.subTest(value=value), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                skill_file = self.write_skill(Path(temporary), extra=f"compatibility: {value}\n")
+                validate.check_skill(skill_file)
+                self.assertEqual(1, len(validate.problems))
+                self.assertIn("compatibility", validate.problems[0])
+
+    def test_skill_entrypoint_cannot_be_a_symlink(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            original = self.write_skill(root)
+            original.rename(root / "outside.md")
+            original.symlink_to(root / "outside.md")
+            validate.check_skill(original)
+        self.assertEqual(1, len(validate.problems))
+        self.assertIn("symlink", validate.problems[0])
+
     def test_skill_name_rejects_invalid_boundaries(self) -> None:
         invalid_names = ["", "-sample", "sample-", "sample--skill", "Sample", "a" * 65]
         with TemporaryDirectory() as temporary:
@@ -311,6 +337,44 @@ class ValidateManifestTest(TestCase):
                     validate.check_plugin(manifest)
                     self.assertTrue(any(expected in problem for problem in validate.problems))
 
+    def test_optional_manifest_fields_reject_explicit_null(self) -> None:
+        for field in ("author", "keywords", "extensions"):
+            with self.subTest(field=field), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                plugin = Path(temporary) / "sample"
+                manifest = self.write_json(plugin / "plugin.json", {
+                    "$schema": validate.PLUGIN_SCHEMA, "name": "sample", field: None,
+                })
+                validate.check_plugin(manifest)
+                self.assertEqual(1, len(validate.problems))
+                self.assertIn(field, validate.problems[0])
+
+    def test_mcp_invalid_types_are_diagnosed_without_aborting(self) -> None:
+        for kind in (None, [], {}, 1, "unknown", "stdio", "sse"):
+            with self.subTest(kind=kind), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                manifest = self.write_json(Path(temporary) / "mcp.json", {
+                    "$schema": validate.MCP_SCHEMA,
+                    "mcpServers": {"first": {"type": kind}, "second": []},
+                })
+                validate.check_mcp(manifest)
+                self.assertTrue(any("first:" in p and "requires streamable-http" in p for p in validate.problems))
+                self.assertTrue(any("second: server must be an object" in p for p in validate.problems))
+
+    def test_mcp_rejects_fields_outside_repository_transport_policy(self) -> None:
+        with TemporaryDirectory() as temporary:
+            manifest = self.write_json(Path(temporary) / "mcp.json", {
+                "$schema": validate.MCP_SCHEMA,
+                "mcpServers": {"server": {
+                    "type": "streamable-http", "url": "https://example.com/mcp",
+                    "headers": {}, "command": "unused",
+                }},
+            })
+            with patch.object(validate, "check_mcp_docs"):
+                validate.check_mcp(manifest)
+        self.assertEqual(2, len(validate.problems))
+        self.assertTrue(all("not allowed" in p for p in validate.problems))
+
     def test_mcp_rejects_non_object_servers_and_invalid_server_shape(self) -> None:
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -329,7 +393,7 @@ class ValidateManifestTest(TestCase):
                         "$schema": validate.MCP_SCHEMA,
                         "mcpServers": {"server": {"type": "stdio", "command": ""}},
                     },
-                    "command must be a non-empty string",
+                    "repository policy requires streamable-http",
                 ),
                 (
                     {
@@ -364,6 +428,18 @@ class ValidateManifestTest(TestCase):
                 validate.check_mcp(manifest)
                 self.assertTrue(any("invalid host or port" in p for p in validate.problems))
                 self.assertTrue(any("second: server must be an object" in p for p in validate.problems))
+
+    def test_mcp_url_rejects_empty_userinfo_and_control_characters(self) -> None:
+        for url in ("https://@example.com/mcp", "https://exam\nple.com/mcp", " https://example.com/mcp", "https://example.com/m cp"):
+            with self.subTest(url=url), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                manifest = self.write_json(Path(temporary) / "mcp.json", {
+                    "$schema": validate.MCP_SCHEMA,
+                    "mcpServers": {"server": {"type": "streamable-http", "url": url}},
+                })
+                with patch.object(validate, "check_mcp_docs"):
+                    validate.check_mcp(manifest)
+                self.assertTrue(validate.problems)
 
     def test_mcp_url_policy_requires_https_outside_known_deployments(self) -> None:
         cases = [
@@ -493,6 +569,90 @@ class ValidateManifestTest(TestCase):
         self.assertEqual(0, second_result)
         self.assertNotIn("stale problem", validate.problems)
         self.assertNotIn("stale recommendation", validate.recommendations)
+
+    def test_main_without_plugins_is_a_validation_failure(self) -> None:
+        with TemporaryDirectory() as temporary:
+            with patch.object(validate, "__file__", str(Path(temporary) / "scripts" / "validate.py")):
+                with redirect_stdout(StringIO()) as output:
+                    result = validate.main()
+        self.assertEqual(1, result)
+        self.assertIn("no plugins found", output.getvalue())
+
+    def test_main_rejects_symlink_plugins_root_before_reading_manifests(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            target = root / "outside"
+            self.write_json(target / "sample" / "plugin.json", {
+                "$schema": validate.PLUGIN_SCHEMA, "name": "sample",
+            })
+            (root / "plugins").symlink_to(target, target_is_directory=True)
+            with patch.object(validate, "__file__", str(root / "scripts" / "validate.py")):
+                with patch.object(validate, "check_plugin") as check_plugin:
+                    with redirect_stdout(StringIO()) as output:
+                        result = validate.main()
+            self.assertEqual(1, result)
+            self.assertTrue(any("symlink" in p for p in validate.problems))
+            self.assertIn("symlink", output.getvalue())
+            check_plugin.assert_not_called()
+
+    def test_main_checks_uppercase_markdown_attachments(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            plugin = root / "plugins" / "sample"
+            self.write_json(plugin / "plugin.json", {"$schema": validate.PLUGIN_SCHEMA, "name": "sample"})
+            skill = plugin / "skills" / "sample"
+            skill.mkdir(parents=True)
+            (skill / "SKILL.md").write_text("---\nname: sample\ndescription: Sample\n---\nBody\n")
+            (skill / "REFERENCE.MD").write_text("[missing](missing.md)\n")
+            with patch.object(validate, "__file__", str(root / "scripts" / "validate.py")):
+                with redirect_stdout(StringIO()):
+                    result = validate.main()
+        self.assertEqual(1, result)
+        self.assertTrue(any("REFERENCE.MD" in p and "does not exist" in p for p in validate.problems))
+
+    def test_main_rejects_symlink_plugin_and_skill_directories(self) -> None:
+        for kind in ("plugin", "skill", "dangling-plugin"):
+            with self.subTest(kind=kind), TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                plugin = root / "plugins" / "sample"
+                self.write_json(plugin / "plugin.json", {"$schema": validate.PLUGIN_SCHEMA, "name": "sample"})
+                if kind == "skill":
+                    target = root / "outside" / "sample"
+                    target.mkdir(parents=True)
+                    (target / "SKILL.md").write_text("---\nname: sample\ndescription: Sample\n---\nBody\n")
+                    (plugin / "skills").mkdir()
+                    (plugin / "skills" / "sample").symlink_to(target, target_is_directory=True)
+                else:
+                    target = root / "outside"
+                    plugin.rename(target)
+                    plugin.symlink_to(target if kind == "plugin" else root / "missing", target_is_directory=True)
+                with patch.object(validate, "__file__", str(root / "scripts" / "validate.py")):
+                    with redirect_stdout(StringIO()):
+                        result = validate.main()
+                self.assertEqual(1, result)
+                self.assertTrue(any("symlink" in p for p in validate.problems))
+
+    def test_main_rejects_symlink_manifests_and_mcp_descriptions(self) -> None:
+        for filename in ("plugin.json", "mcp.json", "org.opspresso.agent-studio/mcp/server.md"):
+            with self.subTest(filename=filename), TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                plugin = root / "plugins" / "sample"
+                self.write_json(plugin / "plugin.json", {"$schema": validate.PLUGIN_SCHEMA, "name": "sample"})
+                self.write_json(plugin / "mcp.json", {
+                    "$schema": validate.MCP_SCHEMA,
+                    "mcpServers": {"server": {"type": "streamable-http", "url": "https://example.com/mcp"}},
+                })
+                doc = plugin / "org.opspresso.agent-studio" / "mcp" / "server.md"
+                doc.parent.mkdir(parents=True)
+                doc.write_text("---\ndescription: Server\n---\nNotes\n")
+                target = plugin / filename
+                target.rename(root / "outside")
+                target.symlink_to(root / "outside")
+                with patch.object(validate, "__file__", str(root / "scripts" / "validate.py")):
+                    with redirect_stdout(StringIO()):
+                        result = validate.main()
+                self.assertEqual(1, result)
+                self.assertTrue(any("symlink" in p for p in validate.problems))
 
 
 class ValidateMarkdownLinksTest(TestCase):

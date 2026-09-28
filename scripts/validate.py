@@ -45,7 +45,6 @@ PLUGIN_NAME = re.compile(r"^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$")
 SKILL_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 # The host app's registry slug rule, independent of plugin/skill spec names.
 MCP_NAME = re.compile(r"^[a-z0-9-]+$")
-MCP_CWD = re.compile(r"^(?:\./|\$\{PLUGIN_ROOT\}(?:/|$)|\$\{PLUGIN_DATA\}(?:/|$))")
 
 # Canonical ClusterIP endpoints deployed by argocd-env-demo. This exception is
 # limited to each named server's exact URL, not the entire cluster DNS suffix.
@@ -110,6 +109,8 @@ def parse_frontmatter(text: str, *, where: Path | None = None) -> dict[str, str]
                      "use an indented > or | scalar for multiline descriptions")
             continue
         key = header.group(1).lower()
+        if where is not None and key in fields:
+            fail(where, f"duplicate frontmatter key {key!r}")
         value = re.sub(r"^([\"'])([\s\S]*)\1$", r"\2", header.group(2))
         if value in {">", "|", ">-", "|-"}:
             folded = []
@@ -149,7 +150,7 @@ def check_plugin(manifest: Path) -> None:
             fail(manifest, f"{field} must be a string")
 
     author = data.get("author")
-    if author is not None and not isinstance(author, dict):
+    if "author" in data and not isinstance(author, dict):
         fail(manifest, "author must be an object")
     elif isinstance(author, dict):
         for extra in sorted(set(author) - AUTHOR_FIELDS):
@@ -159,13 +160,13 @@ def check_plugin(manifest: Path) -> None:
                 fail(manifest, f"author.{field} must be a string")
 
     keywords = data.get("keywords")
-    if keywords is not None and (
+    if "keywords" in data and (
         not isinstance(keywords, list) or any(not isinstance(value, str) for value in keywords)
     ):
         fail(manifest, "keywords must be an array of strings")
 
     extensions = data.get("extensions")
-    if extensions is not None and (
+    if "extensions" in data and (
         not isinstance(extensions, dict)
         or any(not isinstance(value, dict) for value in extensions.values())
     ):
@@ -201,77 +202,48 @@ def check_mcp(manifest: Path) -> None:
             fail(manifest, f"{name}: server must be an object")
             continue
         kind = server.get("type")
-        if kind in {"stdio", "sse"}:
-            fail(
-                manifest,
-                f"{name}: repository policy requires streamable-http for the host app",
-            )
-        if kind == "stdio":
-            required, allowed = {"type", "command"}, {"type", "command", "args", "env", "cwd"}
-            command = server.get("command")
-            if "command" in server and (not isinstance(command, str) or not command):
-                fail(manifest, f"{name}: command must be a non-empty string")
-            args = server.get("args")
-            if args is not None and (
-                not isinstance(args, list) or any(not isinstance(value, str) for value in args)
-            ):
-                fail(manifest, f"{name}: args must be an array of strings")
-            env = server.get("env")
-            if env is not None:
-                if not isinstance(env, dict) or any(
-                    not isinstance(key, str) or not isinstance(value, str)
-                    for key, value in env.items()
-                ):
-                    fail(manifest, f"{name}: env must be an object of string values")
-                elif set(env) & {"PLUGIN_ROOT", "PLUGIN_DATA"}:
-                    fail(manifest, f"{name}: env must not override PLUGIN_ROOT or PLUGIN_DATA")
-            cwd = server.get("cwd")
-            if cwd is not None and (not isinstance(cwd, str) or not MCP_CWD.match(cwd)):
-                fail(
-                    manifest,
-                    f"{name}: cwd must start with ./, ${{PLUGIN_ROOT}} or ${{PLUGIN_DATA}}",
-                )
-        elif kind in ("streamable-http", "sse"):
-            required, allowed = {"type", "url"}, {"type", "url", "headers"}
-            if "headers" in server:
-                fail(
-                    manifest,
-                    f"{name}: headers are forbidden by repository policy; configure them after install",
-                )
-            url = server.get("url")
-            if not isinstance(url, str):
-                fail(manifest, f"{name}: url must be a string")
-            else:
-                try:
-                    parsed = urlsplit(url)
-                    # urllib validates numeric range and spelling on port access.
-                    parsed.port
-                except ValueError:
-                    fail(manifest, f"{name}: url has an invalid host or port")
-                    parsed = None
-                if parsed is None:
-                    pass
-                elif parsed.scheme not in {"http", "https"} or not parsed.hostname:
-                    fail(manifest, f"{name}: url must be an absolute HTTP or HTTPS URL")
-                elif parsed.username or parsed.password or parsed.fragment:
-                    fail(manifest, f"{name}: url must not contain user information or a fragment")
-                elif parsed.scheme == "http":
-                    try:
-                        loopback = ipaddress.ip_address(parsed.hostname).is_loopback
-                    except ValueError:
-                        loopback = parsed.hostname == "localhost"
-                    if not loopback and url != INTERNAL_MCP_URLS.get(name):
-                        fail(manifest, f"{name}: a non-loopback endpoint must use HTTPS "
-                             "unless it matches that server's declared in-cluster MCP URL")
-        else:
-            fail(manifest, f"{name}: type must be stdio, streamable-http or sse (got {kind!r})")
+        if kind != "streamable-http":
+            fail(manifest, f"{name}: repository policy requires streamable-http for the host app (got {kind!r})")
             continue
+        required, allowed = {"type", "url"}, {"type", "url"}
+        url = server.get("url")
+        if not isinstance(url, str):
+            fail(manifest, f"{name}: url must be a string")
+        else:
+            check_mcp_url(manifest, name, url)
         for missing in sorted(required - set(server)):
             fail(manifest, f"{name}: {missing} is required for a {kind} server")
         for extra in sorted(set(server) - allowed):
             fail(manifest, f"{name}: {extra!r} is not allowed on a {kind} server")
 
     check_mcp_docs(manifest.parent, set(servers))
+
+
+def check_mcp_url(manifest: Path, name: str, url: str) -> None:
+    # urlsplit silently removes controls and leading whitespace. Validate the
+    # declaration before parsing so the checked address is the stored address.
+    if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in url):
+        fail(manifest, f"{name}: url must not contain whitespace or control characters")
+        return
+    try:
+        parsed = urlsplit(url)
+        # urllib validates numeric range and spelling on port access.
+        parsed.port
+    except ValueError:
+        fail(manifest, f"{name}: url has an invalid host or port")
+        return
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        fail(manifest, f"{name}: url must be an absolute HTTP or HTTPS URL")
+    elif parsed.username is not None or parsed.password is not None or parsed.fragment:
+        fail(manifest, f"{name}: url must not contain user information or a fragment")
+    elif parsed.scheme == "http":
+        try:
+            loopback = ipaddress.ip_address(parsed.hostname).is_loopback
+        except ValueError:
+            loopback = parsed.hostname == "localhost"
+        if not loopback and url != INTERNAL_MCP_URLS.get(name):
+            fail(manifest, f"{name}: a non-loopback endpoint must use HTTPS "
+                 "unless it matches that server's declared in-cluster MCP URL")
 
 
 def check_mcp_docs(plugin: Path, servers: set[str]) -> None:
@@ -292,6 +264,9 @@ def check_mcp_docs(plugin: Path, servers: set[str]) -> None:
 
 
 def check_skill(skill: Path) -> None:
+    if skill.is_symlink():
+        fail(skill, "symlink entrypoints are not carried by host app sync")
+        return
     directory = skill.parent.name
     text = skill.read_text()
     fields = parse_frontmatter(text, where=skill)
@@ -316,7 +291,9 @@ def check_skill(skill: Path) -> None:
         fail(skill, f"description exceeds the host app's {MAX_DESCRIPTION} UTF-16 code unit limit")
 
     compatibility = fields.get("compatibility", "")
-    if len(compatibility) > MAX_COMPATIBILITY:
+    if "compatibility" in fields and not compatibility.strip():
+        fail(skill, "compatibility must not be empty when provided")
+    elif len(compatibility) > MAX_COMPATIBILITY:
         fail(skill, f"compatibility is {len(compatibility)} chars, over {MAX_COMPATIBILITY}")
 
     for extra in sorted(set(fields) - SKILL_FIELDS):
@@ -423,13 +400,27 @@ def main() -> int:
     recommendations.clear()
 
     root = Path(__file__).resolve().parent.parent
-    plugins = sorted(p for p in (root / "plugins").iterdir() if p.is_dir())
+    plugin_root = root / "plugins"
+    if plugin_root.is_symlink():
+        fail(plugin_root, "symlink plugin roots are not carried by host app sync")
+        print(f"  {problems[-1]}")
+        return 1
+    plugins = sorted(p for p in plugin_root.glob("*") if p.is_dir() or p.is_symlink())
     if not plugins:
         print("no plugins found — is this the repository root?")
         return 1
 
     skills = 0
+    readable_plugins = []
     for plugin in plugins:
+        # Git stores a symlink's target text, not its local contents. Reject the
+        # payload before any later pass can read files through that link.
+        links = [plugin] if plugin.is_symlink() else sorted(path for path in plugin.rglob("*") if path.is_symlink())
+        if links:
+            for path in links:
+                fail(path, "symlink payloads are not carried by host app sync")
+            continue
+        readable_plugins.append(plugin)
         manifest = plugin / "plugin.json"
         if manifest.is_file():
             check_plugin(manifest)
@@ -444,18 +435,18 @@ def main() -> int:
         for child in sorted((plugin / "skills").glob("*")) if (plugin / "skills").is_dir() else []:
             if (child / "SKILL.md").is_file():
                 check_skill(child / "SKILL.md")
-                for document in sorted(child.rglob("*.md")):
-                    if not document.is_symlink():
+                for document in sorted(child.rglob("*")):
+                    if document.suffix.lower() == ".md" and document.is_file() and not document.is_symlink():
                         check_markdown_links(document, child)
                 skills += 1
             elif child.is_dir():
                 fail(child, "a skills/ child with no SKILL.md is not a skill")
 
-    check_unique(root, plugins)
+    check_unique(root, readable_plugins)
     for document in [root / "README.md", *sorted((root / "docs").rglob("*.md"))]:
         if document.is_file():
             check_markdown_links(document, root)
-    for plugin in plugins:
+    for plugin in readable_plugins:
         for document in sorted((plugin / "org.opspresso.agent-studio" / "mcp").glob("*.md")):
             check_markdown_links(document, root)
 

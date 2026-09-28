@@ -28,15 +28,13 @@ compatibility: >
 선택된 Workspace가 있으면 ID를 생략한 `run`으로 이어간다. `start`를 반복해도 새 작업이 접수되지 않는다.
 원격 자료를 읽는 것만으로 충분한 작업에는 Sandbox를 만들지 않는다. 실제 파일 처리나 검증이 필요할 때 사용한다.
 파일은 `workdir`의 상대 경로에 쓴다. `workspace_path`는 웹 링크이며 `cd` 대상이 아니다.
-`command`는 `task` 문자열 전체를
-스크립트로 실행한다. 자연어 요청을 쉘 스크립트 자리에 넣지 않는다. Runtime 지정이 없으면 options의
-default_runtime을 따른다. 코딩 Runtime에는 완결된 자연어 `task`를 전달하고 command에는 실제 실행할 셸을 구성한다. 실행 스크립트가 이미 주어졌거나
-검증된 짧은 명령이 확정된 경우에 command를 사용한다. CLI 프로젝트를 만드는 작업은 command 선택의 이유가 아니다.
-command 오류가 나면 task에 설명·Markdown이 들어갔는지 먼저 확인하며 설치·언어 문제로 단정하지 않는다. 기존 Workspace가 있으면
-`run`으로 이어가며, ID가 없는 새 작업만 `start`를 쓴다. Git 없는 작업에는 저장소와 브랜치를
-모두 `null`로 전달한다. `wait`·`status`의 실제 결과로 완료를 판단한다.
-셸은 `-eu`로 실행된다. 실패를 의도적으로 처리할 경우 조건문으로 명시하고, 실패한 `cd` 이후
-다른 위치에서 쓰기를 계속하지 않는다. 코드 구현에는 허용된 Native 코딩 Runtime을 우선 사용한다.
+Runtime 미지정이면 options.default_runtime을 따른다. 코딩 Runtime에는 완결된 자연어 `task`를
+전달한다. `command`는 task 전체를 셸로 실행하므로 이미 작성된 스크립트나 검증된 짧은 명령에
+사용한다. CLI 프로젝트 생성도 자연어 코딩 작업이다. command 오류는 task에 설명·Markdown이
+들어갔는지 먼저 확인한다. 셸은 `-eu`로 실행되므로 의도적인 실패 처리는 조건문으로 명시하고
+실패한 `cd` 뒤에 쓰기를 계속하지 않는다.
+선택이 없는 새 작업만 `start`를 쓰며 Git 없는 작업은 저장소와 브랜치를 모두 `null`로 전달한다.
+`wait`·`status`의 실제 결과로 완료를 판단한다.
 
 ## 작업 종류에 맞게 검증한다
 
@@ -49,13 +47,10 @@ command 오류가 나면 task에 설명·Markdown이 들어갔는지 먼저 확�
   제공된 파일·텍스트에서 시작하고, 문서 편집·다운로드는 현재 제공된 File/SaveFile 등의 계약을 따른다.
 - Git 작업: 최종 Diff와 변경 파일 목록을 읽어 요청 밖 변경을 제거한다.
   커밋·push·PR·배포는 별도 명시적 사용자 요청과 해당 Runtime의 승인 기능을 따른다.
-  호스트 앱의 커밋·push·PR·main 병합은 `Workspace.prepare_git`로 검토를 준비하고 `approval_path`에서 승인한다.
-  `pull-request`는 title/body/draft를 받는다. `merge`의 pullRequestNumber/headSha에는 status.pull_request의 number/headSha를 넣는다.
-  PR 없이 main 푸시를 명시적으로 요청하면 작업 브랜치 푸시 후 `push-main`을 준비한다. fast-forward만 허용한다.
-  PR 생성 때문에 native task를 실행하거나 Workspace를 닫고 다시 만들지 않는다. 종료된 Workspace도
-  `prepare_git`가 복원한다. 게시·PR 요청에는 `workspace-task`의 검토와 게시 절차를 따른다.
-  Native Runtime에 Git 쓰기를 시키지 않는다. `/control/git`·`index.lock` 권한 거절에는
-  임시 인덱스·권한 변경·GitHub 쓰기 도구로 재시도하지 않고 승인 경로를 안내한다.
+  호스트 앱에서는 같은 공간의 `Workspace.prepare_git`로 검토하고 반환된 승인 링크를 전달한다.
+  종료된 공간도 복원되므로 게시를 위해 새 native task나 Workspace를 만들지 않는다.
+  연결된 `workspace-task`가 있으면 게시 절차를 읽고, 없으면 실제 schema로 요청된 동작만 준비한다.
+  Native Git 쓰기나 임시 index·권한 변경·GitHub 쓰기로 승인 경계를 우회하지 않는다.
 
 Sandbox의 출력 경로를 호스트 파일이나 Artifact URL로 표현하지 않는다. 다운로드 도구가 실제로
 제공되지 않으면 Workspace 링크·파일 경로와 확인한 내용을 알려 준다.

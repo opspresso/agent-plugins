@@ -31,7 +31,11 @@ Agent Memory separates durable Memory from document chunks and graph context.
 searches across those source types and supplies detailed evidence. `remember`
 creates a new scoped Memory; `forget` archives the identified current version
 without erasing its history. Confirm the deployed server's tool schema before
-using those names. Automatic pre-run recall needs `memoryRecall` enabled plus
+using those names. When offered, `document_ingest` stores scoped text with a
+required idempotency key; `document_ingest_status` distinguishes accepted work
+from a ready document. `remember` also supports an optional idempotency key.
+Keep a replay's key and payload unchanged; a new key creates a new write.
+Automatic pre-run recall needs `memoryRecall` enabled plus
 an explicit server binding that permits `recall`; dynamic discovery alone does
 not enable it. Search result IDs belong to Agent Memory, not the host app's artifacts.
 
@@ -78,9 +82,9 @@ account connections before authenticated reads can be verified.
 Google discovery requires the companion client's explicit handling of the
 `https://accounts.google.com/` → `https://accounts.google.com` issuer alias;
 older clients reject the metadata. Callback issuer validation remains exact.
-Slack's origin-level resource identifier still conflicts with the current client
-checks. The setup notes describe the required client behavior; manifest sync
-does not update the client or resolve account authorization.
+Slack discovery accepts the official endpoint's challenged origin-level resource
+identifier through a narrowly scoped alias. Older clients without these provider
+aliases need an update. Manifest sync does not update the client or authorize an account.
 
 The `email-triage`, `calendar-management` and `workspace-search` skills use only
 the capabilities offered to the run. Native Google IDs are source identifiers,

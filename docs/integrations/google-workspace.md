@@ -76,8 +76,8 @@ metadata` at both Google metadata addresses. Deploy a client containing the
 Google discovery fix and run Discover again before Connect. Do not disable
 issuer validation or copy a token into the bundled manifest. Public protocol and
 tool catalog checks do not establish account authorization; verify an
-authenticated read after connection. Slack has a separate resource-identifier
-mismatch described in its
+authenticated read after connection. Slack requires a separate, narrowly scoped
+resource alias described in its
 [connection notes](../../plugins/workspace/org.opspresso.agent-studio/mcp/slack.md).
 
 ## Verify the installed connection

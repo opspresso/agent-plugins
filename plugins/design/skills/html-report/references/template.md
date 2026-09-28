@@ -318,20 +318,22 @@ sup a { color: var(--brand-light); text-decoration: none; padding: 0 .1em; }
       var index = Array.prototype.indexOf.call(th.parentNode.children, th);
       var numeric = th.dataset.sort === 'num';
       var asc = th.getAttribute('aria-sort') !== 'ascending';
-      var rows = Array.prototype.slice.call(body.rows);
+      // Read DOM text and parse numeric keys once; comparisons use cached values.
+      var rows = Array.prototype.map.call(body.rows, function (row) {
+        var cell = row.cells[index];
+        return { row: row, value: numeric ? numericValue(cell) : cell.textContent.trim() };
+      });
       rows.sort(function (a, b) {
-        var x = a.cells[index].textContent.trim();
-        var y = b.cells[index].textContent.trim();
+        var x = a.value;
+        var y = b.value;
         if (numeric) {
-          x = numericValue(a.cells[index]);
-          y = numericValue(b.cells[index]);
           if (x === null) { return y === null ? 0 : 1; }
           if (y === null) { return -1; }
           return asc ? x - y : y - x;
         }
         return asc ? collator.compare(x, y) : collator.compare(y, x);
       });
-      rows.forEach(function (row) { body.appendChild(row); });
+      rows.forEach(function (entry) { body.appendChild(entry.row); });
       table.querySelectorAll('th').forEach(function (other) { other.removeAttribute('aria-sort'); });
       th.setAttribute('aria-sort', asc ? 'ascending' : 'descending');
     }

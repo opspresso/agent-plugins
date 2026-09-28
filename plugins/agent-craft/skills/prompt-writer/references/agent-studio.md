@@ -16,7 +16,8 @@ Agent Memory의 `remember`·`recall`·`forget` 계약이다. 배포된 서버의
   해당 기억을 확인한다. 검색 결과가 없다는 것을 자료가 전혀 없다는 뜻으로 해석하지 않는다.
 - 다음 작업에도 유효한 사실은 저장 권한과 공유 범위를 확인하고 remember로 저장한다.
   kind, scope, title, content, source를 실제 schema에 맞춰 전달한다.
-  remember는 신규 생성이므로 응답이 불확실할 때 같은 내용을 무조건 다시 저장하지 않는다.
+  idempotencyKey가 제공되면 같은 저장 요청의 키와 입력을 유지한다. 키 없는 신규 생성의
+  응답이 불확실할 때 같은 내용을 무조건 다시 저장하지 않는다.
 - scope.kind는 organization, team, user 중 요청에 맞게 명시한다.
   개인·팀 범위가 거부되면 조직 전체에 대신 저장하지 않는다. 대화 전용 scope는 없다.
 - 잊기 요청은 실제 조회·저장 결과의 memory ID와 현재 version을 확인한 뒤
@@ -30,7 +31,10 @@ Agent Memory의 `remember`·`recall`·`forget` 계약이다. 배포된 서버의
 Agent Memory는 설치 측에서 별도 MCP로 등록한다. 실제 런에 제공되지 않으면 기억
 조회·저장을 약속하지 않고 현재 대화의 자료로 진행한다. `document_search`는 처리된
 문서 chunk, `knowledge_search`·`knowledge_neighborhood`는 그래프 근거를 찾는다.
-문서 업로드·기억 본문 수정·Graph 작성은 MCP에 없으므로 관리 화면이나 별도 API의 작업이다.
+문서 수집 도구가 제공되면 document_ingest로 개인·팀·조직 scope의 텍스트를 저장하고
+document_ingest_status로 ready를 확인한다. 수집에는 idempotencyKey가 필수이며 접수와
+처리 완료를 구분한다. 도구가 없는 구버전의 문서 수집, 기억 본문 수정과 Graph 작성은
+관리 화면이나 별도 API의 작업이다.
 검색 결과의 문서 ID는 호스트 앱의 `File` artifact ID가 아니다.
 
 `recall`의 text에는 ID와 version이 있지만 항목당 1,200자·전체 4,000자로 잘린다.

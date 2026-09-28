@@ -15,15 +15,15 @@ Marketplace-published or internal apps; an unlisted app is not eligible.
 Before connecting, verify host app discovery compatibility. Slack's 401 at
 `/mcp` points to its
 [protected-resource metadata](https://mcp.slack.com/.well-known/oauth-protected-resource),
-which identifies the resource as `https://mcp.slack.com`. The current companion
-client's `src/infrastructure/mcp/oauthMetadata.ts` requires challenged metadata
-to identify the exact endpoint `https://mcp.slack.com/mcp`, so discovery rejects
-this document. A compatible provider/client update is needed; do not bypass
-resource validation or substitute an undocumented endpoint.
+which identifies the resource as `https://mcp.slack.com`. The companion client's
+`src/infrastructure/mcp/oauthMetadata.ts` accepts this exact alias only for the
+official `/mcp` endpoint and challenged metadata URL. Other resources still require
+an exact match. Clients without this handling need an update before Connect;
+do not disable resource validation or substitute an undocumented endpoint.
 
 After discovery is compatible, configure the installation's registered
 Slack app client ID and secret in the Agent's connection. Register the actual
-the host app's callback URL with that app. Use the supported user-token OAuth flow
+host app callback URL with that app. Use the supported user-token OAuth flow
 and the scopes needed for the selected tools; do not reuse another client's app
 identity or add credentials to the manifest.
 

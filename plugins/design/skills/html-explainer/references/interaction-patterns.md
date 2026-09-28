@@ -28,38 +28,12 @@
   <button type="button" data-move="-1">이전</button>
   <p class="progress" role="status"></p>
   <button type="button" data-move="1">다음</button>
+  <button type="button" class="reset">처음으로</button>
 </nav>
 ```
 
-```js
-(function () {
-  var steps = Array.prototype.slice.call(document.querySelectorAll('.step'));
-  var progress = document.querySelector('.progress');
-  var prev = document.querySelector('[data-move="-1"]');
-  var next = document.querySelector('[data-move="1"]');
-  var at = 0;
-
-  function show(index, moveFocus) {
-    at = Math.max(0, Math.min(steps.length - 1, index));
-    steps.forEach(function (step, i) { step.hidden = i !== at; });
-    prev.disabled = at === 0;
-    next.disabled = at === steps.length - 1;
-    progress.textContent = (at + 1) + ' / ' + steps.length + ' · ' + steps[at].dataset.title;
-    if (moveFocus) { steps[at].focus(); }
-  }
-
-  prev.addEventListener('click', function () { show(at - 1, true); });
-  next.addEventListener('click', function () { show(at + 1, true); });
-
-  document.addEventListener('keydown', function (event) {
-    if (event.target.closest('input, textarea, select')) { return; }
-    if (event.key === 'ArrowRight') { show(at + 1, true); }
-    if (event.key === 'ArrowLeft') { show(at - 1, true); }
-  });
-
-  show(0, false);   // 여기서 처음으로 hidden 이 걸린다. 스크립트가 없으면 전부 보인다
-})();
-```
+단계 전환·키보드·focus 구현은 [템플릿](template.md)의 `show`와 이벤트 처리를 사용한다.
+처리한 화살표 키는 기본 스크롤을 막고 입력 요소·편집 영역·조합 단축키는 가로채지 않는다.
 
 인쇄에서는 전 단계를 되살린다.
 
@@ -162,7 +136,7 @@ document.querySelectorAll('.comparison').forEach(function (comparison) {
 - 터치 대상은 44px 이상으로 둔다.
 
 ```html
-<div class="figure">
+<div class="stage">
   <svg viewBox="0 0 480 260" role="img" aria-labelledby="fig-t fig-d">
     <title id="fig-t">요청이 갈림길을 지나 서버 세 대로 나뉜다</title>
     <desc id="fig-d">왼쪽에서 들어온 화살표가 가운데 갈림길에서 셋으로 갈라진다.</desc>
@@ -177,12 +151,12 @@ document.querySelectorAll('.comparison').forEach(function (comparison) {
 document.querySelectorAll('.hotspot').forEach(function (spot) {
   spot.addEventListener('click', function () {
     var on = spot.getAttribute('aria-pressed') === 'true';
-    var figure = spot.closest('.figure');
-    figure.querySelectorAll('.hotspot').forEach(function (other) {
+    var stage = spot.closest('.stage');
+    stage.querySelectorAll('.hotspot').forEach(function (other) {
       other.setAttribute('aria-pressed', 'false');
     });
     spot.setAttribute('aria-pressed', on ? 'false' : 'true');
-    figure.querySelectorAll('svg [data-part]').forEach(function (part) {
+    stage.querySelectorAll('svg [data-part]').forEach(function (part) {
       part.classList.toggle('dimmed', !on && part.dataset.part !== spot.dataset.part);
     });
   });
@@ -190,11 +164,13 @@ document.querySelectorAll('.hotspot').forEach(function (spot) {
 ```
 
 ```css
-.figure svg .dimmed { opacity: .25; }
+.stage { position: relative; }
+.stage svg .dimmed { opacity: .25; }
 ```
 
 각 비교 대상은 `<g data-part="router">`처럼 묶는다. 라벨을 해당 그룹에 넣고,
 다른 대상을 감싸는 상위 그룹에는 `data-part`를 중복 지정하지 않는다.
+버튼 크기·위치·focus 스타일은 템플릿의 `.hotspot` CSS를 사용한다.
 
 ## 5. 직접 해보기
 
