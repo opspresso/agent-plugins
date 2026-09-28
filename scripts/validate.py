@@ -45,7 +45,6 @@ PLUGIN_NAME = re.compile(r"^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$")
 SKILL_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 # The host app's registry slug rule, independent of plugin/skill spec names.
 MCP_NAME = re.compile(r"^[a-z0-9-]+$")
-MCP_CWD = re.compile(r"^(?:\./|\$\{PLUGIN_ROOT\}(?:/|$)|\$\{PLUGIN_DATA\}(?:/|$))")
 
 # Canonical ClusterIP endpoints deployed by argocd-env-demo. This exception is
 # limited to each named server's exact URL, not the entire cluster DNS suffix.
@@ -149,7 +148,7 @@ def check_plugin(manifest: Path) -> None:
             fail(manifest, f"{field} must be a string")
 
     author = data.get("author")
-    if author is not None and not isinstance(author, dict):
+    if "author" in data and not isinstance(author, dict):
         fail(manifest, "author must be an object")
     elif isinstance(author, dict):
         for extra in sorted(set(author) - AUTHOR_FIELDS):
@@ -159,13 +158,13 @@ def check_plugin(manifest: Path) -> None:
                 fail(manifest, f"author.{field} must be a string")
 
     keywords = data.get("keywords")
-    if keywords is not None and (
+    if "keywords" in data and (
         not isinstance(keywords, list) or any(not isinstance(value, str) for value in keywords)
     ):
         fail(manifest, "keywords must be an array of strings")
 
     extensions = data.get("extensions")
-    if extensions is not None and (
+    if "extensions" in data and (
         not isinstance(extensions, dict)
         or any(not isinstance(value, dict) for value in extensions.values())
     ):
@@ -201,77 +200,48 @@ def check_mcp(manifest: Path) -> None:
             fail(manifest, f"{name}: server must be an object")
             continue
         kind = server.get("type")
-        if kind in {"stdio", "sse"}:
-            fail(
-                manifest,
-                f"{name}: repository policy requires streamable-http for the host app",
-            )
-        if kind == "stdio":
-            required, allowed = {"type", "command"}, {"type", "command", "args", "env", "cwd"}
-            command = server.get("command")
-            if "command" in server and (not isinstance(command, str) or not command):
-                fail(manifest, f"{name}: command must be a non-empty string")
-            args = server.get("args")
-            if args is not None and (
-                not isinstance(args, list) or any(not isinstance(value, str) for value in args)
-            ):
-                fail(manifest, f"{name}: args must be an array of strings")
-            env = server.get("env")
-            if env is not None:
-                if not isinstance(env, dict) or any(
-                    not isinstance(key, str) or not isinstance(value, str)
-                    for key, value in env.items()
-                ):
-                    fail(manifest, f"{name}: env must be an object of string values")
-                elif set(env) & {"PLUGIN_ROOT", "PLUGIN_DATA"}:
-                    fail(manifest, f"{name}: env must not override PLUGIN_ROOT or PLUGIN_DATA")
-            cwd = server.get("cwd")
-            if cwd is not None and (not isinstance(cwd, str) or not MCP_CWD.match(cwd)):
-                fail(
-                    manifest,
-                    f"{name}: cwd must start with ./, ${{PLUGIN_ROOT}} or ${{PLUGIN_DATA}}",
-                )
-        elif kind in ("streamable-http", "sse"):
-            required, allowed = {"type", "url"}, {"type", "url", "headers"}
-            if "headers" in server:
-                fail(
-                    manifest,
-                    f"{name}: headers are forbidden by repository policy; configure them after install",
-                )
-            url = server.get("url")
-            if not isinstance(url, str):
-                fail(manifest, f"{name}: url must be a string")
-            else:
-                try:
-                    parsed = urlsplit(url)
-                    # urllib validates numeric range and spelling on port access.
-                    parsed.port
-                except ValueError:
-                    fail(manifest, f"{name}: url has an invalid host or port")
-                    parsed = None
-                if parsed is None:
-                    pass
-                elif parsed.scheme not in {"http", "https"} or not parsed.hostname:
-                    fail(manifest, f"{name}: url must be an absolute HTTP or HTTPS URL")
-                elif parsed.username or parsed.password or parsed.fragment:
-                    fail(manifest, f"{name}: url must not contain user information or a fragment")
-                elif parsed.scheme == "http":
-                    try:
-                        loopback = ipaddress.ip_address(parsed.hostname).is_loopback
-                    except ValueError:
-                        loopback = parsed.hostname == "localhost"
-                    if not loopback and url != INTERNAL_MCP_URLS.get(name):
-                        fail(manifest, f"{name}: a non-loopback endpoint must use HTTPS "
-                             "unless it matches that server's declared in-cluster MCP URL")
-        else:
-            fail(manifest, f"{name}: type must be stdio, streamable-http or sse (got {kind!r})")
+        if kind != "streamable-http":
+            fail(manifest, f"{name}: repository policy requires streamable-http for the host app (got {kind!r})")
             continue
+        required, allowed = {"type", "url"}, {"type", "url"}
+        url = server.get("url")
+        if not isinstance(url, str):
+            fail(manifest, f"{name}: url must be a string")
+        else:
+            check_mcp_url(manifest, name, url)
         for missing in sorted(required - set(server)):
             fail(manifest, f"{name}: {missing} is required for a {kind} server")
         for extra in sorted(set(server) - allowed):
             fail(manifest, f"{name}: {extra!r} is not allowed on a {kind} server")
 
     check_mcp_docs(manifest.parent, set(servers))
+
+
+def check_mcp_url(manifest: Path, name: str, url: str) -> None:
+    # urlsplit silently removes controls and leading whitespace. Validate the
+    # declaration before parsing so the checked address is the stored address.
+    if any(character.isspace() or ord(character) < 32 or ord(character) == 127 for character in url):
+        fail(manifest, f"{name}: url must not contain whitespace or control characters")
+        return
+    try:
+        parsed = urlsplit(url)
+        # urllib validates numeric range and spelling on port access.
+        parsed.port
+    except ValueError:
+        fail(manifest, f"{name}: url has an invalid host or port")
+        return
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        fail(manifest, f"{name}: url must be an absolute HTTP or HTTPS URL")
+    elif parsed.username is not None or parsed.password is not None or parsed.fragment:
+        fail(manifest, f"{name}: url must not contain user information or a fragment")
+    elif parsed.scheme == "http":
+        try:
+            loopback = ipaddress.ip_address(parsed.hostname).is_loopback
+        except ValueError:
+            loopback = parsed.hostname == "localhost"
+        if not loopback and url != INTERNAL_MCP_URLS.get(name):
+            fail(manifest, f"{name}: a non-loopback endpoint must use HTTPS "
+                 "unless it matches that server's declared in-cluster MCP URL")
 
 
 def check_mcp_docs(plugin: Path, servers: set[str]) -> None:

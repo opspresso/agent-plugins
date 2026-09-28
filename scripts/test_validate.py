@@ -311,6 +311,44 @@ class ValidateManifestTest(TestCase):
                     validate.check_plugin(manifest)
                     self.assertTrue(any(expected in problem for problem in validate.problems))
 
+    def test_optional_manifest_fields_reject_explicit_null(self) -> None:
+        for field in ("author", "keywords", "extensions"):
+            with self.subTest(field=field), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                plugin = Path(temporary) / "sample"
+                manifest = self.write_json(plugin / "plugin.json", {
+                    "$schema": validate.PLUGIN_SCHEMA, "name": "sample", field: None,
+                })
+                validate.check_plugin(manifest)
+                self.assertEqual(1, len(validate.problems))
+                self.assertIn(field, validate.problems[0])
+
+    def test_mcp_invalid_types_are_diagnosed_without_aborting(self) -> None:
+        for kind in (None, [], {}, 1, "unknown", "stdio", "sse"):
+            with self.subTest(kind=kind), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                manifest = self.write_json(Path(temporary) / "mcp.json", {
+                    "$schema": validate.MCP_SCHEMA,
+                    "mcpServers": {"first": {"type": kind}, "second": []},
+                })
+                validate.check_mcp(manifest)
+                self.assertTrue(any("first:" in p and "requires streamable-http" in p for p in validate.problems))
+                self.assertTrue(any("second: server must be an object" in p for p in validate.problems))
+
+    def test_mcp_rejects_fields_outside_repository_transport_policy(self) -> None:
+        with TemporaryDirectory() as temporary:
+            manifest = self.write_json(Path(temporary) / "mcp.json", {
+                "$schema": validate.MCP_SCHEMA,
+                "mcpServers": {"server": {
+                    "type": "streamable-http", "url": "https://example.com/mcp",
+                    "headers": {}, "command": "unused",
+                }},
+            })
+            with patch.object(validate, "check_mcp_docs"):
+                validate.check_mcp(manifest)
+        self.assertEqual(2, len(validate.problems))
+        self.assertTrue(all("not allowed" in p for p in validate.problems))
+
     def test_mcp_rejects_non_object_servers_and_invalid_server_shape(self) -> None:
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
@@ -329,7 +367,7 @@ class ValidateManifestTest(TestCase):
                         "$schema": validate.MCP_SCHEMA,
                         "mcpServers": {"server": {"type": "stdio", "command": ""}},
                     },
-                    "command must be a non-empty string",
+                    "repository policy requires streamable-http",
                 ),
                 (
                     {
@@ -364,6 +402,18 @@ class ValidateManifestTest(TestCase):
                 validate.check_mcp(manifest)
                 self.assertTrue(any("invalid host or port" in p for p in validate.problems))
                 self.assertTrue(any("second: server must be an object" in p for p in validate.problems))
+
+    def test_mcp_url_rejects_empty_userinfo_and_control_characters(self) -> None:
+        for url in ("https://@example.com/mcp", "https://exam\nple.com/mcp", " https://example.com/mcp", "https://example.com/m cp"):
+            with self.subTest(url=url), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                manifest = self.write_json(Path(temporary) / "mcp.json", {
+                    "$schema": validate.MCP_SCHEMA,
+                    "mcpServers": {"server": {"type": "streamable-http", "url": url}},
+                })
+                with patch.object(validate, "check_mcp_docs"):
+                    validate.check_mcp(manifest)
+                self.assertTrue(validate.problems)
 
     def test_mcp_url_policy_requires_https_outside_known_deployments(self) -> None:
         cases = [
