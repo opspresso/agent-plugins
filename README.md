@@ -134,6 +134,16 @@ inline guidance and available tools.
 
 ## Descriptions and visibility in the host app
 
+Document design uses the host engine's exported design contract. Purpose `profile`
+and brand `theme` are independent; defaults are `standard` and `corporate`.
+Page documents use `compact` by default, while decks use `report`. User templates
+and existing styles take priority. File, HTML and native Google authoring skills
+carry their own generated `references/design-system.json` because runtime references
+must stay inside the owning skill bundle. Regenerate these files with the host
+engine's `pnpm export:document-design <output paths...>` after its contract changes.
+Do not hand-edit the generated catalogs or assume a deployed tool supports new fields
+without checking its schema. PDF embeds NanumGothic; editable readers need it installed.
+
 | Component | Visible before selection | Loaded content |
 |---|---|---|
 | Skill | Name and frontmatter description | Body on skill load; references on demand |

@@ -23,7 +23,9 @@ compatibility: >
 1. **재료를 정리한다.** 핵심 주장 한 문장, 그것을 지지하는 수치, 읽는 사람이 누구인지.
    원자료의 결론을 정리한 뒤 필요한 절과 차트를 고른다. 수치가 없는 자료에는
    핵심 수치나 차트를 억지로 추가하지 않는다.
-2. **디자인 시스템을 읽는다.** 마크업을 쓰기 전에 `references/design-system.md`의 토큰과
+2. **디자인 시스템을 읽는다.** 새 기본 디자인은 [디자인 계약](references/design-system.json)의
+   corporate theme·standard profile을 사용한다. profile은 작성 목적이고 theme는 브랜드다.
+   마크업을 쓰기 전에 `references/design-system.md`의 토큰과
    활자 단계를 확인한다. 차트를 만들기 전에 `references/charts.md`를 읽는다.
 3. **템플릿에서 시작한다.** `references/template.md`의 HTML을 복사해서 내용을 채운다.
    토큰, 목차 스크롤 추적, 표 정렬, 인쇄·모션 축소 스타일이 이미 들어 있다. 이 배관을
@@ -81,7 +83,11 @@ DOCX·PPTX·PDF·HWPX 파일로 건네야 하는 문서는 이 스킬이 아니�
 ## 반드시 지킬 것
 
 - **사용자 브랜드와 기존 디자인 시스템을 우선한다.** 별도 기준이 없으면
-  `references/design-system.md`의 기본 토큰을 쓴다. 특정 문서 엔진과 색을 맞출 필요는 없다.
+  `references/design-system.md`와 함께 배포된 디자인 계약의 기본 토큰을 쓴다.
+- 브랜드를 다른 문서와 맞추는 요청이면 같은 theme·색 역할을 적용한다. formal/technical의
+  light 표 머리 처리는 해당 theme의 brandTint/brand를 사용하며 브랜드 자체를 바꾸지 않는다.
+- 기본 글꼴은 NanumGothic을 우선하는 산세리프다. 설치되지 않은 환경의 대체 글꼴을 확인한다.
+  화면의 web 스케일과 인쇄의 page 스케일은 계약의 단위를 따로 적용한다.
 - **기본 본문 지면은 흰색이다.** 색은 표지 블록과 표 머리행처럼 색을 공짜로 받는 자리에만 준다.
   본문 먹색은 순검정이 아니라 `--ink`다.
 - **브랜드색이 나가는 자리는 정해져 있다.** 제목, 표 머리행, 표지 규칙선, 링크, 차트의

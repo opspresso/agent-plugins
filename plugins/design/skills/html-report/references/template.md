@@ -3,10 +3,12 @@
 아래 HTML에서 시작해 언어·브랜드·내용과 필요한 절을 맞춘다. 예시 수치와 날짜는 검증된 자료로 교체한다. 토큰, 목차 스크롤 추적, 표 정렬, 인쇄와
 모션 축소 스타일이 이미 들어 있으니 이 배관을 다시 짜지 않는다. 값의 근거는 같은
 디렉터리의 `design-system.md`에 있다. 색은 조정 가능한 기본값이다.
+`html`의 `data-profile`은 선택한 작성 목적, `data-layout`은 인쇄 제목의 compact/report 역할을 지정한다.
+기본은 standard/compact다. theme를 바꿀 때는 팔레트 토큰을 함께 바꾸며 profile만으로 색을 바꾸지 않는다.
 
 ```html
 <!doctype html>
-<html lang="ko">
+<html lang="ko" data-profile="standard" data-layout="compact">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,30 +19,34 @@
   --ink: #18222B; --ink-muted: #4F5D68;
   --brand: #17324D; --brand-light: #2D6A78; --brand-deep: #0B5D7A; --on-brand: #FFFFFF;
   --positive: #147D64; --negative: #B8433F;
+  --table-header-fill: var(--brand); --table-header-text: var(--on-brand);
   --c1: #2A78D6; --c2: #EB6834; --c3: #1BAF7A; --c4: #EDA100;
   --c5: #E87BA4; --c6: #4A3AA7; --c7: #E34948; --c8: #898781;
 
-  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
+  --font-sans: "NanumGothic", "Nanum Gothic", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: var(--font-sans);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --s-1: .25rem; --s-2: .5rem; --s-3: .75rem; --s-4: 1rem;
   --s-5: 1.5rem; --s-6: 2rem; --s-7: 3rem; --s-8: 4rem;
   --measure: 68ch; --wide: 1100px; --page: 1400px;
 }
+:root[data-profile="formal"], :root[data-profile="technical"] {
+  --table-header-fill: var(--brand-tint); --table-header-text: var(--brand);
+}
 
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
-  font-family: var(--font-serif); font-size: 1.0625rem; line-height: 1.5;
+  font-family: var(--font-body); font-size: 1.0625rem; line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3, .kicker, .meta, .stat, figcaption, table, .toc, .sources { font-family: var(--font-sans); }
 a { color: var(--brand-deep); text-underline-offset: .18em; text-decoration-thickness: 1px; }
 code { font-family: var(--font-mono); font-size: .875em; color: var(--brand-deep); background: var(--brand-tint); padding: .1em .35em; border-radius: 2px; }
-pre { background: var(--brand-tint); padding: var(--s-4); overflow-x: auto; font-size: .875rem; line-height: 1.35; }
-pre code { background: none; padding: 0; color: inherit; }
+pre { background: var(--brand-tint); padding: var(--s-4); overflow-x: auto; font-size: .875em; line-height: 1.35; }
+pre code { background: none; padding: 0; color: inherit; font-size: inherit; }
 
 /* 지면 ------------------------------------------------------------------ */
 .page { max-width: var(--page); margin: 0 auto; padding: var(--s-7) var(--s-5) var(--s-8); }
@@ -97,7 +103,7 @@ figcaption { font-size: .8125rem; line-height: 1.5; color: var(--ink-muted); mar
 /* 표 — 가로 괘선만 ------------------------------------------------------- */
 table { width: 100%; border-collapse: collapse; font-size: .9375rem; line-height: 1.35; margin: var(--s-5) 0; }
 th, td { text-align: left; padding: var(--s-2) var(--s-3); }
-thead th { background: var(--brand); color: var(--on-brand); font-size: .8125rem; font-weight: 600; }
+thead th { background: var(--table-header-fill); color: var(--table-header-text); font-size: .8125rem; font-weight: 600; }
 tbody tr + tr td { border-top: 1px solid var(--rule); }
 tbody tr:nth-child(odd) td { background: var(--brand-tint); }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
@@ -124,9 +130,20 @@ sup a { color: var(--brand-light); text-decoration: none; padding: 0 .1em; }
 }
 
 /* 인쇄 ------------------------------------------------------------------- */
+@page { size: A4; margin: 20mm; }
 @media print {
   .toc, .no-print { display: none; }
-  body { font-size: 10.5pt; }
+  body { font-size: 11pt; }
+  h1 { font-size: 20pt; line-height: 1.2; }
+  :root[data-layout="report"] h1 { font-size: 30pt; line-height: 1.15; }
+  h2 { font-size: 17pt; }
+  h3 { font-size: 15pt; line-height: 1.2; }
+  .dek { font-size: 13pt; }
+  .lead, table { font-size: 11pt; }
+  .kicker, .meta, .stat-label, .stat-note, figcaption, .sources, thead th { font-size: 8.5pt; }
+  .stat { font-size: 26pt; }
+  code, pre { font-size: 9.5pt; }
+  .page { max-width: none; padding: 0; }
   .layout { display: block; }
   .reveal, .reveal.pending, .reveal.shown { opacity: 1; transform: none; transition: none; }
   header.title { background: none; padding: 0; }
@@ -206,7 +223,7 @@ sup a { color: var(--brand-light); text-decoration: none; padding: 0 .1em; }
             </g>
             <path d="M80 152 L220 138 L360 118 L500 98" style="fill: none; stroke: var(--c1)" stroke-width="2"/>
             <circle cx="500" cy="98" r="3.5" style="fill: var(--c1)"/>
-            <text x="512" y="104" style="fill: var(--c1)" font-size="12">15.1%</text>
+            <text x="512" y="104" style="fill: var(--ink)" font-size="12">15.1%</text>
           </svg>
           <figcaption>월별 재방문율. 2026-03-01 ~ 06-30, 가입 30일 이상 사용자 31.8만 명 기준. 출처<sup><a href="#s1" id="s1-ref">1</a></sup></figcaption>
         </figure>

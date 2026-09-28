@@ -1,0 +1,76 @@
+{
+  "cases": [
+    {
+      "id": "compact-file",
+      "prompt": "이 회의 메모를 제목을 포함한 짧은 DOCX 회의록으로 만들어 줘. 표지와 목차는 필요 없어.",
+      "context": "Notes are supplied. File offers profile, theme, colors and layout. No template or brand is supplied.",
+      "expected_skill": "document-authoring",
+      "required_behaviors": ["Use standard purpose and corporate theme", "Use compact layout and preserve the title and notes"],
+      "forbidden_behaviors": ["Add cover or contents pages", "Invent decisions or recipients"]
+    },
+    {
+      "id": "purpose-preserves-brand",
+      "prompt": "같은 회사의 기술 명세와 임원 보고서를 만들어 줘. 브랜드색은 둘 다 유지해.",
+      "context": "Content and an explicit corporate theme are supplied. File supports independent profile and theme.",
+      "expected_skill": "document-authoring",
+      "required_behaviors": ["Select technical and executive purposes independently of the same theme", "Keep body/font/color roles consistent across the outputs"],
+      "forbidden_behaviors": ["Change brand palette merely because purpose changes"]
+    },
+    {
+      "id": "native-template",
+      "prompt": "지정한 Google Docs 양식을 복사해서 이 제안서를 작성해 줘. 원래 표와 스타일을 유지해.",
+      "context": "An exact template ID, content, native copy/read/update tools and account access are supplied. The template has multiple tabs and named styles.",
+      "expected_skill": "document-authoring",
+      "required_behaviors": ["Copy the native file and inspect the returned ID", "Preserve tabs, tables and named-style relationships", "Constrain edits and read back their content and style"],
+      "forbidden_behaviors": ["Overwrite the source template", "Replace it with a DOCX artifact or the default corporate style", "Claim rendering was checked from text-only reads"]
+    },
+    {
+      "id": "unsupported-native-create",
+      "prompt": "이 원고를 새 Google Slides 발표 자료로 만들어 줘.",
+      "context": "Only presentation read and update are offered. There is no destination ID or create/copy capability.",
+      "expected_skill": "document-authoring",
+      "required_behaviors": ["Report the missing destination/create capability and provide usable presentation content"],
+      "forbidden_behaviors": ["Invent a presentation ID", "Claim a local PPTX is a newly created Google presentation"]
+    },
+    {
+      "id": "workbook-brand",
+      "prompt": "같은 브랜드의 XLSX 집계표를 만들고 수식도 넣어 줘.",
+      "context": "Rows and formulas are supplied. File offers theme/colors for XLSX and rejects profile/layout.",
+      "expected_skill": "spreadsheet-authoring",
+      "required_behaviors": ["Use the supplied theme with explicit formula objects", "Inspect source/output values and disclose that formulas were not recalculated"],
+      "forbidden_behaviors": ["Send prose profile/page layout to XLSX", "Invent formula cached values or claim calculation"]
+    },
+    {
+      "id": "native-design-roles",
+      "prompt": "이 원고로 짧은 Google Docs 문서를 만들어 줘. 양식은 없고 다른 회사 문서와 디자인을 맞춰 줘.",
+      "context": "Content, a shared corporate theme, native creation/read/style-update tools and the bundled design catalog are supplied. No template is supplied.",
+      "expected_skill": "document-authoring",
+      "required_behaviors": ["Use type.page.body and type.page.headings for point sizes", "Use leading.document.body and convert line spacing to percent", "Use fonts.googleBody and read back the applied styles"],
+      "forbidden_behaviors": ["Read missing page.body or document.body catalog fields", "Use the report cover title for a compact document", "Claim visual verification from structure-only reads"]
+    },
+    {
+      "id": "html-purpose-style",
+      "prompt": "이 기술 보고서를 HTML로 만들어 줘. corporate 브랜드를 유지하고 인쇄용 크기도 맞춰 줘.",
+      "context": "Content and the bundled design catalog are supplied. The technical profile has a light tableHeader. The report includes tables, code and small chart value labels.",
+      "expected_skill": "html-report",
+      "required_behaviors": ["Use brandTint and brand for light table headers without changing the theme", "Apply type.page sizes for print separately from type.web sizes", "Use readable text colors for small chart labels", "Keep inline and block code at the same role size"],
+      "forbidden_behaviors": ["Leave a solid table header for the technical profile", "Reuse chart series colors as small text without checking contrast", "Shrink code twice inside pre"]
+    },
+    {
+      "id": "legacy-workbook-schema",
+      "prompt": "이 자료로 corporate 브랜드의 XLSX 집계표를 만들어 줘.",
+      "context": "Rows are supplied. The deployed File schema supports XLSX creation but exposes neither theme nor colors. The bundled design catalog is newer than the deployed tool.",
+      "expected_skill": "spreadsheet-authoring",
+      "required_behaviors": ["Check the actual File schema before choosing arguments", "Use only supported creation fields and disclose the unperformed brand styling"],
+      "forbidden_behaviors": ["Send theme or colors to a schema that does not accept them", "Claim corporate colors were applied from the catalog alone"]
+    },
+    {
+      "id": "style-analysis-only",
+      "prompt": "이 문서의 글꼴과 색상 차이만 분석해 줘. 수정하지 마.",
+      "context": "Document metadata and style information are supplied. No write is requested.",
+      "expected_skill": null,
+      "required_behaviors": ["Compare observable style information and state rendering limits"],
+      "forbidden_behaviors": ["Create a replacement document", "Restyle or publish the supplied document"]
+    }
+  ]
+}

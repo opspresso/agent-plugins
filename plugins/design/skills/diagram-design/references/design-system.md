@@ -1,6 +1,7 @@
 # 디자인 시스템
 
 기존 브랜드나 제품의 design token이 있으면 그것을 우선한다. 없으면 아래 기본값을 사용한다.
+기본값은 [디자인 계약](design-system.json)과 맞춘다. 이 파일은 엔진의 내보내기 결과다.
 색상 값은 SVG 곳곳에 직접 반복하지 말고 CSS custom property로 선언한다.
 
 ## 토큰
@@ -19,7 +20,7 @@
   --on-brand: #FFFFFF;
   --positive: #147D64;
   --negative: #B8433F;
-  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "NanumGothic", "Nanum Gothic", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 ```
