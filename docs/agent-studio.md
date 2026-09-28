@@ -31,7 +31,11 @@ Agent Memory separates durable Memory from document chunks and graph context.
 searches across those source types and supplies detailed evidence. `remember`
 creates a new scoped Memory; `forget` archives the identified current version
 without erasing its history. Confirm the deployed server's tool schema before
-using those names. Automatic pre-run recall needs `memoryRecall` enabled plus
+using those names. When offered, `document_ingest` stores scoped text with a
+required idempotency key; `document_ingest_status` distinguishes accepted work
+from a ready document. `remember` also supports an optional idempotency key.
+Keep a replay's key and payload unchanged; a new key creates a new write.
+Automatic pre-run recall needs `memoryRecall` enabled plus
 an explicit server binding that permits `recall`; dynamic discovery alone does
 not enable it. Search result IDs belong to Agent Memory, not the host app's artifacts.
 

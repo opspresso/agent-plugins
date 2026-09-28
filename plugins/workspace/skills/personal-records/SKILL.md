@@ -17,7 +17,8 @@ compatibility: >
 1. `File read`로 선택한 Artifact를 읽는다. 잘린 응답이면 나머지를 읽고, 전체를 얻지 못하면 저장을 중단한다.
 2. 실제 연결 도구의 schema를 확인한다. 개인 scope `{kind:"user"}`와 서버가 전달한 사용자 문맥을 사용한다.
    email·토큰을 인수로 요구하거나 임의의 userId·조직 scope를 지정하지 않는다.
-3. Document는 `document_ingest`에 선택한 본문을 그대로 전달한다.
+3. Document는 `document_ingest`에 선택한 본문과 확인된 제목을 전달한다.
+   mimeType은 본문 형식에 맞는 `text/plain` 또는 `text/markdown`으로 지정한다.
    sourceUri는 `urn:agent-studio:artifact:<artifact_id>`, idempotencyKey는 `<artifact_id>:document`다.
    `document_ingest_status`로 실제 상태를 확인하고 접수와 ready를 구분한다.
 4. Memory는 요청된 범위에서 근거가 분명한 항목만 `remember`로 기록한다.
