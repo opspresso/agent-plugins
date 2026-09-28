@@ -170,9 +170,12 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   next.addEventListener('click', function () { show(at + 1, true); });
 
   document.addEventListener('keydown', function (event) {
-    if (event.target.closest('input, textarea, select')) { return; }
-    if (event.key === 'ArrowRight') { show(at + 1, true); }
-    if (event.key === 'ArrowLeft') { show(at - 1, true); }
+    if (event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey ||
+        event.target.closest('input, textarea, select, [contenteditable]')) { return; }
+    if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+      event.preventDefault();
+      show(at + (event.key === 'ArrowRight' ? 1 : -1), true);
+    }
   });
 
   // 슬라이더 — 값이 바뀌면 그림이 즉시 반응한다

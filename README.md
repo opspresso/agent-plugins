@@ -152,7 +152,7 @@ Run from the repository root:
 ```sh
 python3 -m unittest discover -s scripts -p 'test_*.py'
 python3 scripts/validate.py
-node --test scripts/test_html_report.mjs
+node --test scripts/test_html_*.mjs
 ```
 
 CI runs all three without installing dependencies. The Python checker enforces
@@ -167,8 +167,9 @@ Local inline Markdown links outside code blocks are checked for existing files
 and containment; skill links must remain in their own bundle. This is not a full
 Markdown parser or a remote-link availability check.
 
-Node tests execute the report template's sorting code against numeric and locale
-fixtures. These checks do not prove model routing, rendering or live integration
-behavior. For workflow changes, also review realistic positive and near-miss
+Node tests execute report sorting against numeric and locale fixtures and
+explainer navigation, keyboard and reset behavior. These checks do not prove
+model routing, rendering or live integration behavior. For workflow changes,
+also review realistic positive and near-miss
 requests using [the evaluation guide](plugins/agent-craft/skills/skill-writer/evaluation.md),
 and distinguish scenario review from actual model/tool execution.
