@@ -1,15 +1,30 @@
 ---
 name: spreadsheet-authoring
 description: >
-  XLSX 예산·집계·계산표를 생성하거나 파일 ID로 기존 통합 문서의 수식·오류 셀·숨김 시트를
-  점검하고 셀을 수정한다. 수식 재계산은 지원하지 않는다.
+  XLSX 또는 Google Sheets의 예산·집계·계산표를 생성·점검하고 지정 셀·수식·서식을 수정한다.
+  파일은 실제 file_id와 File, native 시트는 해당 MCP를 사용한다. File의 수식 재계산은 지원하지 않는다.
   보고서 안의 단순 표는 document-authoring, JSON·CSV 텍스트 추출은 structured-output을 사용한다.
 compatibility: >
-  호스트 앱의 File 빌트인과 artifact 저장소가 필요하다. 기존 XLSX는 file_id로
-  접근하며 도구가 없으면 표와 수식을 Markdown으로 낸다.
+  XLSX는 File과 artifact 저장소, Google Sheets는 실제 MCP와 계정 권한이 필요하다.
+  도구가 없으면 제공된 값·수식으로 분석하고 저장·계산 성공을 주장하지 않는다.
 ---
 
 # 스프레드시트 작성·점검
+
+## 새 파일의 디자인
+
+[디자인 계약](references/design-system.json)의 theme·색·본문 글꼴을 사용한다. 새 XLSX의 기본은
+corporate theme이며 profile·페이지 layout은 받지 않는다. 사용자 브랜드가 있으면 확인한 theme·colors를
+전달하고 일반 문서와 같은 브랜드를 유지한다. NanumGothic이 없는 수신 환경의 폰트 대체를 확인한다.
+기존 통합 문서 편집은 원래 스타일을 유지하며 요청 없이 전체를 다시 디자인하지 않는다.
+
+Google Sheets 요청은 실제 Sheets 도구와 native ID로 수행한다. 템플릿이 있으면 유지하고 새 문서만
+같은 계약의 색·글꼴·표 머리 역할을 적용한다. 값/수식 쓰기와 repeatCell·updateCells 등 서식 쓰기를
+구분하고 지정 range 밖을 덮지 않는다. 셀 자료형·표시 형식·고정 행·열 너비를 read로 대조한다.
+native 수정은 XLSX Artifact 생성이 아니며 실제 export 기능이 있을 때만 다운로드를 제공한다.
+
+아래 File 계약은 XLSX 파일에만 적용한다. Google Sheets는 실제 schema·native ID와
+read/값/수식/서식 도구를 사용하며 Artifact를 만들었다고 하지 않는다.
 
 ## 작업과 입력을 구분한다
 
@@ -43,6 +58,7 @@ File(operation="inspect", file_id="<실제 파일 ID>", from=0, include_hidden=f
 
 ```
 File(operation="create", format="xlsx",
+  theme="corporate",
   title="2026년 예산",
   name="2026-예산",
   sheets=[{

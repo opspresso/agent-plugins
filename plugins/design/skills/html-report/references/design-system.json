@@ -1,0 +1,250 @@
+{
+  "version": 1,
+  "defaults": {
+    "profile": "standard",
+    "theme": "corporate",
+    "pageLayout": "compact",
+    "deckLayout": "report"
+  },
+  "colors": [
+    "brand",
+    "brandLight",
+    "brandDeep",
+    "brandTint",
+    "surfaceTint",
+    "ink",
+    "inkMuted",
+    "rule",
+    "onBrand",
+    "positive",
+    "negative"
+  ],
+  "fonts": {
+    "body": "NanumGothic",
+    "googleBody": "Nanum Gothic",
+    "webBody": "\"NanumGothic\", \"Nanum Gothic\", system-ui, -apple-system, \"Segoe UI\", sans-serif",
+    "code": {
+      "docx": "Consolas",
+      "pptx": "Consolas",
+      "hwpx": "굴림체",
+      "pdf": "Courier",
+      "web": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
+    },
+    "editableFontRequirement": "NanumGothic must be installed on the reader's device; PDF embeds the font."
+  },
+  "page": {
+    "unit": "pt",
+    "width": 595.28,
+    "height": 841.89,
+    "margin": 56.7,
+    "header": 28.35,
+    "footer": 28.35,
+    "background": "FFFFFF"
+  },
+  "type": {
+    "page": {
+      "unit": "pt",
+      "body": 11,
+      "code": 9.5,
+      "headings": [
+        20,
+        17,
+        15,
+        13,
+        12,
+        11
+      ],
+      "caption": 8.5,
+      "coverTitle": 30,
+      "subtitle": 13,
+      "ordinal": 36,
+      "metric": 26
+    },
+    "deck": {
+      "unit": "pt",
+      "coverTitle": 44,
+      "subtitle": 20,
+      "title": 32,
+      "sectionTitle": 40,
+      "ordinal": 66,
+      "closingTitle": 36,
+      "body": 18,
+      "code": 14,
+      "subheadings": [
+        22,
+        20,
+        18,
+        18
+      ],
+      "caption": 11,
+      "cardTitle": 18,
+      "cardBody": 14,
+      "metric": 44,
+      "metricLabel": 13,
+      "quote": 24
+    },
+    "web": {
+      "unit": "px",
+      "body": 17,
+      "coverTitle": 40,
+      "title": 24,
+      "subtitle": 20,
+      "caption": 13,
+      "code": 14.875
+    }
+  },
+  "leading": {
+    "document": {
+      "body": 1.5,
+      "heading": 1.2,
+      "coverTitle": 1.15,
+      "subtitle": 1.4,
+      "compact": 1.35
+    },
+    "deck": {
+      "body": 1.35,
+      "title": 1.15,
+      "coverTitle": 1.1,
+      "subtitle": 1.3
+    }
+  },
+  "chart": [
+    "2A78D6",
+    "EB6834",
+    "1BAF7A",
+    "EDA100",
+    "E87BA4",
+    "4A3AA7",
+    "E34948",
+    "898781"
+  ],
+  "themes": {
+    "corporate": {
+      "brand": "17324D",
+      "brandLight": "2D6A78",
+      "brandDeep": "0B5D7A",
+      "brandTint": "EAF1F3",
+      "surfaceTint": "F5F7F8",
+      "ink": "18222B",
+      "inkMuted": "4F5D68",
+      "rule": "CBD5DB",
+      "onBrand": "FFFFFF",
+      "positive": "147D64",
+      "negative": "B8433F"
+    },
+    "classic": {
+      "brand": "1F4E79",
+      "brandLight": "4472C4",
+      "brandDeep": "0563C1",
+      "brandTint": "EEF3F9",
+      "surfaceTint": "F4F6F9",
+      "ink": "212529",
+      "inkMuted": "595959",
+      "rule": "D9DEE5",
+      "onBrand": "FFFFFF",
+      "positive": "147D64",
+      "negative": "B8433F"
+    },
+    "ocean": {
+      "brand": "0B2D4D",
+      "brandLight": "007481",
+      "brandDeep": "005A8D",
+      "brandTint": "E7F3F4",
+      "surfaceTint": "F2F6F8",
+      "ink": "17232D",
+      "inkMuted": "52616D",
+      "rule": "C9D5DB",
+      "onBrand": "FFFFFF",
+      "positive": "147D64",
+      "negative": "B8433F"
+    },
+    "slate": {
+      "brand": "334E68",
+      "brandLight": "627D98",
+      "brandDeep": "245B78",
+      "brandTint": "EDF1F4",
+      "surfaceTint": "F7F7F5",
+      "ink": "20252A",
+      "inkMuted": "525A61",
+      "rule": "CDD2D6",
+      "onBrand": "FFFFFF",
+      "positive": "287A62",
+      "negative": "A94743"
+    },
+    "teal": {
+      "brand": "0F4C5C",
+      "brandLight": "147D75",
+      "brandDeep": "075A72",
+      "brandTint": "E8F3F1",
+      "surfaceTint": "F2F7F6",
+      "ink": "162629",
+      "inkMuted": "4C6063",
+      "rule": "C6D6D3",
+      "onBrand": "FFFFFF",
+      "positive": "147D64",
+      "negative": "B8433F"
+    }
+  },
+  "profiles": {
+    "executive": {
+      "label": "Executive",
+      "purpose": "Leadership decisions, board reports and approval documents.",
+      "tableHeader": "solid",
+      "doc": {
+        "coverRulePoints": 48
+      },
+      "deck": {
+        "coverBandPoints": 12,
+        "cornerRadiusFraction": 0.015
+      }
+    },
+    "consulting": {
+      "label": "Consulting",
+      "purpose": "Strategy proposals and conclusion-led presentations.",
+      "tableHeader": "solid",
+      "doc": {
+        "coverRulePoints": 72
+      },
+      "deck": {
+        "coverBandPoints": 36,
+        "cornerRadiusFraction": 0.05
+      }
+    },
+    "formal": {
+      "label": "Formal",
+      "purpose": "Public-sector and external submissions designed first for print.",
+      "tableHeader": "light",
+      "doc": {
+        "coverRulePoints": 36
+      },
+      "deck": {
+        "coverBandPoints": 0,
+        "cornerRadiusFraction": 0
+      }
+    },
+    "technical": {
+      "label": "Technical",
+      "purpose": "Architecture, RFC and engineering documents with restrained structure.",
+      "tableHeader": "light",
+      "doc": {
+        "coverRulePoints": 42
+      },
+      "deck": {
+        "coverBandPoints": 6,
+        "cornerRadiusFraction": 0.01
+      }
+    },
+    "standard": {
+      "label": "Standard",
+      "purpose": "General-purpose business documents with a neutral layout.",
+      "tableHeader": "solid",
+      "doc": {
+        "coverRulePoints": 60
+      },
+      "deck": {
+        "coverBandPoints": 21.6,
+        "cornerRadiusFraction": 0.08
+      }
+    }
+  }
+}

@@ -4,6 +4,8 @@ description: >
   or sheet structure when requested. Requires the project's connected Google
   account and Workspace MCP Developer Preview access. Confirm spreadsheet, tab
   and range; this accesses a live sheet rather than an XLSX artifact.
+  Preserve existing styles; use the offered spreadsheet-authoring design contract
+  for new sheets and keep formatting writes separate from value/formula writes.
 ---
 
 # google-sheets

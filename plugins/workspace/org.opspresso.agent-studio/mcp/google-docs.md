@@ -4,6 +4,8 @@ description: >
   requested. Requires the Agent's connected Google account and Workspace MCP
   Developer Preview access. Resolve ambiguous files through Drive; Google document
   IDs cannot be used as host app artifact IDs.
+  Preserve the target's template and named styles; use the offered document-authoring
+  skill for a new document's design contract rather than provider defaults.
 ---
 
 # google-docs
@@ -17,3 +19,7 @@ Verify a known document read. For an authorized edit, inspect the current
 structure and identifiers, apply the requested change and read back the affected
 content. Native document editing does not create a DOCX/PDF artifact or prove
 exported layout fidelity.
+
+For new documents, select a supplied native template or the offered document design contract before writing.
+Map title/body/caption/table roles through the discovered style requests and read back affected styles.
+Text-only readback does not prove typography or page layout.

@@ -22,7 +22,7 @@
   --brand-light: #2D6A78;
   --brand-deep: #0B5D7A;
   --on-brand: #FFFFFF;
-  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-sans: "NanumGothic", "Nanum Gothic", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 *, *::before, *::after { box-sizing: border-box; }
@@ -80,6 +80,7 @@ h1 {
   main { padding: 32px 16px 48px; }
   .diagram-frame svg { width: 900px; }
 }
+@page { size: A4; margin: 20mm; }
 @media print {
   main { max-width: none; padding: 0; }
   .diagram-frame { overflow: visible; }

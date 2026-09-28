@@ -4,6 +4,8 @@ description: >
   presentation when requested. Requires the project's connected Google account
   and Workspace MCP Developer Preview access. Text or structural reads do not
   verify rendered layout or produce a PPTX/PDF artifact.
+  Preserve supplied templates and master/layout relationships; new decks use the
+  offered document-authoring skill's design contract when no user style is supplied.
 ---
 
 # google-slides
@@ -17,3 +19,6 @@ Verify a known presentation read. Before an authorized update, obtain the curren
 slide/object identifiers and constrain changes to the requested elements. Read
 back affected content; perform visual verification only when the runtime offers
 an actual rendering or preview capability.
+
+Map the selected design's title/body/caption/table roles to the actual style/transform requests.
+Verify the target's font, color and bounds after content changes, using a rendered preview when offered.

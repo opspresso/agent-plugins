@@ -20,8 +20,8 @@
   --c1: #2A78D6; --c2: #EB6834; --c3: #1BAF7A; --c4: #EDA100;
   --c5: #E87BA4; --c6: #4A3AA7; --c7: #E34948; --c8: #898781;
 
-  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-serif: Georgia, "Times New Roman", serif;
+  --font-sans: "NanumGothic", "Nanum Gothic", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-body: var(--font-sans);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   --s-1: .25rem; --s-2: .5rem; --s-3: .75rem; --s-4: 1rem;
@@ -33,7 +33,7 @@
 html { scroll-behavior: smooth; }
 body {
   margin: 0; background: var(--bg); color: var(--ink);
-  font-family: var(--font-serif); font-size: 1.0625rem; line-height: 1.5;
+  font-family: var(--font-body); font-size: 1.0625rem; line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 h1, h2, h3, .kicker, .meta, .stat, figcaption, table, .toc, .sources { font-family: var(--font-sans); }
@@ -124,9 +124,11 @@ sup a { color: var(--brand-light); text-decoration: none; padding: 0 .1em; }
 }
 
 /* 인쇄 ------------------------------------------------------------------- */
+@page { size: A4; margin: 20mm; }
 @media print {
   .toc, .no-print { display: none; }
-  body { font-size: 10.5pt; }
+  body { font-size: 11pt; }
+  .page { max-width: none; padding: 0; }
   .layout { display: block; }
   .reveal, .reveal.pending, .reveal.shown { opacity: 1; transform: none; transition: none; }
   header.title { background: none; padding: 0; }

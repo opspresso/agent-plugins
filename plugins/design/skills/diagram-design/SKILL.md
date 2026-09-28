@@ -38,7 +38,9 @@ compatibility: >
    - 계층, 소유, 포함과 개념 관계: `references/relationship-diagrams.md`
 6. 보안 경계, 병목, 피드백처럼 동작 의미가 핵심이면
    `references/semantic-patterns.md`도 읽는다.
-7. `references/design-system.md`의 토큰과 `references/svg-implementation.md`의
+7. 새 기본 디자인은 [디자인 계약](references/design-system.json)의 corporate theme를 사용하고,
+   다른 문서와 묶는 요청이면 같은 theme·글꼴 역할을 유지한다.
+   `references/design-system.md`의 토큰과 `references/svg-implementation.md`의
    연결선·접근성 규칙으로 그린다. HTML 산출물은 `references/template.md`에서 시작한다.
 8. 발행 전 삭제 가능한 요소와 중복 연결을 걷어내고 아래 검사를 수행한다.
 
