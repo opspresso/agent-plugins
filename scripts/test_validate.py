@@ -615,6 +615,28 @@ class ValidateManifestTest(TestCase):
                 self.assertEqual(1, result)
                 self.assertTrue(any("symlink" in p for p in validate.problems))
 
+    def test_main_rejects_symlink_manifests_and_mcp_descriptions(self) -> None:
+        for filename in ("plugin.json", "mcp.json", "org.opspresso.agent-studio/mcp/server.md"):
+            with self.subTest(filename=filename), TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                plugin = root / "plugins" / "sample"
+                self.write_json(plugin / "plugin.json", {"$schema": validate.PLUGIN_SCHEMA, "name": "sample"})
+                self.write_json(plugin / "mcp.json", {
+                    "$schema": validate.MCP_SCHEMA,
+                    "mcpServers": {"server": {"type": "streamable-http", "url": "https://example.com/mcp"}},
+                })
+                doc = plugin / "org.opspresso.agent-studio" / "mcp" / "server.md"
+                doc.parent.mkdir(parents=True)
+                doc.write_text("---\ndescription: Server\n---\nNotes\n")
+                target = plugin / filename
+                target.rename(root / "outside")
+                target.symlink_to(root / "outside")
+                with patch.object(validate, "__file__", str(root / "scripts" / "validate.py")):
+                    with redirect_stdout(StringIO()):
+                        result = validate.main()
+                self.assertEqual(1, result)
+                self.assertTrue(any("symlink" in p for p in validate.problems))
+
 
 class ValidateMarkdownLinksTest(TestCase):
     def setUp(self) -> None:

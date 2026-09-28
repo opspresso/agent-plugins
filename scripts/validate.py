@@ -406,10 +406,16 @@ def main() -> int:
         return 1
 
     skills = 0
+    readable_plugins = []
     for plugin in plugins:
-        if plugin.is_symlink():
-            fail(plugin, "symlink plugin directories are not carried by host app sync")
+        # Git stores a symlink's target text, not its local contents. Reject the
+        # payload before any later pass can read files through that link.
+        links = [plugin] if plugin.is_symlink() else sorted(path for path in plugin.rglob("*") if path.is_symlink())
+        if links:
+            for path in links:
+                fail(path, "symlink payloads are not carried by host app sync")
             continue
+        readable_plugins.append(plugin)
         manifest = plugin / "plugin.json"
         if manifest.is_file():
             check_plugin(manifest)
@@ -422,9 +428,6 @@ def main() -> int:
         # One level only: the spec tells clients not to search deeper, so a skill
         # nested further down would pass a check nothing would ever load.
         for child in sorted((plugin / "skills").glob("*")) if (plugin / "skills").is_dir() else []:
-            if child.is_symlink():
-                fail(child, "symlink skill directories are not carried by host app sync")
-                continue
             if (child / "SKILL.md").is_file():
                 check_skill(child / "SKILL.md")
                 for document in sorted(child.rglob("*")):
@@ -434,11 +437,11 @@ def main() -> int:
             elif child.is_dir():
                 fail(child, "a skills/ child with no SKILL.md is not a skill")
 
-    check_unique(root, plugins)
+    check_unique(root, readable_plugins)
     for document in [root / "README.md", *sorted((root / "docs").rglob("*.md"))]:
         if document.is_file():
             check_markdown_links(document, root)
-    for plugin in plugins:
+    for plugin in readable_plugins:
         for document in sorted((plugin / "org.opspresso.agent-studio" / "mcp").glob("*.md")):
             check_markdown_links(document, root)
 
