@@ -400,7 +400,12 @@ def main() -> int:
     recommendations.clear()
 
     root = Path(__file__).resolve().parent.parent
-    plugins = sorted(p for p in (root / "plugins").glob("*") if p.is_dir() or p.is_symlink())
+    plugin_root = root / "plugins"
+    if plugin_root.is_symlink():
+        fail(plugin_root, "symlink plugin roots are not carried by host app sync")
+        print(f"  {problems[-1]}")
+        return 1
+    plugins = sorted(p for p in plugin_root.glob("*") if p.is_dir() or p.is_symlink())
     if not plugins:
         print("no plugins found — is this the repository root?")
         return 1

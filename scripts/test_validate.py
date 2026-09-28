@@ -578,6 +578,23 @@ class ValidateManifestTest(TestCase):
         self.assertEqual(1, result)
         self.assertIn("no plugins found", output.getvalue())
 
+    def test_main_rejects_symlink_plugins_root_before_reading_manifests(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            target = root / "outside"
+            self.write_json(target / "sample" / "plugin.json", {
+                "$schema": validate.PLUGIN_SCHEMA, "name": "sample",
+            })
+            (root / "plugins").symlink_to(target, target_is_directory=True)
+            with patch.object(validate, "__file__", str(root / "scripts" / "validate.py")):
+                with patch.object(validate, "check_plugin") as check_plugin:
+                    with redirect_stdout(StringIO()) as output:
+                        result = validate.main()
+            self.assertEqual(1, result)
+            self.assertTrue(any("symlink" in p for p in validate.problems))
+            self.assertIn("symlink", output.getvalue())
+            check_plugin.assert_not_called()
+
     def test_main_checks_uppercase_markdown_attachments(self) -> None:
         with TemporaryDirectory() as temporary:
             root = Path(temporary)
