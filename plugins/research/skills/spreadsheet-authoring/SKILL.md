@@ -17,9 +17,11 @@ compatibility: >
 corporate theme이며 profile·페이지 layout은 받지 않는다. 사용자 브랜드가 있으면 확인한 theme·colors를
 전달하고 일반 문서와 같은 브랜드를 유지한다. NanumGothic이 없는 수신 환경의 폰트 대체를 확인한다.
 기존 통합 문서 편집은 원래 스타일을 유지하며 요청 없이 전체를 다시 디자인하지 않는다.
+생성 예시의 theme·colors는 실제 File schema가 지원할 때만 보낸다. 지원하지 않으면 가능한
+기본 스타일 출력과 브랜드 적용의 미수행 범위를 밝히고, 없는 옵션이나 원본 서식 편집을 완료했다고 하지 않는다.
 
 Google Sheets 요청은 실제 Sheets 도구와 native ID로 수행한다. 템플릿이 있으면 유지하고 새 문서만
-같은 계약의 색·글꼴·표 머리 역할을 적용한다. 값/수식 쓰기와 repeatCell·updateCells 등 서식 쓰기를
+같은 계약의 색·`fonts.googleBody`·표 머리 역할을 적용한다. 값/수식 쓰기와 repeatCell·updateCells 등 서식 쓰기를
 구분하고 지정 range 밖을 덮지 않는다. 셀 자료형·표시 형식·고정 행·열 너비를 read로 대조한다.
 native 수정은 XLSX Artifact 생성이 아니며 실제 export 기능이 있을 때만 다운로드를 제공한다.
 

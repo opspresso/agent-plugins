@@ -19,11 +19,12 @@ read_doc의 실제 구조에서 tab·segment·index와 named style을 얻는다.
 요청한 범위에 해당하는 batch update만 사용한다. 삽입 뒤 index가 움직이는 것을 고려한다.
 
 - 제목·절·본문·캡션을 역할로 구분한다. named style과 text/paragraph style을 함께 확인한다.
-- 기본 본문은 page.body 포인트와 document.body 줄 간격을 사용한다. 문단 간격·정렬과
-  A4 page/여백은 계약의 pt 단위에서 실제 DocumentStyle schema로 변환한다.
-- compact의 첫 제목은 page.headings[0], 바로 아래 문단은 body다. report 표지는
-  coverTitle/subtitle 역할을 사용한다. paragraph lineSpacing은 배수를 퍼센트로 바꾼다(1.5 → 150).
-- fontFamily는 provider 이름 `Nanum Gothic`을 사용한다. 현재 문서에 반영된 weightedFontFamily를
+- 기본 본문은 `type.page.body` 포인트와 `leading.document.body` 줄 간격을 사용한다.
+  문단 간격·정렬과 `page.width`·`page.height`·`page.margin`은 pt 단위에서 실제 DocumentStyle schema로 변환한다.
+- compact의 첫 제목은 `type.page.headings[0]`, 바로 아래 문단은 `type.page.body`다.
+  report 표지는 `type.page.coverTitle`·`type.page.subtitle` 역할을 사용한다.
+  paragraph lineSpacing은 배수를 퍼센트로 바꾼다(1.5 → 150).
+- fontFamily는 `fonts.googleBody`의 provider 이름을 사용한다. 현재 문서에 반영된 weightedFontFamily를
   다시 읽고 지원되지 않았거나 대체됐다면 같은 글꼴이라고 주장하지 않는다.
 - 색은 6자리 hex를 0–1 RGB로 변환한다. profile의 light/solid 표 머리 처리를 선택한 theme로 적용한다.
 - updateTextStyle·updateParagraphStyle·updateTableCellStyle·updateDocumentStyle 등은
@@ -33,10 +34,10 @@ read_doc의 실제 구조에서 tab·segment·index와 named style을 얻는다.
 ## Google Slides
 
 read_presentation으로 실제 slide/object/master/layout ID와 페이지 크기를 읽는다.
-템플릿의 배치와 master를 우선하고 새로운 덱만 계약의 deck 역할을 적용한다.
+템플릿의 배치와 master를 우선하고 새로운 덱만 계약의 `type.deck`·`leading.deck` 역할을 적용한다.
 
 - 새 덱은 16:9를 기본으로 하고 제목·본문·캡션·표 역할마다 같은 type/색 규칙을 쓴다.
-- 계약의 크기는 pt이며 모서리 비율은 cornerRadiusFraction이다. provider에 없는 형태 조정
+- 계약의 크기는 pt이며 모서리 비율은 `profiles[profile].deck.cornerRadiusFraction`이다. provider에 없는 형태 조정
   속성을 임의로 만들지 않으며 템플릿의 기본 형태를 유지한다.
 - updateTextStyle·updateParagraphStyle·updateShapeProperties·updateTableCellProperties와
   transform을 실제 schema로 구성한다. 좌표·크기는 단위를 함께 지정한다.

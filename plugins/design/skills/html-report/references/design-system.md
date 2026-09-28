@@ -80,7 +80,7 @@
 | 본문 | sans | 1.0625rem | 1.5 |
 | 캡션·메타 | sans | 0.8125rem | 1.5 · `--ink-muted` |
 | 수치 | sans | `clamp(2rem, 4vw, 2.5rem)` | 1.1 · `tabular-nums` |
-| 표·코드 | sans·mono | 0.9375rem·0.875rem | 1.35 |
+| 표·코드 | sans·mono | 0.9375rem·본문의 0.875em | 1.35 |
 
 줄 간격과 자간은 언어·실제 글꼴에서 검수한다. 위 표는 시작점이며 글자를 눌러 줄을 맞추지 않는다.
 
@@ -121,7 +121,9 @@
 기간·모집단·출처를 적는다. 캡션 없는 차트를 두지 않는다.
 
 **표** — **가로 괘선만 쓴다.** 세로선은 숫자를 하나씩 가두고, 눈은 표를 행으로 읽는다.
-머리행은 `--brand` 채움에 `--on-brand` 글자다. 행 사이는 `--rule` 한 줄, 줄무늬가
+머리행은 `profiles[profile].tableHeader`를 따른다. standard·executive·consulting의 solid는
+`--brand` 채움에 `--on-brand` 글자, formal·technical의 light는 `--brand-tint` 채움에
+`--brand` 글자다. 템플릿의 `html[data-profile]`로 선택한다. 행 사이는 `--rule` 한 줄, 줄무늬가
 필요하면 `--brand-tint`를 홀수 행에 옅게. 숫자 열은 오른쪽 정렬에 등폭 숫자.
 정렬이 탐색에 도움이 될 때 `data-sort`를 설정한다.
 
@@ -138,10 +140,22 @@
 @media print {
   nav, .toc, .controls { display: none; }
   body { font-size: 11pt; }
+  h1 { font-size: 20pt; line-height: 1.2; }
+  :root[data-layout="report"] h1 { font-size: 30pt; line-height: 1.15; }
+  h2 { font-size: 17pt; }
+  h3 { font-size: 15pt; line-height: 1.2; }
+  .dek { font-size: 13pt; }
+  .lead, table { font-size: 11pt; }
+  .kicker, .meta, .stat-label, .stat-note, figcaption, .sources, thead th { font-size: 8.5pt; }
+  .stat { font-size: 26pt; }
+  code, pre { font-size: 9.5pt; }
   h2, figure, table { break-inside: avoid; }
   a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 8pt; color: #555; }
 }
 ```
+
+인쇄 크기는 `type.page`의 역할을 사용한다. 제목은 기본 compact의 `headings[0]`이며
+`data-layout="report"`일 때만 `coverTitle`을 적용한다. 화면의 rem 크기를 그대로 인쇄하지 않는다.
 
 본문이 이미 흰 지면이라 인쇄용으로 색을 되돌릴 것이 없다. 링크 주소를 각주처럼 펼쳐
 두면 종이로 읽는 사람이 출처를 확인할 수 있다.
