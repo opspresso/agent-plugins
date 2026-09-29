@@ -39,6 +39,8 @@ Keep a replay's key and payload unchanged; a new key creates a new write.
 Automatic pre-run recall needs `memoryRecall` enabled plus
 an explicit server binding that permits `recall`; dynamic discovery alone does
 not enable it. Search result IDs belong to Agent Memory, not the host app's artifacts.
+Use the [connection notes](integrations/agent-memory.md) for current console text
+and installation-side verification; the server is registered independently of Plugin sync.
 
 `mcp.json` contains provider-hosted and declared in-cluster deployment addresses.
 Other organization URLs, credentials, model selections and Agent bindings
@@ -215,6 +217,9 @@ repository and base_branch are null. `status` and bounded `wait` return output,
 checks, Diff and a cursor. Keep queued/running distinct from success. `cancel` stops
 a run and `close` saves state and removes compute. The native task continues if the
 parent Agent response ends; follow the returned workspace_path.
+When the offered `start` schema includes `title`, use a short purpose label in the
+user's language. It labels the Workspace and its Chat; the script or coding task
+stays in `task`. Do not copy a command script into the title or send an unsupported field.
 
 The builtin prepares commit, commit-and-push, push, pull-request, merge and push-main
 reviews through prepare_git, but cannot consume approvals. Use the Workspace's
