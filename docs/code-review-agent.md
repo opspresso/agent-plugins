@@ -10,9 +10,16 @@ GitHub 저장소에서 Payload URL을 `/api/webhook/{agent}`로, Content type을
 등록한다. 시크릿은 저장소 파일·Agent 프롬프트·PR·로그에 넣지 않는다.
 저장소를 읽을 수 있어도 Pull requests 쓰기 권한이 없으면 댓글 게시가 실패한다.
 
-호스트 앱이 서명·저장소·PR·HEAD를 검증하고 제공한 변경 내용으로 Agent를 실행한 후
-해당 커밋에 COMMENT 리뷰를 게시한다. Agent가 댓글 도구나 게시 위치를 고르지 않으며
-이 모드에는 Skill 읽기만 제공된다. 변경 코드 실행·PR 승인·merge·배포는 포함하지 않는다.
+Agent의 Workspace 도구와 command 런타임, 대상 저장소 정책, Sandbox와 worker를 설정하고
+Webhook의 `내 권한으로 실행`을 소유자가 명시적으로 켠다. 공유 GitHub 리뷰 권한과
+Workspace 실행 위임은 별도 설정이다. webhook actor의 동시 실행 한도는 2 이상이어야 한다.
+
+호스트 앱이 서명·저장소·PR·HEAD를 검증하고 Workspace를 만든 뒤 서버 Git bundle로 정확한
+HEAD를 받는다. Agent는 Skill·ReviewSource와 준비된 Workspace에서 관련 코드와 테스트를
+읽고 필요한 격리 검사를 실행한다. 검사의 실제 완료 결과를 읽고 최종 리뷰 본문을 작성한다.
+호스트가 해당 커밋에 COMMENT 리뷰를 게시하고 보고를 기록한 뒤 Workspace와 Sandbox를 닫는다.
+실패에도 Workspace를 정리한다. Agent가 게시 위치나 다른 저장소를 고르지 않으며,
+소스 수정·Git publication·PR 승인·merge·배포를 실행하지 않는다.
 최대 파일 수·diff 문맥 한도와 누락 여부는 실제 실행 입력과 게시 본문에 표시된다.
 
 `opened`, `synchronize`, `reopened`, `ready_for_review`가 열린 일반 PR의 리뷰를 요청한다.
