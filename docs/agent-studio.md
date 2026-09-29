@@ -221,9 +221,11 @@ When the offered `start` schema includes `title`, use a short purpose label in t
 user's language. It labels the Workspace and its Chat; the script or coding task
 stays in `task`. Do not copy a command script into the title or send an unsupported field.
 
-The builtin prepares commit, commit-and-push, push, pull-request, merge and push-main
-reviews through prepare_git, but cannot consume approvals. Use the Workspace's
-review UI to execute them or configured workflow actions. General agent
+A coding request includes commit, work-branch push and pull-request publication through
+prepare_git without another approval, unless the user limits the scope. Main merge,
+direct main push, tags, releases and configured workflow dispatch require a separate
+request and confirmation in the Workspace review UI. Tags bind to reviewed main;
+releases bind to an existing tag and its exact commit. General agent
 descriptions and system prompts identify capabilities; account, repository,
 branch and requested file changes belong in each user's task input.
 

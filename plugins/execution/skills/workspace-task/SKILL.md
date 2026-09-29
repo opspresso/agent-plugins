@@ -87,7 +87,10 @@ Workspace의 checks, native task에서 직접 실행한 검사와 GitHub CI는 �
 checks=[]로 GitHub 검사가 없다고 하지 않는다. GitHub CI는 새 status의 pull_request.ci나
 해당 SHA·run·attempt의 실제 실행 기록으로 확인한다. 릴리스 게시만으로 전체 빌드 완료를 추론하지 않는다.
 
-Git 게시 요청에는 [Git 검토와 승인](references/git-actions.md)을 읽는다. 새 run은 미승인 검토를
+코딩 요청은 사용자가 제한하지 않으면 새 작업 브랜치의 구현·검증·커밋·푸시·PR까지 포함한다.
+[Git 게시와 확인](references/git-actions.md)을 읽고 `prepare_git`로 PR까지 추가 승인 없이 진행한다.
+조회·진단만 요청한 작업이나 Git-free 파일 처리에는 이 게시 범위를 추가하지 않는다.
+main 반영·태그·릴리즈·배포는 별도 사용자 요청과 확인을 따른다. 새 run은 미승인 검토를
 취소하므로 파일 수정을 마친 뒤 검토한다. 실행 중·결과 불명 상태의 게시를 자동 반복하지 않는다.
 Chat에서 만든 승인에 `source_chat_url`이 있으면 결과 전달 뒤 같은 채팅에서 자동 재개된다. 성공한
 단계 뒤에 사용자 요청의 미완료 단계가 있으면 다음 검토를 준비한다. 한 단계의 승인·성공을 전체 요청

@@ -1,7 +1,9 @@
-# Git 검토와 승인
+# Git 게시와 확인
 
 호스트 앱의 Workspace Git 동작 계약이다. 실제 제공된 schema가 우선하며 사용자의 요청 범위만 준비한다.
-조회·파일 수정·커밋·작업 브랜치 푸시·PR·main 반영·배포는 서로 다른 단계다.
+코딩 요청의 기본 완료 범위는 새 작업 브랜치의 구현·검증·커밋·푸시·PR이다.
+사용자가 게시를 금지하거나 로컬 수정만 요청하면 그 범위를 따른다. 조회·리뷰 요청에는 게시를 추가하지 않는다.
+커밋·작업 브랜치 푸시·PR은 추가 승인 없이 실행한다. main 반영·태그·릴리즈·배포는 별도 사용자 요청과 확인이 필요하다.
 
 | 요청 | prepare_git의 action | 전제·결과 |
 |---|---|---|
@@ -11,6 +13,8 @@
 | PR 생성·기존 PR 설명/Draft 변경 | kind=pull-request, title, body, draft | 커밋 필요, 작업 브랜치 게시 포함, 해당 브랜치의 열린 PR 재사용 |
 | 이 Workspace의 PR을 main으로 병합 | kind=merge, pullRequestNumber, headSha | status.pull_request의 number/headSha 사용, 열린 Ready PR의 정확한 HEAD 필요 |
 | PR 없이 main 직접 푸시 | kind=push-main | 먼저 작업 브랜치에 커밋·푸시, 검토한 main에 fast-forward만 허용 |
+| main 커밋에 태그 생성 | kind=tag, tag | 검토한 현재 main SHA와 CI를 확인, 같은 태그의 다른 커밋 덮어쓰기 금지 |
+| 기존 태그로 릴리즈 생성 | kind=release, tag, title, body, draft, prerelease | 태그 생성·확인 후 실행, 검토한 태그 SHA와 CI를 재확인 |
 | 허용된 workflow로 배포 | kind=deploy, workflow, ref=main, inputs | options.deployment_workflows의 경로 사용, inputs는 중복 없는 name/value 배열 |
 
 ```json
@@ -24,13 +28,15 @@
 선택된 Workspace가 없을 때만 명시적인 workspace_id가 필요하다. 예시의 제목·본문은 실제 결과로 바꾼다.
 PR 설명의 형식이 필요하고 `pr-description`이 연결됐으면 해당 Skill을 사용한다.
 
+commit·commit-and-push·push·pull-request는 `prepare_git`가 즉시 실행하고 action_id·status·result를 반환한다.
+succeeded이면 다음 미완료 단계를 이어가며 PR URL을 확인한다. 이 단계의 승인 링크를 요청하지 않는다.
 pending은 실행 성공이 아니다. 반환된 approval_url(없으면 상대 approval_path)을 그대로 링크로 전달하고 승인까지 멈춘다.
 `source_chat_url`이 반환된 Chat 요청은 승인 성공·실패·거절 결과가 원래 채팅에 전달되고 Agent가 자동 재개된다.
 사용자에게 같은 요청을 다시 보내도록 요구하거나 승인 여부를 계속 polling하지 않는다. 재개 시
 `status.git_action`의 action·status·result를 읽고 PR URL·commit SHA를 확인한다.
 
-사용자가 커밋·푸시 → PR → main 병합을 요청했다면 승인된 단계의 성공 뒤 다음 단계의 `prepare_git`를
-준비한다. 커밋·푸시가 끝났다는 이유로 PR 요청까지 완료했다고 하지 않으며, PR 생성이 끝났다는 이유로
+사용자가 커밋·푸시 → PR → main 병합을 요청했다면 커밋·푸시와 PR은 바로 실행하고,
+PR의 정확한 HEAD와 CI를 확인한 뒤 main 병합의 `prepare_git` 확인을 준비한다. 커밋·푸시가 끝났다는 이유로 PR 요청까지 완료했다고 하지 않으며, PR 생성이 끝났다는 이유로
 main 병합 요청까지 완료했다고 하지 않는다. 각 승인은 해당 action만 실행한다. 다음 승인 링크를 제공할 때
 그 동작과 이미 완료한 단계를 정확히 구분한다. 최종 요청이 끝나면 실제 결과를 보고한다.
 
@@ -43,12 +49,25 @@ CI 완료 후 자동 재개를 약속하지 않는다.
 `source_chat_url`이 없는 Playground·직접 Workspace 요청은 자동으로 이어질 원래 Chat이 없다.
 자동 진행을 약속하지 않고 같은 공간의 상태 확인 방법을 제공한다. 재개가 실패·중단됐다는 상태가 있으면
 저장된 채팅 답변과 Workspace의 실제 결과를 먼저 확인한다. 성공한 Git 동작은 다시 실행하지 않는다.
-이 도구는 승인 결정을 대신 내리지 않는다. 새 요청을 위해 아직 대기 중인 다른 검토를 임의로 승인하지 않는다.
+이 도구는 별도 확인이 필요한 main 반영·태그·릴리즈·배포의 승인 결정을 대신 내리지 않는다. 새 요청을 위해 아직 대기 중인 다른 검토를 임의로 승인하지 않는다.
 
 main 반영은 대기 중·실패한 검사가 있으면 막힌다. ci=none은 **보고된 검사 없음**이며 성공이 아니다.
 검사 미보고 상태로 승인하는 의미를 알리고 GitHub의 브랜치 보호 규칙을 따른다. Branch가 갈라지면
 force push로 덮지 않는다. PR 경로에서 충돌과 필요한 수정·검증을 확인한다.
 사용자가 PR 병합을 요청했는데 직접 main 푸시로 대체하지 않는다.
+
+사용자가 태그·릴리즈를 요청하면 먼저 main 반영 결과를 확인한다. tag는 현재 원격 main의 정확한
+커밋을 검토하고, release는 이미 만들어진 태그의 커밋을 검토한다. 태그 이름·릴리즈 제목·본문·
+Draft·Prerelease 상태를 요청에 맞춰 준비한다. 각 pending 동작의 확인 링크를 제공하며,
+태그 성공 뒤에만 릴리즈를 준비한다. 기존 태그를 다른 SHA로 바꾸거나 릴리즈를 중복 게시하지 않는다.
+
+```json
+{"request":{"operation":"prepare_git","action":{"kind":"tag","tag":"v1.0.0"}}}
+```
+
+```json
+{"request":{"operation":"prepare_git","action":{"kind":"release","tag":"v1.0.0","title":"v1.0.0","body":"Verified changes and checks","draft":false,"prerelease":false}}}
+```
 
 Workspace가 소유하지 않은 외부 PR은 이 merge 동작의 대상이 아니다. 그 PR의 읽기·리뷰는 MCP로
 수행할 수 있지만 로컬 Workspace가 해당 HEAD를 소유한다고 가정하지 않는다.
