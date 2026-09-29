@@ -14,9 +14,9 @@ compatibility: >
 
 오디오 보관 도구인 ImportFile·TranscribeAudio·AudioJob은 개인 Document/Memory 기록 도구가 아니다.
 
-1. `File read`로 선택한 Artifact를 읽는다. 부분 추출이나 잘림이 보고되면 전체 기록을 저장하지 않는다.
+1. `File read`로 선택한 Artifact를 읽고 사용자가 요청한 기록 범위를 대조한다. 부분 추출이나 잘림으로 그 범위를 확인하지 못했다면 저장하지 않는다.
    `File read`는 이어 읽기를 지원하지 않는다. `from`을 추가하거나 같은 호출을 반복하지 않는다.
-   필요한 전체 본문을 확인할 수 없으면 미확인 범위를 알리고, 원문이 온전히 제공될 때까지 기록을 중단한다.
+   요청한 본문을 확인할 수 없으면 미확인 범위를 알리고, 필요한 원문이 온전히 제공될 때까지 기록을 중단한다.
 2. 실제 연결 도구의 schema를 확인한다. 개인 scope `{kind:"user"}`와 서버가 전달한 사용자 문맥을 사용한다.
    email·토큰을 인수로 요구하거나 임의의 userId·조직 scope를 지정하지 않는다.
 3. Document는 `document_ingest`에 선택한 본문과 확인된 제목을 전달한다.
