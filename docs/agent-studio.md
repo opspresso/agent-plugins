@@ -39,6 +39,8 @@ Keep a replay's key and payload unchanged; a new key creates a new write.
 Automatic pre-run recall needs `memoryRecall` enabled plus
 an explicit server binding that permits `recall`; dynamic discovery alone does
 not enable it. Search result IDs belong to Agent Memory, not the host app's artifacts.
+Use the [connection notes](integrations/agent-memory.md) for current console text
+and installation-side verification; the server is registered independently of Plugin sync.
 
 `mcp.json` contains provider-hosted and declared in-cluster deployment addresses.
 Other organization URLs, credentials, model selections and Agent bindings
