@@ -9,10 +9,23 @@ head SHA에서 읽고, 이미 제기된 리뷰와 CI가 어느 revision을 가�
 리뷰 도중 HEAD가 바뀌면 최신 변경을 확인하거나 검토한 SHA를 명시한다.
 fork PR을 base 저장소의 같은 이름 브랜치로 잘못 읽지 않는다.
 
-GitHub MCP의 실제 제공 도구로 읽는다. `pull_request_read`의 methods와 paging을 확인하고
-큰 diff는 파일별로 좁힌다. 결과가 잘렸으면 읽은 범위에서만 판단한다.
+호스트가 `ReviewSource`를 제공하면 고정된 PR 자료를 그 도구로 읽는다. 수동 리뷰에서
+GitHub MCP를 쓰면 실제 제공 도구와 `pull_request_read`의 methods·paging을 확인한다.
+큰 diff는 파일별로 좁히고 결과가 잘렸으면 읽은 범위에서만 판단한다.
 
-## Sandbox가 필요한 경우
+## Webhook 자동 리뷰
+
+호스트가 서명과 PR HEAD를 검증한 뒤 Workspace를 자동으로 준비한다. `ReviewSource`로
+누락·잘린 diff와 고정 revision의 자료를 읽고, 준비된 `Workspace`의 `run`으로 관련 코드와
+저장소 지침을 읽거나 격리 검사를 실행한다. `status`·`wait`로 실행 결과를 끝까지 확인한다.
+다른 Workspace를 선택하거나 저장소·런타임·revision을 바꾸지 않는다.
+소스 tree를 바꾸지 않고 임시 재현 스크립트는 `/tmp`에 둔다. 게시 전 호스트가 실제 HEAD와
+tree를 확인하므로 변경된 소스에서 실행한 결과는 게시할 수 없다.
+미완료 작업이나 읽지 못한 자료를 검증했다고 보고하지 않는다. 최종 본문에는 결함의
+파일·줄·영향과 실제 검토·검사 범위, 미확인 사항을 적는다. 게시와 Workspace 종료는 호스트가
+담당하므로 GitHub 게시 도구나 종료 도구를 중복 호출하지 않는다.
+
+## 수동 리뷰에서 Sandbox가 필요한 경우
 
 MCP의 자료만으로 충분하면 Workspace를 만들지 않는다. 재현·테스트가 필요하면 연결된
 `workspace-task`로 현재 선택과 허용 저장소를 확인한다. 호스트 앱의 start는 branch를 기준으로 clone하며
