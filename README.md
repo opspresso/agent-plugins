@@ -6,6 +6,21 @@ capabilities. Skills are reusable across environments; bundled MCP endpoints
 include the supported `argocd-env-demo` deployment profile.
 Everything is [MIT-licensed](LICENSE).
 
+## Start here
+
+| Your task | Read |
+|---|---|
+| Configure an Agent and connect tools | [Host app integration](docs/agent-studio.md) |
+| Run coding and file tasks | [Workspace agent profile](docs/code-agent.md) |
+| Process recordings | [Audio agent profile](docs/audio-agent.md) |
+| Write or update documentation | [Documentation writing guidelines](#documentation-writing-guidelines) |
+| Add or change a skill | [Writing and maintaining skills](#writing-and-maintaining-skills) |
+| Check a repository change | [Validation commands](#validation) |
+
+MCP (Model Context Protocol) connects the host app to external tools and data.
+Installing a plugin registers its content; the Agent still needs tool bindings
+and any required account connection.
+
 ## Scope and runtime
 
 Reusable task guidance and provider-specific integrations have separate scopes.
