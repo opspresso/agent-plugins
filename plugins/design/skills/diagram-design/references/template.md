@@ -160,4 +160,4 @@ h1 {
 3. diagram slug를 정하고 SVG 내부 id에 같은 prefix를 사용한다.
 4. `viewBox`를 요소 수와 사용 위치에 맞춘다.
 5. 사용하지 않는 CSS와 예시 요소를 제거한다.
-6. `svg-implementation.md`의 육안 검사를 수행한다.
+6. [SVG 구현](svg-implementation.md)의 육안 검사를 수행한다.

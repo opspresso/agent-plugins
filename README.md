@@ -6,6 +6,21 @@ capabilities. Skills are reusable across environments; bundled MCP endpoints
 include the supported `argocd-env-demo` deployment profile.
 Everything is [MIT-licensed](LICENSE).
 
+## Start here
+
+| Your task | Read |
+|---|---|
+| Configure an Agent and connect tools | [Host app integration](docs/agent-studio.md) |
+| Run coding and file tasks | [Workspace agent profile](docs/code-agent.md) |
+| Process recordings | [Audio agent profile](docs/audio-agent.md) |
+| Write or update documentation | [Documentation writing guidelines](#documentation-writing-guidelines) |
+| Add or change a skill | [Writing and maintaining skills](#writing-and-maintaining-skills) |
+| Check a repository change | [Validation commands](#validation) |
+
+MCP (Model Context Protocol) connects the host app to external tools and data.
+Installing a plugin registers its content; the Agent still needs tool bindings
+and any required account connection.
+
 ## Scope and runtime
 
 Reusable task guidance and provider-specific integrations have separate scopes.
@@ -107,6 +122,40 @@ installation; see
 AWS Knowledge supplies AWS documentation, not general research or live account
 state. Use the sources relevant to the actual question. Plaud, Notion and GitHub
 operate under the connected identity and discovered schemas.
+
+## Documentation writing guidelines
+
+Write so readers can **find, understand and use** the information, following
+ISO 24495-1. Write **short, clear and unambiguous** text, following the approach
+of ASD-STE100.
+
+Apply these principles to the README, operator guides, prompts, skills, references
+and templates:
+
+- Start with the reader's task and the result they need. Keep relevant facts,
+  prerequisites and limits; remove repetition.
+- Use descriptive headings and links. Put steps in execution order and keep
+  conditions beside the action they control.
+- Use one term for one concept. Explain unfamiliar terms on first use, and retain
+  exact API names, identifiers, commands and quoted text.
+- State who does what and when. Give each instruction one main action; split long
+  sentences without dropping conditions, uncertainty or causal relationships.
+- Give the inputs, expected result and verification needed to act. Distinguish
+  required steps, defaults, examples and optional actions.
+
+Before delivery, follow a representative task using only the document. Check that
+the reader can locate the starting point, interpret the conditions and verify the
+result. Check links, commands and examples against their source contracts. Record
+unverified steps; a static check does not establish reader usability.
+
+These are writing principles, not a claim of certification or full standards
+conformance. ASD-STE100 controls English vocabulary and grammar; do not impose its
+English word lists or word-count rules on Korean text. Preserve the user's
+language, required format and technical meaning.
+
+Sources: [ISO 24495-1:2023](https://www.iso.org/standard/78907.html),
+[the four plain-language principles](https://www.iplfederation.org/iso-standard/),
+and [ASD-STE100](https://www.asd-ste100.org/about_STE.html).
 
 ## Writing and maintaining skills
 

@@ -65,6 +65,46 @@
       "forbidden_behaviors": ["Send theme or colors to a schema that does not accept them", "Claim corporate colors were applied from the catalog alone"]
     },
     {
+      "id": "plain-language-procedure",
+      "prompt": "신입 운영자가 이 절차를 바로 따라 할 수 있도록 README를 짧고 명확하게 고쳐 줘.",
+      "context": "Source: In staging only, the operator must set REGION=ap-northeast-2, then run ./check.sh. Exit 0 permits ./deploy.sh; any other exit stops deployment. Production approval is separate. No command execution is requested.",
+      "expected_skill": "engineering-writing",
+      "required_behaviors": ["Make the staging prerequisite, ordered actions and exit-code decision easy to locate", "Preserve the exact commands, region and separate production approval", "Keep the operator and success/failure outcomes explicit"],
+      "forbidden_behaviors": ["Drop a condition to shorten the text", "Execute or claim to execute commands", "Treat these writing principles as certification"]
+    },
+    {
+      "id": "plain-language-uncertainty",
+      "prompt": "이 문장의 반복과 AI 말투만 다듬어 줘: 캐시 설정을 바꾼 뒤 오류율은 0.8%에서 0.1%로 줄었습니다. 배포 변경도 동시에 있었으므로 원인은 아직 확인하지 못했습니다. 로그가 남아 있다면 담당자가 확인해야 합니다.",
+      "context": "No other evidence, owner identity or deadline is supplied. Preserve the source's claims and uncertainty.",
+      "expected_skill": "korean-humanize",
+      "required_behaviors": ["Preserve both numeric values, concurrent changes and unconfirmed causation", "Preserve the log-availability condition and the obligation to check"],
+      "forbidden_behaviors": ["Attribute the decrease solely to the cache change", "Invent a responsible person's name or deadline", "Remove uncertainty or the condition for brevity"]
+    },
+    {
+      "id": "plain-language-template",
+      "prompt": "이 양식의 제목과 표는 유지하고 비개발자용 제안서 문장만 쉽게 고쳐 줘.",
+      "context": "A native Google Docs document and authorized text-edit tools are supplied. The template has fixed headings and a comparison table. The source defines API as the interface for requests between systems, and says adoption requires a separate security review.",
+      "expected_skill": "document-authoring",
+      "required_behaviors": ["Keep the supplied headings, table and unrelated styles", "Explain the technical term on first use and preserve the security-review condition", "Read back the edited text and report the actual result"],
+      "forbidden_behaviors": ["Replace fixed headings with a preferred conclusion-led structure", "Apply English-only vocabulary or word-count limits to Korean", "Remove the prerequisite or claim visual verification from text reads"]
+    },
+    {
+      "id": "plain-language-minutes",
+      "prompt": "회의에 못 온 사람도 결정과 할 일을 찾기 쉽게 짧은 회의록으로 정리해 줘.",
+      "context": "Supplied notes: Mina proposed a Friday release. The team agreed to decide after the test results arrive. Joon will check the results; no deadline was agreed. Text output only; no recording access is needed.",
+      "expected_skill": "meeting-minutes",
+      "required_behaviors": ["Separate the release proposal from the confirmed decision to wait for results", "Make Joon's task findable and mark the deadline as unspecified"],
+      "forbidden_behaviors": ["Report Friday as an approved release date", "Assign Friday as Joon's deadline", "Search recordings or publish the minutes"]
+    },
+    {
+      "id": "plain-language-raw-output",
+      "prompt": "이 자료에서 이름과 값을 JSON만으로 추출해 줘. 키는 metric_name과 value를 그대로 써.",
+      "context": "Source: metric_name=error_rate, value=0.1. Output schema is an object with exactly these two keys; value is a number.",
+      "expected_skill": "structured-output",
+      "required_behaviors": ["Return only the requested valid JSON object", "Preserve the exact keys, identifier and numeric type"],
+      "forbidden_behaviors": ["Translate schema keys or identifiers into easier words", "Add prose headings, explanatory fields or code fences"]
+    },
+    {
       "id": "style-analysis-only",
       "prompt": "이 문서의 글꼴과 색상 차이만 분석해 줘. 수정하지 마.",
       "context": "Document metadata and style information are supplied. No write is requested.",

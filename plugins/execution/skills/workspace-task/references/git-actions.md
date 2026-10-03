@@ -5,6 +5,8 @@
 사용자가 게시를 금지하거나 로컬 수정만 요청하면 그 범위를 따른다. 조회·리뷰 요청에는 게시를 추가하지 않는다.
 커밋·작업 브랜치 푸시·PR은 추가 승인 없이 실행한다. main 반영·태그·릴리즈·배포는 별도 사용자 요청과 확인이 필요하다.
 
+## 요청에 맞는 동작 선택
+
 | 요청 | prepare_git의 action | 전제·결과 |
 |---|---|---|
 | 로컬 커밋 | kind=commit, message | 실제 변경을 커밋하고 체크포인트에 저장 |
@@ -17,6 +19,8 @@
 | 기존 태그로 릴리즈 생성 | kind=release, tag, title, body, draft, prerelease | 태그 생성·확인 후 실행, 검토한 태그 SHA와 CI를 재확인 |
 | 허용된 workflow로 배포 | kind=deploy, workflow, ref=main, inputs | options.deployment_workflows의 경로 사용, inputs는 중복 없는 name/value 배열 |
 
+## 작업 브랜치 커밋과 PR
+
 ```json
 {"request":{"operation":"prepare_git","action":{"kind":"commit-and-push","message":"feat: implement requested changes"}}}
 ```
@@ -27,6 +31,8 @@
 
 선택된 Workspace가 없을 때만 명시적인 workspace_id가 필요하다. 예시의 제목·본문은 실제 결과로 바꾼다.
 PR 설명의 형식이 필요하고 `pr-description`이 연결됐으면 해당 Skill을 사용한다.
+
+## 실행 결과와 승인 대기
 
 commit·commit-and-push·push·pull-request는 `prepare_git`가 즉시 실행하고 action_id·status·result를 반환한다.
 succeeded이면 다음 미완료 단계를 이어가며 PR URL을 확인한다. 이 단계의 승인 링크를 요청하지 않는다.
@@ -40,6 +46,8 @@ PR의 정확한 HEAD와 CI를 확인한 뒤 main 병합의 `prepare_git` 확인�
 main 병합 요청까지 완료했다고 하지 않는다. 각 승인은 해당 action만 실행한다. 다음 승인 링크를 제공할 때
 그 동작과 이미 완료한 단계를 정확히 구분한다. 최종 요청이 끝나면 실제 결과를 보고한다.
 
+### CI 대기와 자동 재개
+
 PR 성공 후 `ci_watch`가 전달되면 서버가 해당 PR 번호·HEAD를 최대 30분 동안 관찰한다. pending이면
 현재 상태를 알리고 턴을 마친다. `workspace_ci_result`로 자동 재개되므로 같은 상태를 반복 조회하거나
 사용자에게 다시 요청하라고 하지 않는다. 검사 완료 후 최신 HEAD/CI로 다음 병합 검토를 준비한다.
@@ -51,10 +59,17 @@ CI 완료 후 자동 재개를 약속하지 않는다.
 저장된 채팅 답변과 Workspace의 실제 결과를 먼저 확인한다. 성공한 Git 동작은 다시 실행하지 않는다.
 이 도구는 별도 확인이 필요한 main 반영·태그·릴리즈·배포의 승인 결정을 대신 내리지 않는다. 새 요청을 위해 아직 대기 중인 다른 검토를 임의로 승인하지 않는다.
 
+## main 반영
+
 main 반영은 대기 중·실패한 검사가 있으면 막힌다. ci=none은 **보고된 검사 없음**이며 성공이 아니다.
 검사 미보고 상태로 승인하는 의미를 알리고 GitHub의 브랜치 보호 규칙을 따른다. Branch가 갈라지면
 force push로 덮지 않는다. PR 경로에서 충돌과 필요한 수정·검증을 확인한다.
 사용자가 PR 병합을 요청했는데 직접 main 푸시로 대체하지 않는다.
+
+Workspace가 소유하지 않은 외부 PR은 이 merge 동작의 대상이 아니다. 그 PR의 읽기·리뷰는 MCP로
+수행할 수 있지만 로컬 Workspace가 해당 HEAD를 소유한다고 가정하지 않는다.
+
+## 태그와 릴리즈
 
 사용자가 태그·릴리즈를 요청하면 먼저 main 반영 결과를 확인한다. tag는 현재 원격 main의 정확한
 커밋을 검토하고, release는 이미 만들어진 태그의 커밋을 검토한다. 태그 이름·릴리즈 제목·본문·
@@ -69,8 +84,8 @@ Draft·Prerelease 상태를 요청에 맞춰 준비한다. 각 pending 동작의
 {"request":{"operation":"prepare_git","action":{"kind":"release","tag":"v1.0.0","title":"v1.0.0","body":"Verified changes and checks","draft":false,"prerelease":false}}}
 ```
 
-Workspace가 소유하지 않은 외부 PR은 이 merge 동작의 대상이 아니다. 그 PR의 읽기·리뷰는 MCP로
-수행할 수 있지만 로컬 Workspace가 해당 HEAD를 소유한다고 가정하지 않는다.
+## 배포
+
 배포 요청은 `options.deployment_workflows`에서 실제 허용 경로를 확인하고 아래 형태로 검토를 준비한다.
 경로가 없으면 프로젝트의 워크스페이스 도구 설정이 필요하다. 임의 workflow를 허용하거나
 Sandbox·MCP로 대신 실행하지 않는다. 제공된 schema에 deploy가 없으면 Git·배포 화면의 경로를 안내한다.
@@ -83,6 +98,8 @@ workflow와 inputs는 실제 저장소 정의와 요청으로 바꾼다. 입력�
 커밋·PR 병합 승인은 배포 승인이 아니다. 배포 승인 성공도 workflow 접수만 증명한다. 해당 GitHub
 실행의 SHA·환경·결과와 실제 서비스 상태를 확인한 뒤 배포 완료를 보고한다. 실행 조회가 없으면
 접수 상태로 보고하며 중복 dispatch하지 않는다. Skill이나 Sandbox에 배포 권한이 생기는 것은 아니다.
+
+## 오류와 재시도 경계
 
 /control/git와 index.lock 쓰기 거절은 보호된 Git 경계다. native task에 git add·commit·push·merge·fetch·checkout을
 시키거나 chmod·임시 index·다른 Git 디렉터리·GitHub 파일 쓰기로 우회하지 않는다. 필요한 파일 수정과

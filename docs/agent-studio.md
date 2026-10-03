@@ -27,6 +27,8 @@ retrieval is not supplied by this repository; when transcript access is absent,
 request transcript text or use available sources and identify the evidence limit.
 Video metadata alone does not establish what was spoken.
 
+### Agent Memory
+
 Agent Memory separates durable Memory from document chunks and graph context.
 `recall` returns compact Memory text with IDs and versions; `context_search`
 searches across those source types and supplies detailed evidence. `remember`
@@ -41,6 +43,8 @@ an explicit server binding that permits `recall`; dynamic discovery alone does
 not enable it. Search result IDs belong to Agent Memory, not the host app's artifacts.
 Use the [connection notes](integrations/agent-memory.md) for current console text
 and installation-side verification; the server is registered independently of Plugin sync.
+
+### Endpoint ownership
 
 `mcp.json` contains provider-hosted and declared in-cluster deployment addresses.
 Other organization URLs, credentials, model selections and Agent bindings
@@ -146,6 +150,8 @@ entries for the request. This supplements explicit bindings; it does not make
 every installed skill or tool available. Use the actual offered list and schemas.
 OAuth-backed MCP discovery still requires that Agent's connection.
 
+### Files and artifacts
+
 The host app extracts attachments and, when artifact storage succeeds, retains
 originals with file IDs. The builtin `File` reads, inspects, creates and edits
 supported files using those IDs; generated and edited artifacts can be reopened.
@@ -158,6 +164,8 @@ Plain text, Markdown, CSV, JSON, HTML and SVG creation uses `SaveFile` (UTF-8
 1MiB per file). These text artifacts can be inspected and edited through `File`;
 HTML inspection returns source while reading extracts safe text. `SaveFile` and
 `File` create/edit share ten write attempts per run, including failed attempts.
+
+### MCP results visible to the model
 
 For MCP results with non-empty `content`, the model receives those blocks, not
 the accompanying `structuredContent`. Check visible counts and validation
@@ -211,6 +219,8 @@ The operator connects the Sandbox backend and Workspace worker. The `Workspace` 
 of an enabled Agent; bind workspace-task and sandbox-task in its current settings.
 The actual tool schemas remain authoritative.
 
+### Start and observe a task
+
 `options` reads available runtimes, default_runtime and registered repositories. There is no default repository. `start` queues a
 new Workspace; `run` continues a returned workspace_id. For work without Git,
 repository and base_branch are null. `status` and bounded `wait` return output,
@@ -221,6 +231,8 @@ When the offered `start` schema includes `title`, use a short purpose label in t
 user's language. It labels the Workspace and its Chat; the script or coding task
 stays in `task`. Do not copy a command script into the title or send an unsupported field.
 
+### Git publication
+
 A coding request includes commit, work-branch push and pull-request publication through
 prepare_git without another approval, unless the user limits the scope. Main merge,
 direct main push, tags, releases and configured workflow dispatch require a separate
@@ -228,6 +240,8 @@ request and confirmation in the Workspace review UI. Tags bind to reviewed main;
 releases bind to an existing tag and its exact commit. General agent
 descriptions and system prompts identify capabilities; account, repository,
 branch and requested file changes belong in each user's task input.
+
+### Reuse and close a Workspace
 
 Read options.current_workspace before creating compute. Repeated start returns the
 selection without queueing another task; run continues it. close keeps files and
