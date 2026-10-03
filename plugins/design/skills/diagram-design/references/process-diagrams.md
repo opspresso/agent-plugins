@@ -58,7 +58,7 @@
 ## Kanban
 
 - column은 작업 상태이며 진행 방향을 일관되게 둔다.
-- WIP limit가 있으면 column header에 표시하고 초과를 text로 알린다.
+- 진행 중 작업 수의 상한(WIP limit)이 있으면 column header에 표시하고 초과를 text로 알린다.
 - card에는 식별자, 짧은 제목, blocker처럼 흐름 판단에 필요한 것만 둔다.
 - 우선순위와 진행 상태를 같은 색 체계로 표현하지 않는다.
 - 완료된 항목을 너무 많이 보여 전체 흐름을 가리지 않는다.

@@ -1,8 +1,8 @@
 # 템플릿
 
-아래 HTML을 복사해 단계와 그림만 채운다. 단계 전환, 키보드, 진행 알림, 초기화, 모션
-축소, 인쇄 배관이 이미 들어 있으니 다시 짜지 않는다. 장치를 더 붙일 때는 같은
-디렉터리의 `interaction-patterns.md`를 본다.
+아래 HTML을 복사해 단계와 그림을 채운다. 단계 전환, 키보드, 진행 알림, 초기화, 모션
+축소와 인쇄 기능을 재사용한다. 장치를 더 붙일 때는 같은
+디렉터리의 [조작 요소별 구현](interaction-patterns.md)를 본다.
 
 제목과 단계·그림을 채운 뒤 필요한 컨트롤만 남긴다. 슬라이더의 `draw`에 값과 SVG를
 연결하는 코드를 작성한다. 추가한 조작도 초기화에 포함하고 `id`·`for`를 고유하게 맞춘다.
@@ -53,7 +53,7 @@ h1 { margin: 0 0 var(--s-3); font-size: clamp(1.6rem, 5vw, 2.2rem); line-height:
 .stage svg { display: block; width: 100%; height: auto; }
 .stage figcaption { margin-top: var(--s-3); font-size: .875rem; color: var(--ink-dim); }
 
-/* 설명 — 두 문장을 넘기지 않는다 */
+/* 설명은 간결하게 쓰되 필요한 조건을 보존한다 */
 .say { margin: 0 0 var(--s-5); max-width: 26em; font-size: 1.125rem; }
 .term { font-weight: 600; }
 
@@ -106,7 +106,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   <header class="intro">
     <p class="kicker">머리말</p>
     <h1>무엇을 설명하는지 한 문장으로</h1>
-    <p>독자가 이미 아는 것에서 출발하는 한 줄. 여기까지가 글자다.</p>
+    <p>독자가 이미 아는 내용과 이번 설명에서 알게 될 내용을 연결한다.</p>
   </header>
 
   <ol class="steps">
@@ -114,7 +114,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
       <figure class="stage">
         <svg viewBox="0 0 720 400" role="img" aria-labelledby="t1 d1">
           <title id="t1">이 그림이 말하는 결론</title>
-          <desc id="d1">그림에 무엇이 어떻게 놓여 있는지 한두 문장.</desc>
+          <desc id="d1">그림이 설명하는 관계·변화와 필요한 조건.</desc>
           <!-- 그림. 라벨은 <text>로 그림 안에 직접 붙인다 -->
         </svg>
         <figcaption>그림이 스스로 말하지 못하는 것만 적는다.</figcaption>
@@ -230,7 +230,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 ## 바꾸는 순서
 
 1. `lang`·버튼·접근성 라벨을 문서 언어에 맞추고 `<title>`과 들머리를 채운다.
-2. `설명 계단` 표의 행 수만큼 `<li class="step">`을 복제하고 `data-title`에 그 단계에서
+2. 설명 순서 표의 행 수만큼 `<li class="step">`을 복제하고 `data-title`에 그 단계에서
    알게 되는 것을 적는다. 진행 표시가 이 값을 읽는다.
 3. 단계마다 `<svg>`를 그린다. `<title>`은 주제가 아니라 **그 그림의 결론**을 쓰고
    `id`가 겹치지 않게 한다.

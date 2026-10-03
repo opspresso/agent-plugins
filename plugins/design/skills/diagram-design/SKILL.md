@@ -14,6 +14,10 @@ compatibility: >
 내용의 구조와 관계가 한눈에 드러나는 정적 다이어그램을 만든다. 장식보다 의미, 의미보다
 사실을 우선한다. 사용자가 주지 않은 구성 요소나 연결을 레이아웃을 채우기 위해 만들지 않는다.
 
+제목·라벨·설명은 독자가 필요한 관계를 찾고 이해할 수 있게 쓴다. 같은 요소에는 같은 이름을
+쓰고 연결선에는 방향과 조건을 표시한다. 참고 자료에서 node는 구성 요소, connector는 연결선,
+zone은 경계로 묶은 영역, label은 이름표, annotation은 보충 주석을 뜻한다.
+
 ## 경계
 
 - 수치의 비교·추세·분포·상관관계가 중심이면 `tufte-charts`를 사용한다.
@@ -29,19 +33,19 @@ compatibility: >
 1. 독자가 다이어그램을 보고 답해야 할 질문을 한 문장으로 정한다.
 2. 입력에서 **요소, 관계, 그룹, 순서, 상태, 강조점**을 분리한다. 불명확한 관계를
    추측하지 않는다.
-3. `references/type-selection.md`를 읽고 주된 관계 하나를 기준으로 유형을 고른다.
+3. [유형 선택](references/type-selection.md)을 읽고 주된 관계 하나를 기준으로 유형을 고른다.
 4. 의미상 빠진 정보가 결과를 바꿀 때만 질문한다. 색·모서리·장식처럼 안전한 시각
    기본값은 묻지 않고 선택을 밝힌다.
 5. 선택한 계열의 reference를 하나 읽는다.
-   - 시스템과 데이터 구조: `references/system-diagrams.md`
-   - 순서, 상태와 업무 흐름: `references/process-diagrams.md`
-   - 계층, 소유, 포함과 개념 관계: `references/relationship-diagrams.md`
+   - [시스템과 데이터 구조](references/system-diagrams.md)
+   - [순서·상태·업무 흐름](references/process-diagrams.md)
+   - [계층·소유·포함·개념 관계](references/relationship-diagrams.md)
 6. 보안 경계, 병목, 피드백처럼 동작 의미가 핵심이면
-   `references/semantic-patterns.md`도 읽는다.
+   [의미 패턴](references/semantic-patterns.md)도 읽는다.
 7. 새 기본 디자인은 [디자인 계약](references/design-system.json)의 corporate theme를 사용하고,
    다른 문서와 묶는 요청이면 같은 theme·글꼴 역할을 유지한다.
-   `references/design-system.md`의 토큰과 `references/svg-implementation.md`의
-   연결선·접근성 규칙으로 그린다. HTML 산출물은 `references/template.md`에서 시작한다.
+   [디자인 시스템](references/design-system.md)의 토큰과 [SVG 구현](references/svg-implementation.md)의
+   연결선·접근성 규칙으로 그린다. HTML 산출물은 [HTML 템플릿](references/template.md)에서 시작한다.
 8. 발행 전 삭제 가능한 요소와 중복 연결을 걷어내고 아래 검사를 수행한다.
 
 ## 유형을 고른 뒤 알릴 것
