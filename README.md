@@ -65,7 +65,7 @@ repository because the supported registry is flat.
 |---|---|---|
 | devops | gitops-change, incident-triage | argocd, cloudwatch, grafana, kubernetes, github |
 | research | document-authoring, spreadsheet-authoring | aws-knowledge |
-| workspace | korean-writing, korean-humanize, tech-spec, meeting-minutes, audio-processing, personal-records, email-triage, calendar-management, workspace-search | notion, plaud, gmail, google-drive, google-calendar, google-docs, google-sheets, google-slides, slack |
+| workspace | korean-writing, korean-humanize, slack-response, tech-spec, meeting-minutes, audio-processing, personal-records, email-triage, calendar-management, workspace-search | notion, plaud, gmail, google-drive, google-calendar, google-docs, google-sheets, google-slides, slack |
 | design | html-wireframe, html-prototype, html-explainer, frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
 | engineering | code-review, fix-issue, implement-feature, refactor-code, dependency-upgrade, ci-failure-investigator, security-remediation, project-generator, pr-description, engineering-writing | — |
 | execution | workspace-task, sandbox-task | — |

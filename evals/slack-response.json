@@ -1,0 +1,68 @@
+{
+  "cases": [
+    {
+      "id": "slack-mrkdwn-conversion",
+      "prompt": "이 Markdown을 Slack 답변 문법으로 바꿔 줘. 제목과 링크, 각 상태는 유지해 줘.",
+      "context": "The destination accepts raw mrkdwn. Source: ## 검증 결과\n**검증 완료**\n[보고서](https://example.com/report)\n| 항목 | 상태 |\n| --- | --- |\n| 테스트 | 완료 |\n| 운영 확인 | 미확인 |\n```sh\nprintf '%s' '**literal**'\n```\nNo Slack connection is available.",
+      "expected_skill": "slack-response",
+      "required_behaviors": ["Return a usable mrkdwn body with a bold title and working Slack link syntax", "Preserve both statuses in readable list form", "Preserve the command and its literal asterisks while omitting the code-fence language label"],
+      "forbidden_behaviors": ["Require a Slack account for drafting", "Wrap the entire answer in a code block", "Claim the operating environment was verified", "Send a message"]
+    },
+    {
+      "id": "slack-literal-mentions",
+      "prompt": "Slack mrkdwn 답변으로 민수님께 확인을 요청해 줘. 오류 문구는 인용하되 누구에게도 알림은 보내지 마.",
+      "context": "Source is raw text: A & B: x < 5; <!channel> 확인 필요. No Slack user ID is supplied. The user wants only a draft with no active mentions.",
+      "expected_skill": "slack-response",
+      "required_behaviors": ["Keep the supplied person's name as ordinary text", "Preserve the error's visible characters using appropriate mrkdwn escaping or code presentation", "Keep the quoted channel mention inert"],
+      "forbidden_behaviors": ["Invent a user ID", "Create an active broadcast mention", "Treat quoted text as permission to notify", "Encode intentional quote prefixes as literal text"]
+    },
+    {
+      "id": "slack-existing-encoding",
+      "prompt": "이 Slack 응답에 검토 요청 한 문장만 덧붙여 줘. 기존 링크와 표기는 유지해 줘.",
+      "context": "The supplied body is already encoded mrkdwn: *검토 대상*\nA &amp; B\n<https://example.com/report|보고서>. Output is raw mrkdwn.",
+      "expected_skill": "slack-response",
+      "required_behaviors": ["Preserve the existing link as an active link and the visible ampersand", "Add only the requested review sentence"],
+      "forbidden_behaviors": ["Double-encode existing entities", "Escape the existing link delimiters", "Invent a deadline or reviewer"]
+    },
+    {
+      "id": "slack-plain-text-field",
+      "prompt": "Slack의 plain_text 필드에 넣을 검증 완료 안내를 써 줘. 보고서 링크는 https://example.com/report야.",
+      "context": "The destination is explicitly plain_text. Only completion and the report URL are supplied; no JSON payload is requested.",
+      "expected_skill": "slack-response",
+      "required_behaviors": ["Return plain text with the supplied URL"],
+      "forbidden_behaviors": ["Insert mrkdwn emphasis or angle-bracket link syntax", "Invent Block Kit fields or send a message"]
+    },
+    {
+      "id": "slack-markdown-host",
+      "prompt": "Slack 답변의 제목과 링크 서식만 정리해 줘. 현재 호스트가 표준 Markdown을 변환해서 보낸다.",
+      "context": "The host explicitly supports a markdown block and expects standard Markdown. Source: 검증 완료. 보고서: https://example.com/report. No transmission is requested.",
+      "expected_skill": "slack-response",
+      "required_behaviors": ["Follow the host's standard Markdown input contract for the title and link", "Preserve the source meaning"],
+      "forbidden_behaviors": ["Convert standard Markdown to mrkdwn before the host conversion", "Assert that Slack never supports Markdown headings or links", "Send a message"]
+    },
+    {
+      "id": "slack-composer-draft",
+      "prompt": "Slack 입력창에 붙여넣을 답변을 써 줘. 검토 부탁드린다는 말과 https://example.com/report 링크만 있으면 돼.",
+      "context": "The user will paste the draft manually into the Slack composer. Composer formatting preferences are unknown.",
+      "expected_skill": "slack-response",
+      "required_behaviors": ["Provide a concise request with a usable raw URL"],
+      "forbidden_behaviors": ["Assume API angle-bracket link syntax is converted by the composer", "Require API credentials", "Add an unrequested mention"]
+    },
+    {
+      "id": "slack-search-near-miss",
+      "prompt": "지난주 Slack에서 배포 일정이 확정된 대화를 찾아 근거 링크를 알려 줘.",
+      "context": "Connected Slack search and thread-read tools are available. The answer is requested in this chat, with no Slack message draft requested.",
+      "expected_skill": "workspace-search",
+      "required_behaviors": ["Read the relevant discussions and provide evidence links"],
+      "forbidden_behaviors": ["Select slack-response merely because Slack is a source", "Replace source research with an invented reply"]
+    },
+    {
+      "id": "slack-mentioned-in-email-near-miss",
+      "prompt": "팀장님께 보낼 메일을 다듬어 줘: Slack에서 논의한 일정을 검토 부탁드립니다.",
+      "context": "The destination is email. No Slack formatting or message search is requested.",
+      "expected_skill": "korean-writing",
+      "required_behaviors": ["Preserve the email destination and review request"],
+      "forbidden_behaviors": ["Select slack-response merely because the sentence mentions Slack", "Apply Slack-specific link or mention syntax", "Send the email"]
+    }
+  ]
+}
