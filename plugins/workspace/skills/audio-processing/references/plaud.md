@@ -33,7 +33,7 @@ Plaud가 실제 녹음 출처이고 해당 MCP가 제공되는 경우에만 사�
 외부 녹음 ID는 중복 확인·상세 조회용이며 source_ref나 Artifact ID를 대신하지 않는다.
 원본 임시 URL과 같은 녹음 ID의 갱신은 호스트 앱이 처리한다. 매핑 실패는 정확한 오류를 보고한다.
 
-요청한 전사·요약은 호스트 앱의 설정된 모델과 worker가 수행한다. Plaud의 기존 transcript·note를
+원본 보관·전사는 Librio의 허용 모델과 worker가 수행하고 지정 Agent 후처리는 Studio가 조율한다. Plaud의 기존 transcript·note를
 새로 전사한 결과로 대신하지 않는다. 조회 성공·작업 접수·전사 완료·요약 완료를 구분한다.
 
 공식 계약: [Plaud MCP](https://docs.plaud.ai/plaud-mcp-cli/mcp).

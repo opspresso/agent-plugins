@@ -1,14 +1,14 @@
 # Workspace 작업 Agent 구성
 
 호스트 앱의 Agent 이름과 관계없이 적용하는 공용 프로필이다. Agent는 요청을 조율하고,
-Workspace의 코딩 Runtime 또는 command가 파일 작업을 실행한다. Sandbox는 별도 MCP 서버가 아니다.
+Forge의 Workspace와 코딩 Runtime 또는 command가 파일 작업을 실행한다. Studio는 `Workspace` 도구로 위임하고 원래 대화·승인·후속 진행을 관리한다. Forge는 독립 HTTP/MCP를 제공하며 Sandbox 자체는 내부 일시 실행 자원이다.
 
 ## 실행 환경 설정
 
 1. Agent 현재 설정에서 워크스페이스 도구를 활성화한다.
-2. Models에서 Runtime별 모델을 선택한다.
+2. Forge가 현재 사용자에게 허용한 Runtime별 모델 채널을 선택한다. provider 키와 endpoint는 Forge 서버에서 설정한다.
 3. 소유자·관리자가 Agent의 워크스페이스 도구 탭에서 저장소 정책과 기본 Runtime을 설정한다.
-4. 설치 측에서 계정·Worker·이미지를 설정한다.
+4. 설치 측에서 Studio→Forge 서명 위임·정책 callback과 Forge Worker·Sandbox 이미지를 설정한다.
 
 기본 저장소는 없으며 접근 모드 기본은 등록 + 신규다. 지원하는 정책은 저장소 고정,
 소유자 지정, 모든 저장소, 신규 자동 허용이다. 신규 모드는 Workspace 도구가 실제로 생성한

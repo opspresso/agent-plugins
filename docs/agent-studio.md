@@ -19,7 +19,9 @@ contracts before changing a plugin's tool instructions or connection settings.
 |---|---|---|
 | `agent-studio` | Plugin sync, current Agent bindings, builtin tools, attachment extraction and artifact delivery | A component must be offered through saved bindings or enabled dynamic discovery; describe only inputs and results the run can access |
 | `agent-models` | Model families, provider offerings, capabilities and pricing | A catalog, not an MCP server; use the available model `id`, not its provider `wireId`, in Agent settings |
-| `agent-memory` | Scoped memories, document search and graph search | Register its installation-specific `/api/mcp` endpoint separately and bind it to the Agent; use the deployed schema for `remember`/`recall`/`forget` and organization/team/user scopes |
+| `agent-memory` | Long-term memories and short-term task handoffs | Bind the exact service URL, current caller and `recall`/`remember`/`handoff_*` scopes |
+| `agent-librio` | Documents, RAG, knowledge graph, recordings, transcription and summaries | Bind its separate MCP/HTTP connection; use public model IDs and original source provenance |
+| `agent-forge` | Workspaces, Sandbox execution, native sessions, checkpoints and Git effects | Studio's `Workspace` wrapper or directly discovered Forge HTTP/MCP use the same remote execution service |
 
 Document processing belongs to the host app's builtin `File` tool and artifact
 store. It needs no MCP registration or separate server binding. YouTube caption
@@ -29,20 +31,24 @@ Video metadata alone does not establish what was spoken.
 
 ### Agent Memory
 
-Agent Memory separates durable Memory from document chunks and graph context.
-`recall` returns compact Memory text with IDs and versions; `context_search`
-searches across those source types and supplies detailed evidence. `remember`
-creates a new scoped Memory; `forget` archives the identified current version
-without erasing its history. Confirm the deployed server's tool schema before
-using those names. When offered, `document_ingest` stores scoped text with a
-required idempotency key; `document_ingest_status` distinguishes accepted work
-from a ready document. `remember` also supports an optional idempotency key.
-Keep a replay's key and payload unchanged; a new key creates a new write.
-Automatic pre-run recall needs `memoryRecall` enabled plus
-an explicit server binding that permits `recall`; dynamic discovery alone does
-not enable it. Search result IDs belong to Agent Memory, not the host app's artifacts.
-Use the [connection notes](integrations/agent-memory.md) for current console text
-and installation-side verification; the server is registered independently of Plugin sync.
+Agent Memory owns durable memories and short-term task handoffs. `recall` returns
+compact Memory text with IDs and versions; its `context_search` searches Memory
+only. `remember` writes scoped memory, and `forget` archives an observed version.
+`handoff_create/list/get/update/close` preserve progress with TTL and version checks;
+Forge retains actual native sessions and file checkpoints.
+
+Librio's separate `context_search` combines document and graph evidence;
+`document_search`, `knowledge_search` and `knowledge_neighborhood` narrow that
+search. `document_ingest` uses a stable idempotency key and
+`document_ingest_status` distinguishes accepted work from a ready document.
+
+Automatic pre-run recall requires `memoryRecall` and an explicit Memory server
+binding permitting `recall`; dynamic discovery alone does not enable it. IDs from
+either service are not Studio Artifact IDs. Use the
+[Memory connection notes](integrations/agent-memory.md) and
+[Librio connection notes](integrations/agent-librio.md). Current caller delegation
+uses signed, audience-bound identity and explicit local bindings, never
+`X-User-Email` or matching UUIDs.
 
 ### Endpoint ownership
 
@@ -108,10 +114,10 @@ Public metadata supports PKCE and dynamic registration; authenticated recording
 access still needs to be verified after account connection.
 
 The intended workflow is recording selection → mapped `source_ref` → the host app's
-`AudioJob` → optional `meeting-minutes` Agent → optional personal Documents/Memory.
+`AudioJob` → Librio original/transcript → optional Studio `meeting-minutes` Agent → explicitly requested Librio documents or Memory.
 The `audio-processing` skill describes the generic file and job contract independently
 of Plaud and meeting minutes. Enable the Agent's `audioProcessing` tools and
-configure its worker, private source bucket and transcription endpoint first. The
+configure the Librio service, its private source bucket and allowed transcription connections first. Studio owns custom Agent postprocessing and conversation continuation. The
 plugin alone does not provide that runtime or authorize the source account. Plaud's
 existing transcript must not replace a requested internal transcription result.
 
@@ -214,10 +220,10 @@ external actions.
 
 The execution plugin supplies reusable task guidance, not a shell or account credentials.
 Enable `parameters.workspaceTools` in the Agent's current settings. Configure repositories, access mode
-and default runtime in the Agent's Workspace tools tab; choose native runtime models in Models.
-The operator connects the Sandbox backend and Workspace worker. The `Workspace` builtin is available only to signed-in members
+and default runtime in the Agent's Workspace tools tab; choose from Forge's allowed native model channels.
+The operator configures the Forge service and its Sandbox provider, worker and model gateway. The `Workspace` builtin is available only to signed-in members
 of an enabled Agent; bind workspace-task and sandbox-task in its current settings.
-The actual tool schemas remain authoritative.
+The actual tool schemas remain authoritative. Model tool inputs cannot choose the Forge URL, caller identity, organization or provider credentials. The plugin grants none of these permissions.
 
 ### Start and observe a task
 
@@ -226,7 +232,7 @@ new Workspace; `run` continues a returned workspace_id. For work without Git,
 repository and base_branch are null. `status` and bounded `wait` return output,
 checks, Diff and a cursor. Keep queued/running distinct from success. `cancel` stops
 a run and `close` saves state and removes compute. The native task continues if the
-parent Agent response ends; follow the returned workspace_path.
+parent Agent response ends; follow the returned workspace_path. Read all output pages using next_seq and has_more; output_loss remains a permanent warning even after the final page. Uncertain dispatch or lost responses must be reconciled through the same stored receipt, not a new execution.
 When the offered `start` schema includes `title`, use a short purpose label in the
 user's language. It labels the Workspace and its Chat; the script or coding task
 stays in `task`. Do not copy a command script into the title or send an unsupported field.

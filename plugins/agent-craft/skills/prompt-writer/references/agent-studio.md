@@ -11,7 +11,7 @@ Agent Memory의 `remember`·`recall`·`forget` 계약이다. 배포된 서버의
 **동작 규칙**에는 필요한 항목을 넣는다.
 
 ```
-- 이전 결정·선호는 recall로 찾는다. 조직 문서와 Graph를 함께 찾으려면 context_search를 쓴다.
+- 이전 결정·선호는 Agent Memory의 recall로 찾는다. 조직 문서와 Graph는 Agent Librio의 context_search로 찾는다.
 - recall은 Memory만 축약해서 반환한다. 상세 본문·출처·scope가 필요하면 context_search로
   해당 기억을 확인한다. 검색 결과가 없다는 것을 자료가 전혀 없다는 뜻으로 해석하지 않는다.
 - 다음 작업에도 유효한 사실은 저장 권한과 공유 범위를 확인하고 remember로 저장한다.
@@ -28,8 +28,8 @@ Agent Memory의 `remember`·`recall`·`forget` 계약이다. 배포된 서버의
 - 기억의 출처·유효 기간을 확인한다. 파일·설정·이름은 현재 상태와 대조한다.
 ```
 
-Agent Memory는 설치 측에서 별도 MCP로 등록한다. 실제 런에 제공되지 않으면 기억
-조회·저장을 약속하지 않고 현재 대화의 자료로 진행한다. `document_search`는 처리된
+Agent Memory와 Agent Librio는 설치 측에서 서로 다른 MCP로 등록한다. 실제 런에 제공되지 않으면 기억
+조회·저장을 약속하지 않고 현재 대화의 자료로 진행한다. Librio의 `document_search`는 처리된
 문서 chunk, `knowledge_search`·`knowledge_neighborhood`는 그래프 근거를 찾는다.
 문서 수집 도구가 제공되면 document_ingest로 개인·팀·조직 scope의 텍스트를 저장하고
 document_ingest_status로 ready를 확인한다. 수집에는 idempotencyKey가 필수이며 접수와
@@ -44,8 +44,9 @@ document_ingest_status로 ready를 확인한다. 수집에는 idempotencyKey가 
 자동 회상을 원하면 버전의 `memoryRecall`을 켜고 별도 등록한 서버를 명시적으로 binding하며
 허용 도구에 `recall`을 포함한다. 요청별 동적 발견만으로는 실행 전 자동 recall이 되지 않는다.
 
-조직 Agent token은 사용자 위임이 없으면 organization 범위만 접근한다. 로그인 사용자
-신원은 호스트 앱이 신뢰된 `X-User-Email` header로 전달한다. 모델이 email·tenant
+Studio는 정확히 설정된 service URL에 현재 caller의 짧은 signed delegation을 전달한다.
+Memory/Librio는 issuer·subject의 명시적 로컬 사용자 binding과 현재 멤버십을 검사한다.
+`X-User-Email`·display email·같은 UUID는 사용자 권한의 근거가 아니다. 모델이 email·tenant·owner
 인자를 만들어 권한을 바꾸지 않으며 자격 증명은 설치 측에서 관리한다.
 사용자 scope는 인증 사용자, team scope는 확인된 teamId를 쓰고 조직 전체 공유를 기본값으로 삼지 않는다.
 
@@ -53,6 +54,8 @@ document_ingest_status로 ready를 확인한다. 수집에는 idempotencyKey가 
 
 현재 호스트 앱에서 선택 가능한 모델과 필요한 능력(tool use·vision·이미지 생성 등)을
 먼저 확인한다. `agent-models`는 모델·provider offering 카탈로그이며 MCP 서버가 아니다.
-가격과 모델 목록을 프롬프트에 복사해 고정하지 않는다. 버전 설정에는 카탈로그의 `id`를
+가격과 모델 목록을 프롬프트에 복사해 고정하지 않는다. 서비스의 공개 연결 ID와 catalogId·wireId는 다르다. 미지정 가격은 unknown이고 명시된 0만 무료다. 버전 설정에는 카탈로그의 `id`를
 쓰고 provider 전송용 `wireId`와 혼동하지 않는다. `hidden` 모델을 새 기본값으로 권하지
 않고 embedding·rerank·transcription 모델을 일반 대화 모델로 선택하지 않는다.
+
+단기 작업 인수인계는 Memory의 handoff_create/list/get/update/close를 명시적으로 연결한다. 목표·진행·다음 할 일·blocker와 metadata 참조를 전달하며 native Session이나 checkpoint는 Forge가 보존한다. 만료·종료된 handoff를 진행 중 작업으로 취급하지 않는다.

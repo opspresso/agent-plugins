@@ -1,6 +1,6 @@
 # 앱 도구
 
-현재 제공된 schema가 기준이다. AudioJob 인수는 `request` 객체 하나이며, operation에 맞는 형태만
+Studio의 현재 제공된 schema가 기준이다. ImportFile·TranscribeAudio·AudioJob 이름은 유지되며 원본 보관·전사는 Librio에 위임한다. 지정 Agent 후처리는 Studio가 실행한다. AudioJob 인수는 `request` 객체 하나이며, operation에 맞는 형태만
 선택한다. 선택 항목은 필요 없으면 null로 지정한다. 빈 문자열, "none", 임의 날짜·모델·retention을
 채워 넣지 않는다. 서로 다른 작업의 필드를 섞지 않는다.
 
@@ -35,7 +35,7 @@ worker는 Agent별 접수 순서대로 한 건씩 실행하므로 처리 완료�
 ```
 
 revision은 실제 config 응답으로 바꾼다. 이 형태에는 model·retention·postprocess·destination·task를
-넣지 않는다. worker가 원본 보관 → 전사 → 설정된 후처리를 이어가며 각 결과를 Artifacts에 저장한다.
+넣지 않는다. Studio가 Librio의 원본 보관 → 전사를 관측하고 설정된 Agent 후처리를 이어간다. 반환된 Artifact 참조는 서비스 소유 원본 ID와 다를 수 있다.
 이미 보관된 원본은 source의 kind를 artifact로, id를 원본 Artifact ID로 지정한다.
 사용자가 명시적으로 재처리할 때만 processing_revision에 새 값을 쓰고 같은 요청의 재전송에서는 유지한다.
 앞 작업이 완료돼도 발생당 접수 한도는 복원되지 않으므로 ImportFile·TranscribeAudio로 작업을 분리하지 않는다.
@@ -50,7 +50,7 @@ revision은 실제 config 응답으로 바꾼다. 이 형태에는 model·retent
 
 전사만 필요하면 TranscribeAudio에 source·model·retention·language·processing_revision을 전달한다.
 source는 `{kind:"artifact"|"file"|"source",id:"<해당 참조>"}`이며 language는 선택하지 않으면 null이다.
-모델·보존 기간은 config 또는 사용자 요청에서 가져온다.
+모델·보존 기간은 config 또는 사용자 요청에서 가져온다. model은 Librio의 허용된 transcription 공개 ID이며 provider wireId나 catalogId를 직접 넣지 않는다.
 
 이미 전사된 Artifact는 AudioJob postprocess로 요약한다. 오디오 입력으로 다시 제출하지 않는다.
 
@@ -85,3 +85,5 @@ transcript는 전사문, processed는 후처리 본문이다. nextCursor가 있�
 occurrence_limit은 현재 실행의 접수 한도 소진이다. 기다리거나 반복 제출해도 풀리지 않는다.
 active_limit은 대기·진행을 합친 접수 한도다. 기존 작업 ID와 미접수 대상을 보고하고 종료한다.
 연결 변경·OAuth 오류는 설정을 확인하며 새 revision으로 우회하지 않는다.
+
+서비스간 HTTP request key·signed principal·org·recordingId는 Studio가 관리한다. 이 값들을 AudioJob request에 추가하지 않는다. 반환된 실제 참조로만 결과를 읽고 접수·완료·현재 파일 가용성을 각각 확인한다.
