@@ -87,3 +87,11 @@ active_limit은 대기·진행을 합친 접수 한도다. 기존 작업 ID와 �
 연결 변경·OAuth 오류는 설정을 확인하며 새 revision으로 우회하지 않는다.
 
 서비스간 HTTP request key·signed principal·org·recordingId는 Studio가 관리한다. 이 값들을 AudioJob request에 추가하지 않는다. 반환된 실제 참조로만 결과를 읽고 접수·완료·현재 파일 가용성을 각각 확인한다.
+
+## 사용자가 외부 기록을 함께 요청한 경우
+
+명시적 `process`의 destination은 `{documentServerName, memoryServerName}`이며 사용하지 않는
+대상은 null이다. 적어도 하나의 실제 연결 서버명을 선택한다. 문서는 Librio 연결,
+장기 기억은 Memory 연결로 구분하며 하나의 서버가 두 저장소를 함께 제공한다고 가정하지 않는다.
+서버명은 연결 선택일 뿐 사용자 위임이나 접근 권한을 부여하지 않는다. 정기 submit의 기본 흐름에는
+외부 기록을 추가하지 않으며 사용자가 지정한 대상·scope와 현재 권한을 지킨다.

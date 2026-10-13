@@ -52,3 +52,5 @@ Studio's general Librio MCP delegation includes `audio:read` but excludes
 and verifies current policy before execution. Required-policy Studio issuers cannot
 submit directly without that stored context. Do not swap credentials or use
 another MCP route to bypass this boundary.
+
+For explicitly requested external records, Studio AudioJob process selects separate `destination.documentServerName` and `destination.memoryServerName` connections. Use null for the unused target. A server name selects a binding; it does not delegate identity or grant access.
