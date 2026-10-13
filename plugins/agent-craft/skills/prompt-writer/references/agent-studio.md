@@ -31,10 +31,10 @@ Agent Memory의 `remember`·`recall`·`forget` 계약이다. 배포된 서버의
 Agent Memory와 Agent Librio는 설치 측에서 서로 다른 MCP로 등록한다. 실제 런에 제공되지 않으면 기억
 조회·저장을 약속하지 않고 현재 대화의 자료로 진행한다. Librio의 `document_search`는 처리된
 문서 chunk, `knowledge_search`·`knowledge_neighborhood`는 그래프 근거를 찾는다.
-문서 수집 도구가 제공되면 document_ingest로 개인·팀·조직 scope의 텍스트를 저장하고
-document_ingest_status로 ready를 확인한다. 수집에는 idempotencyKey가 필수이며 접수와
-처리 완료를 구분한다. 도구가 없는 구버전의 문서 수집, 기억 본문 수정과 Graph 작성은
-관리 화면이나 별도 API의 작업이다.
+Librio의 문서 수집 도구가 제공되면 `document_ingest`로 개인·팀·조직 scope의 텍스트를 저장하고
+`document_ingest_status`로 ready를 확인한다. 수집에는 idempotencyKey가 필수이며 접수와
+처리 완료를 구분한다. 문서 수집 도구가 제공되지 않으면 Librio 관리 화면이나 API를 사용한다.
+기억 본문 수정은 Memory, Graph 작성은 Librio의 관리 화면이나 API에서 수행한다.
 검색 결과의 문서 ID는 호스트 앱의 `File` artifact ID가 아니다.
 
 `recall`의 text에는 ID와 version이 있지만 항목당 1,200자·전체 4,000자로 잘린다.
