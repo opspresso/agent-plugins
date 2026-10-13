@@ -107,3 +107,5 @@ workflow와 inputs는 실제 저장소 정의와 요청으로 바꾼다. 입력�
 
 uncertain은 외부 결과가 불명확한 상태다. 새 승인·새 공간·다른 API로 같은 게시를 반복하지 않는다.
 failed라면 원인을 확인하고 수정한 뒤 새 검토를 준비한다. 성공한 단계를 실패한 것처럼 다시 실행하지 않는다.
+
+Forge는 reviewed tree·HEAD·fingerprint와 원격 ref를 확인한 뒤 Git 효과를 실행한다. Studio는 현재 사용자의 GitHub grant, 승인과 PR·merge·release·dispatch를 조율한다. 연결 token을 task나 Sandbox에 전달하지 않는다. sourceRevision으로 고정한 review Workspace는 commit·push·tag·publication이 금지되며 다른 도구로 우회하지 않는다.

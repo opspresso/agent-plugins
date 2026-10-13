@@ -25,6 +25,9 @@ description: >
 | 문서 본문·표·발표 내용 | 선택한 파일을 해당 Docs·Sheets·Slides 또는 내용 읽기 도구로 확인 |
 | 논의 과정·최신 결정 | 관련 Slack 검색 후 스레드와 후속 답변 확인 |
 | 메일의 요청·약속 | 제공된 메일 도구로 검색 후 스레드 확인 |
+| 장기 선호·결정·경험 | Agent Memory의 recall 또는 해당 서버 context_search |
+| 조직 문서·전사 근거·지식 관계 | Agent Librio의 context_search·document_search·knowledge_search |
+| 다른 코딩 클라이언트의 진행 인수인계 | Agent Memory의 handoff_list 후 handoff_get |
 
 ## 후보를 본문 근거로 바꾼다
 
@@ -52,3 +55,5 @@ Slack 파일 ID는 앱 artifact ID가 아니다. 반환된 실제 artifact 참�
 검색·요약 요청만으로 파일 수정, Slack 게시, 공유 권한 변경, Memory 저장을 실행하지 않는다.
 사용자가 그 작업까지 요청했다면 실제 제공된 도구와 기존 권한으로 이어서 수행하며,
 단순한 답변 제시와 외부 변경 완료를 구분한다.
+
+context_search는 Memory와 Librio 모두 제공할 수 있으므로 발견된 서버의 역할과 신뢰된 연결을 확인한다. 전자는 장기 기억, 후자는 문서·지식 근거를 검색한다. 이름만 보고 서비스·사용자 접근 범위를 바꾸지 않는다.

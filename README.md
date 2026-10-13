@@ -6,6 +6,12 @@ capabilities. Skills are reusable across environments; bundled MCP endpoints
 include the supported `argocd-env-demo` deployment profile.
 Everything is [MIT-licensed](LICENSE).
 
+This repository owns declarations, discovery metadata and task guidance. It does
+not run services or create credentials, permissions, Workspaces or Sandboxes.
+Studio orchestrates Agents; Forge executes Workspace tasks; Memory owns memories
+and handoffs; Librio owns documents, RAG, knowledge and audio. See the
+[service integration contract](docs/agent-studio.md).
+
 ## Start here
 
 | Your task | Read |
@@ -229,6 +235,6 @@ Markdown parser or a remote-link availability check.
 Node tests execute report sorting against numeric and locale fixtures and
 explainer navigation, keyboard and reset behavior. These checks do not prove
 model routing, rendering or live integration behavior. For workflow changes,
-also review realistic positive and near-miss
+also review [service boundary scenarios](evals/service-boundaries.json) and realistic positive and near-miss
 requests using [the evaluation guide](plugins/agent-craft/skills/skill-writer/evaluation.md),
 and distinguish scenario review from actual model/tool execution.

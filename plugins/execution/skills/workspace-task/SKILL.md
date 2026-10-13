@@ -5,14 +5,14 @@ description: >
   기존 공간과 Session을 재사용하고 작업 접수·검증·Git 게시 단계를 조율한다.
   실행에는 Workspace 도구가 필요하며 원격 자료를 읽는 것만으로 충분한 요청에는 공간을 만들지 않는다.
 compatibility: >
-  호스트 앱의 Workspace 빌트인과 활성화된 Worker를 사용한다.
+  Studio의 Workspace 빌트인은 독립 Forge 서비스에 실행을 위임한다. 직접 Forge MCP를 사용할 때는 발견한 schema를 따른다.
   Skill 설치가 Runtime·저장소 권한·계정 연결을 만들지는 않는다.
 ---
 
 # 지속형 Workspace 작업 조율
 
 Workspace는 파일·Git·Session을 유지하는 작업 공간이고 Sandbox는 그 파일을 실행하는 일시적 자원이다.
-조율 Agent는 사용자 의도와 결과를 관리하고, 코딩 Runtime은 파일 수정·검사를 수행한다.
+Studio의 조율 Agent는 사용자 의도·현재 권한·승인·대화 재개를 관리한다. Forge는 실행·Session·checkpoint·Git 효과를 소유하고, 코딩 Runtime은 파일 수정·검사를 수행한다.
 계정·저장소·브랜치·작업 파일은 사용자 요청에서 얻는다.
 
 ## 필요한 경로 선택
@@ -35,6 +35,13 @@ Workspace는 파일·Git·Session을 유지하는 작업 공간이고 Sandbox는
 없는 Skill을 임의로 호출하지 않는다. 해당 작업을 직접 수행할 도구·자료가 있으면 그 범위에서
 진행하고 한계를 알린다. Skill 선택 때문에 새로운 게시·수정 범위를 추가하지 않는다.
 
+## 사용하는 도구 경계
+
+아래 `options/start/run/status/wait`는 Studio의 `Workspace` wrapper 계약이다. 직접 발견한
+Forge MCP를 사용하는 클라이언트는 [Forge 접수와 관측](references/forge.md)을 읽는다.
+두 경로의 이름과 필드를 섞지 않는다. Skill 설치는 서비스를 실행하거나 공간·권한을 만들지 않는다.
+Forge URL·org·owner·서명 키·provider credential은 서버 설정이며 모델이 입력하지 않는다.
+
 ## 공간과 Runtime
 
 1. `{"request":{"operation":"options"}}`로 workdir, 허용 Runtime·저장소와 current_workspace를 읽는다.
@@ -48,7 +55,7 @@ Workspace는 파일·Git·Session을 유지하는 작업 공간이고 Sandbox는
    현재 schema에 `title`이 있으면 사용자의 언어로 짧은 작업 목적을 적는다. 제목은 표시용이고
    `task`는 실행 입력이다. 특히 command의 셸 스크립트를 제목으로 복사하지 않는다.
 4. 사용자가 Runtime을 지정하지 않으면 options의 default_runtime을 따른다. 현재 허용 Runtime 목록에
-   없으면 Models의 모델 연결 또는 프로젝트 기본 Runtime 설정을 확인한다. command에는 실제 실행할
+   없으면 Forge의 허용 모델 채널 또는 Agent 기본 Runtime 설정을 확인한다. command에는 실제 실행할
    셸 스크립트를 구성해서 보내며 자연어 목록을 넣지 않는다. 코딩 Runtime에는 완결된 자연어 task를 보낸다.
    선택된 Runtime은 run에서 바꿀 수 없다.
 
@@ -72,10 +79,13 @@ workspace_path·approval_path의 상대 웹 경로를 그대로 사용하며 `/c
 ## 접수·완료·후속 요청
 
 queued/running은 완료가 아니다. 반환된 run_id로 wait/status를 읽고 after_seq=0부터 next_seq로
-출력을 이어간다. has_more면 남은 결과를 읽는다. 같은 작업을 새 ID로 재접수하지 않는다.
+출력을 이어간다. has_more면 남은 결과를 읽는다. output_loss=true는 영구 출력 유실이며
+마지막 페이지에서도 해소되지 않는다. 완료 상태만으로 전체 검증·게시 준비를 판단하지 않는다. 같은 작업을 새 ID로 재접수하지 않는다.
 진전 없는 상태 조회를 연속 반복하지 말고 현재 상태와 링크를 제공한다. 부모 응답이 끝나도 작업은 계속된다.
 reused=true, task_queued=false는 기존 공간만 반환한 것이다. 새 작업은 run으로 요청한다.
 
+접수 응답 유실이나 서비스 재연결에서는 기존 ID와 저장된 접수 결과를 관측한다. 새 task·새 키로
+불확실한 작업을 재실행하지 않는다. Studio wrapper의 내부 request key나 Forge ID를 임의로 입력하지 않는다.
 실행의 성공·실패·취소·중단과 실제 변경을 확인한다. 오류는 입력·환경·상태의 확인된 원인을 고친 뒤
 같은 공간에서 이어간다. 경로·도구·권한 오류를 새 Workspace나 다른 Git 경로로 우회하지 않는다.
 사용자가 작업 중지를 요청하면 cancel, 공간 종료를 요청하면 close를 사용한다. close는 선택과

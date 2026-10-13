@@ -5,7 +5,7 @@ description: >
   필요한 입력과 도구를 확인하고 파일·검사·Diff로 결과를 검증한다.
   실행에는 Workspace 도구 또는 실제 Sandbox 실행 기능이 필요하며 호스트 쉘을 가정하지 않는다.
 compatibility: >
-  호스트 앱의 Workspace 빌트인은 설정된 command·Codex·Claude·OpenCode Runtime을 사용한다.
+  Studio Workspace 또는 직접 발견한 Forge 실행 도구가 필요하다. Forge는 command·Codex·Claude·OpenCode Runtime을 실행한다.
   산출물 파일은 Workspace에 남으며 별도 Artifact 다운로드 기능이 있다고 가정하지 않는다.
 ---
 
@@ -55,6 +55,12 @@ Runtime 미지정이면 options.default_runtime을 따른다. 코딩 Runtime에�
 
 Sandbox의 출력 경로를 호스트 파일이나 Artifact URL로 표현하지 않는다. 다운로드 도구가 실제로
 제공되지 않으면 Workspace 링크·파일 경로와 확인한 내용을 알려 준다.
+
+Studio의 Workspace wrapper와 직접 Forge MCP의 필드는 서로 다르다. 직접 Forge를 사용하면
+발견된 workspace_create·run_submit·run_get·run_events·run_cancel 계약을 따른다.
+create/submit의 requestKey와 입력을 유지하고 응답이 유실되면 읽기 전용 receipt 조회부터 한다.
+terminal과 hasMore=false를 확인해도 outputLoss=true이면 전체 출력을 확인했다고 하지 않는다.
+Studio에서는 기존 wait/status의 next_seq·has_more·output_loss를 사용한다.
 
 ## 권한과 실패 처리
 
