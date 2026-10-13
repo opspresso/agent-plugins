@@ -63,3 +63,5 @@ Studio는 Librio의 비공개 원본·전사 결과와 Studio 후처리 결과�
 접수 응답이 유실되면 기존 AudioJob list/status로 확인하고 새로운 processing_revision으로 재실행하지 않는다.
 HTTP 내부 request key·recording ID·org·owner는 wrapper의 공개 입력이 아니다. AudioJob에 없는 cancel/retry/delete
 operation을 만들어 호출하지 않는다. lifecycle 관리는 실제 제공되는 콘솔/API 계약을 따른다.
+
+Studio 일반 Librio MCP는 오디오 읽기만 허용한다. 실행은 AudioJob wrapper의 durable dispatch와 현재 권한 검사로 접수한다. 독립 Librio client의 audio_job_submit 등 직접 도구가 있다고 해서 Studio wrapper를 우회하지 않는다.

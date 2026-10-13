@@ -37,3 +37,18 @@ recording IDs or service credentials as new AudioJob arguments. Console lifecycl
 APIs do not imply model tools named cancel, retry or delete. Verify current output
 availability before linking a completed recording or transcript. Retention and
 processing completion are different facts.
+
+## Direct clients and Studio have different execution paths
+
+Independent clients using their own Librio credential or an explicitly configured
+local issuer can discover `recording_reserve`, `recording_archive`,
+`audio_job_submit`, `audio_job_cancel`, `audio_job_retry` and `audio_job_delete`
+when authorized. Read tools are `audio_models`, `audio_status`, `audio_list`,
+`audio_request_status` and `audio_output_read`. These are Librio MCP names, not
+operations to add to Studio's AudioJob request object.
+
+Studio's general Librio MCP delegation includes `audio:read` but excludes
+`audio:write`. AudioJob's server-side HTTP flow creates durable dispatch context
+and verifies current policy before execution. Required-policy Studio issuers cannot
+submit directly without that stored context. Do not swap credentials or use
+another MCP route to bypass this boundary.

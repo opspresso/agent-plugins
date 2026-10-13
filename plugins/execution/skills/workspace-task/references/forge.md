@@ -2,6 +2,8 @@
 
 이 문서는 독립 Forge 도구가 실제로 발견된 클라이언트용이다. Studio의 `Workspace`
 wrapper가 제공되면 그 wrapper의 options/start/run/status 계약을 사용한다.
+독립 클라이언트의 자체 Forge personal credential 또는 명시된 local issuer가 필요하다.
+Studio 일반 Forge MCP 위임은 workspace:read만 제공하며 실행은 Studio Workspace wrapper로 접수한다.
 서비스 endpoint와 현재 사용자 credential은 클라이언트 설정에 있어야 한다. 조직·owner·email
 인수를 만들어 신원을 바꾸거나 모델 지시에 토큰을 넣지 않는다.
 

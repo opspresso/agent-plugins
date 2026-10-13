@@ -223,6 +223,7 @@ Enable `parameters.workspaceTools` in the Agent's current settings. Configure re
 and default runtime in the Agent's Workspace tools tab; choose from Forge's allowed native model channels.
 The operator configures the Forge service and its Sandbox provider, worker and model gateway. The `Workspace` builtin is available only to signed-in members
 of an enabled Agent; bind workspace-task and sandbox-task in its current settings.
+Studio's general Forge MCP binding is read-only; execution goes through the Workspace wrapper with durable dispatch and current policy. Independent coding clients can use their own Forge credentials directly.
 The actual tool schemas remain authoritative. Model tool inputs cannot choose the Forge URL, caller identity, organization or provider credentials. The plugin grants none of these permissions.
 
 ### Start and observe a task
