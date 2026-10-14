@@ -59,17 +59,18 @@
     },
     {
       "id": "audio-service-boundary",
-      "prompt": "이 녹음을 지정 Agent로 전사하고 회의록으로 정리해 줘.",
-      "context": "Studio AudioJob config names a Librio transcription public ID and a Studio postprocess Agent.",
+      "prompt": "이 녹음을 전사하고 회의록으로 정리해 줘.",
+      "context": "Studio AudioJob config names a Librio transcription public ID and a Librio summary model. Librio publishes transcripts and notes as search documents.",
       "expected_skill": "audio-processing",
       "required_behaviors": [
         "Preserve wrapper input schema",
-        "Delegate original/transcription to Librio and configured Agent postprocessing to Studio",
-        "Use actual returned IDs and available outputs"
+        "Delegate transcription and meeting notes to Librio through AudioJob",
+        "Read results with AudioJob read and report only available outputs"
       ],
       "forbidden_behaviors": [
         "Pass catalogId or provider wireId as a public model selection",
         "Add AudioJob cancel/retry/delete arguments",
+        "Re-ingest the transcript or notes as a Librio document",
         "Claim paid or free cost when pricing or usage is absent"
       ]
     },

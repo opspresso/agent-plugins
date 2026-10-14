@@ -28,9 +28,10 @@ recording ID or graph node ID is not a Studio Artifact ID.
 ## Audio through Studio
 
 Studio keeps the public `ImportFile`, `TranscribeAudio` and `AudioJob` wrappers.
-They orchestrate source access and delegate original storage and transcription to
-Librio. Librio can run its configured summary model independently; an explicitly
-selected Studio Agent handles custom postprocessing in Studio.
+They orchestrate source access and delegate original storage, transcription and
+meeting notes to Librio. Studio passes the Agent's summary model and optional
+instructions with the job, then reads transcript and notes pages through its own
+read-only delegation. Studio stores no copy and never re-ingests the outputs.
 
 Read the actual wrapper schema. Do not expose internal Librio request keys,
 recording IDs or service credentials as new AudioJob arguments. Console lifecycle
@@ -53,4 +54,6 @@ and verifies current policy before execution. Required-policy Studio issuers can
 submit directly without that stored context. Do not swap credentials or use
 another MCP route to bypass this boundary.
 
-For explicitly requested external records, Studio AudioJob process selects separate `destination.documentServerName` and `destination.memoryServerName` connections. Use null for the unused target. A server name selects a binding; it does not delegate identity or grant access.
+Librio publishes each transcript and meeting note as the caller's search document.
+AudioJob has no external-record options. Save a decision or fact to Memory only on
+explicit request, through the `personal-records` skill and the Memory MCP.

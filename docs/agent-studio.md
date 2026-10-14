@@ -114,10 +114,11 @@ Public metadata supports PKCE and dynamic registration; authenticated recording
 access still needs to be verified after account connection.
 
 The intended workflow is recording selection → mapped `source_ref` → the host app's
-`AudioJob` → Librio original/transcript → optional Studio `meeting-minutes` Agent → explicitly requested Librio documents or Memory.
+`AudioJob` → Librio original → Librio transcript and optional meeting notes, both
+published as Librio search documents → explicitly requested Memory records.
 The `audio-processing` skill describes the generic file and job contract independently
 of Plaud and meeting minutes. Enable the Agent's `audioProcessing` tools and
-configure the Librio service, its private source bucket and allowed transcription connections first. Studio owns custom Agent postprocessing and conversation continuation. The
+configure the Librio service, its private source bucket and allowed transcription and summary connections first. Studio owns source transfer, job progress, cost checks and output read-through; it stores no transcript copy. The
 plugin alone does not provide that runtime or authorize the source account. Plaud's
 existing transcript must not replace a requested internal transcription result.
 
