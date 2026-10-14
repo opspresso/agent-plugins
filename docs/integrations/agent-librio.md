@@ -21,8 +21,8 @@ Keep credentials, provider endpoints and connection IDs in installation settings
 | `document_ingest_status` | Check processing and distinguish accepted work from `ready` |
 | `document_ingest_retry` | Retry a failed document using its observed `expectedAttempts` and a stable key |
 
-Both Memory and Librio expose `context_search`; select the discovered server by
-its purpose and trusted connection, not the bare tool name. A source document ID,
+Long-term memories come from Memory's `recall`, not Librio. Select the discovered
+server by its purpose and trusted connection, not the bare tool name. A source document ID,
 recording ID or graph node ID is not a Studio Artifact ID.
 
 ## Audio through Studio

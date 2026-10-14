@@ -22,8 +22,7 @@ in installation secret configuration, never skills, prompts or task inputs.
 
 | Discovered tool | Purpose |
 |---|---|
-| `recall` | Compact long-term memories with IDs and versions |
-| `context_search` | Ranked long-term Memory details; no document or graph search |
+| `recall` | Ranked long-term memories: compact text plus ID, version, content, source and scope; no document or graph search |
 | `remember` | Durable scoped memory with provenance; keep an explicit idempotency key on retries |
 | `forget` | Archive the observed memory version with manage permission |
 | `handoff_create` | Save goal, summary, next actions, blockers and references with an idempotency key |
