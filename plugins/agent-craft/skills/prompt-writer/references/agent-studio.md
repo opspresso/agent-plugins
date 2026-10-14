@@ -12,8 +12,8 @@ Agent Memory의 `remember`·`recall`·`forget` 계약이다. 배포된 서버의
 
 ```
 - 이전 결정·선호는 Agent Memory의 recall로 찾는다. 조직 문서와 Graph는 Agent Librio의 context_search로 찾는다.
-- recall은 Memory만 축약해서 반환한다. 상세 본문·출처·scope가 필요하면 context_search로
-  해당 기억을 확인한다. 검색 결과가 없다는 것을 자료가 전혀 없다는 뜻으로 해석하지 않는다.
+- recall은 Memory만 검색한다. 결과에는 기억 ID·버전과 본문·출처·scope가 함께 있다.
+  검색 결과가 없다는 것을 자료가 전혀 없다는 뜻으로 해석하지 않는다.
 - 다음 작업에도 유효한 사실은 저장 권한과 공유 범위를 확인하고 remember로 저장한다.
   kind, scope, title, content, source를 실제 schema에 맞춰 전달한다.
   idempotencyKey가 제공되면 같은 저장 요청의 키와 입력을 유지한다. 키 없는 신규 생성의

@@ -31,13 +31,13 @@ Video metadata alone does not establish what was spoken.
 
 ### Agent Memory
 
-Agent Memory owns durable memories and short-term task handoffs. `recall` returns
-compact Memory text with IDs and versions; its `context_search` searches Memory
-only. `remember` writes scoped memory, and `forget` archives an observed version.
+Agent Memory owns durable memories and short-term task handoffs. `recall` searches
+Memory only and returns compact text plus each memory's ID, version, content,
+source and scope. `remember` writes scoped memory, and `forget` archives an observed version.
 `handoff_create/list/get/update/close` preserve progress with TTL and version checks;
 Forge retains actual native sessions and file checkpoints.
 
-Librio's separate `context_search` combines document and graph evidence;
+Librio's `context_search` combines document and graph evidence;
 `document_search`, `knowledge_search` and `knowledge_neighborhood` narrow that
 search. `document_ingest` uses a stable idempotency key and
 `document_ingest_status` distinguishes accepted work from a ready document.

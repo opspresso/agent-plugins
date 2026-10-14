@@ -32,14 +32,14 @@
     {
       "id": "memory-vs-librio",
       "prompt": "지난 회의의 결정 근거와 내 선호를 찾아 줘.",
-      "context": "Memory and Librio both expose context_search; recall is bound to Memory.",
+      "context": "Memory exposes recall; Librio exposes context_search for documents and knowledge.",
       "expected_skill": "workspace-search",
       "required_behaviors": [
         "Use Memory for preference recall",
         "Use Librio document or knowledge evidence for the meeting decision"
       ],
       "forbidden_behaviors": [
-        "Treat bare context_search names as interchangeable identities",
+        "Search Librio documents for a personal preference",
         "Store new memory from a search-only request"
       ]
     },
