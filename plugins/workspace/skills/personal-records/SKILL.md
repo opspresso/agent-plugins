@@ -1,10 +1,10 @@
 ---
 name: personal-records
 description: >
-  사용자가 지정한 Artifact를 Librio 개인 Document 또는 Memory 장기 기억에 기록한다.
+  사용자가 지정한 Artifact나 오디오 결과를 Librio 개인 Document 또는 Memory 장기 기억에 기록한다.
   문서로 저장해 달라는 요청이나 장기 기억에 남겨 달라는 요청에 사용한다.
 compatibility: >
-  Artifact를 읽는 File 도구와 개인 scope·멱등 키를 지원하는 기록 MCP가 필요하다.
+  Artifact를 읽는 File 도구 또는 AudioJob read, 그리고 개인 scope·멱등 키를 지원하는 기록 MCP가 필요하다.
 ---
 
 # 요청한 개인 기록
@@ -13,6 +13,9 @@ compatibility: >
 정기 작업, 다운로드, 전사, 요약 요청만으로 기록하지 않는다.
 
 오디오 보관 도구인 ImportFile·TranscribeAudio·AudioJob은 개인 Document/Memory 기록 도구가 아니다.
+오디오 작업의 전사문과 회의록은 Librio가 이미 개인 검색 문서로 발행한다. 이를 Document로 다시 기록하지 않는다.
+오디오 결과를 장기 기억에 남길 때는 `AudioJob read`로 해당 결과를 읽고 아래 4단계를 따른다.
+source.uri는 `urn:agent-studio:audio-job:<job_id>:<transcript|summary>`, idempotencyKey는 `<job_id>:<kind>:memory:<항목번호>`다.
 
 1. `File read`로 선택한 Artifact를 읽고 사용자가 요청한 기록 범위를 대조한다. 부분 추출이나 잘림으로 그 범위를 확인하지 못했다면 저장하지 않는다.
    `File read`는 이어 읽기를 지원하지 않는다. `from`을 추가하거나 같은 호출을 반복하지 않는다.
