@@ -4,7 +4,7 @@ description: >
   녹음을 Agent Librio로 보내 지정 모델로 전사하고 회의록을 만든다.
   정기 수집, 녹음 처리 요청, 기존 오디오 작업의 상태·결과 확인에 사용한다.
 compatibility: >
-  Studio의 ImportFile·TranscribeAudio·AudioJob wrapper와 연결된 Agent Librio가 필요하다. 원본 녹음·전사문·회의록은 Librio가 소유한다.
+  Studio의 ImportFile·TranscribeAudio·AudioJob wrapper와 연결된 Agent Librio가 필요하다. Librio가 전사문·회의록을 만들고, Studio가 완료된 결과를 요청자의 Artifact로 저장한다.
   출처 조회에는 해당 MCP 연결과 검증된 사용자 문맥이 필요하다.
 ---
 
@@ -19,10 +19,11 @@ compatibility: >
 | 결과 | 소유자 | 읽는 방법 |
 | --- | --- | --- |
 | 원본 오디오 | Studio 비공개 Artifact | job의 `source.href` |
-| 전사문·회의록 | Agent Librio | `AudioJob read`의 `transcript`·`summary` |
+| 전사문·회의록 | 요청자의 Studio Artifact | 완료된 job의 `artifacts.transcript.href`·`artifacts.summary.href`, 본문은 `AudioJob read` |
 | 회의 내용 검색 | Agent Librio 검색 문서 | 연결된 Librio MCP의 검색 도구 |
 
-Studio는 전사문과 회의록을 Artifact로 저장하지 않는다. Librio가 두 결과를 사용자의 검색 문서로 직접 발행한다.
+AudioJob 작업 하나가 전사·회의록 작성·Artifact 저장을 모두 처리한다. Librio는 두 결과를 사용자의 검색 문서로도 발행한다.
+전사만 하거나 회의록을 빼고 접수하지 않는다.
 
 ## 입력에 따라 시작한다
 
@@ -45,7 +46,9 @@ Studio는 전사문과 회의록을 Artifact로 저장하지 않는다. Librio�
 3. 완료된 작업은 `outputs`의 결과별 상태를 확인한다. `available`만 읽을 수 있다.
    `expired`·`deleted`는 Librio에서 보존 기간이 끝났거나 보관 해제된 결과다. 사용할 수 없다고 보고한다.
    완료된 작업과 만료된 원본을 자동 재처리하지 않는다. 명시적 재처리 요청에는 새 processing_revision을 사용한다.
-4. 새 처리가 필요하면 먼저 `AudioJob config`로 현재 전사 모델·회의록 설정·보존 기간을 확인한다.
+4. 새 처리가 필요하면 먼저 `AudioJob config`로 현재 전사 모델·회의록 모델·보존 기간을 확인한다.
+   config가 회의록 모델 없음 오류를 반환하면 접수하지 않는다. Agent 소유자가 Agent의 Audio 설정에서
+   회의록 모델을 선택하고 저장해야 한다고 보고한다. TranscribeAudio로 전사만 대신 실행하지 않는다.
    모델은 Librio가 제공한 공개 ID다. catalogId나 provider wireId를 대신 보내지 않는다.
    모델이 삭제됐거나 연결이 잘못되면 해당 오류를 보고하고 새 파일 참조를 발급하거나 작업을 접수하지 않는다.
    요청된 범위와 탐색 한도 안에서 출처 목록을 조회한다.
@@ -56,7 +59,8 @@ Studio는 전사문과 회의록을 Artifact로 저장하지 않는다. Librio�
    한도로 남은 후보는 접수하지 않은 것으로 보고하며,
    worker가 미접수 후보까지 이어 처리한다고 약속하지 않는다. 정기 실행은 다음 발생에서 같은 기간을 다시 조회하고 완료된 ID를 제외한다.
 6. 제출 응답의 status는 접수 결과이고 job.status는 실행 상태다. 접수·중복·과거 완료 결과의 재사용을 구분해
-   job ID와 시각을 보고한다. 원본 링크는 도구가 반환한 `source.href`만 사용한다.
+   job ID와 시각을 보고한다. 진행 중인 작업은 완료되면 전사문과 회의록이 Artifacts에 저장된다고 알린다.
+   원본 링크는 도구가 반환한 `source.href`만, 결과 링크는 `artifacts`의 `href`만 사용한다.
 
 source_ref는 원본 URL 대신 제공되는 참조이며 저장 완료를 뜻하지 않는다. URL은 의도적으로 숨겨진다.
 중복 여부는 URL 유무나 제목이 아니라 원래 외부 ID와 작업 상태로 판단한다.
