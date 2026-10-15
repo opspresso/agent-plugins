@@ -2,11 +2,12 @@ name: Validate
 
 # A skill that breaks the Agent Skills spec is not an error anywhere: the spec
 # tells clients to skip it and carry on, so the only symptom is a skill that is
-# never called. This is where that becomes visible.
+# never called. This is where that becomes visible. It runs once per change, when the change reaches
+# main (Studio reads plugins from main); run it by hand for a branch that needs a hosted check.
 on:
   push:
     branches: [main]
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   validate:
@@ -18,3 +19,14 @@ jobs:
       - run: python3 -m unittest discover -s scripts -p 'test_*.py'
       - run: python3 scripts/validate.py
       - run: node --test scripts/test_html_*.mjs
+
+  sync-gitlab:
+    # agent-studio's Sync to GitLab mirrors this repository; it no longer polls for changes.
+    needs: validate
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request the GitLab sync
+        env:
+          GH_TOKEN: ${{ secrets.GHP_TOKEN }}
+        run: gh api repos/opspresso/agent-studio/dispatches -f event_type=sync-gitlab
