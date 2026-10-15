@@ -20,8 +20,9 @@ list에 nextCursor가 있으면 필요 범위까지 이어 조회한다. 실패�
 {"request":{"operation":"config"}}
 ```
 
-enabled·revision·model·summary·retention을 확인한다. `summary`가 있으면 Librio가 회의록을 함께 만든다.
-설정이 없거나 요청과 맞지 않으면 필요한 설정만 알린다.
+enabled·revision·model·summary·retention을 확인한다. 저장된 설정에는 항상 회의록 모델(`summary`)이 있다.
+"no meeting-notes model" 오류는 이전 설정에 회의록 모델이 없다는 뜻이다. 접수하지 않고, Agent 소유자가 Audio 설정에서
+회의록 모델을 선택하고 저장해야 한다고 알린다. 설정이 없거나 요청과 맞지 않으면 필요한 설정만 알린다.
 연결된 출처 MCP에서 목록과 상세를 조회한다. source_ref는 서버가 발급한 참조이며 외부 파일 ID나 URL이 아니다.
 Plaud plugin의 기본 파일 매핑이 적용되면 get_file 응답에서 source_ref를 받는다.
 복수 녹음은 maxActive(대기+진행)와 maxPerOccurrence가 허용하는 만큼 각각 submit한다.
@@ -35,7 +36,7 @@ worker는 Agent별 접수 순서대로 한 건씩 실행하므로 처리 완료�
 ```
 
 revision은 실제 config 응답으로 바꾼다. 이 형태에는 model·retention·summary·task를 넣지 않는다.
-Studio가 원본을 Librio로 보내고, Librio가 전사와 설정된 회의록을 만든다.
+Studio가 원본을 Librio로 보내고, Librio가 전사와 회의록을 만든다. 완료되면 Studio가 두 결과를 요청자의 Artifact로 저장한다.
 이미 보관된 원본은 source의 kind를 artifact로, id를 원본 Artifact ID로 지정한다.
 사용자가 명시적으로 재처리할 때만 processing_revision에 새 값을 쓰고 같은 요청의 재전송에서는 유지한다.
 앞 작업이 완료돼도 발생당 접수 한도는 복원되지 않으므로 ImportFile·TranscribeAudio로 작업을 분리하지 않는다.
@@ -46,8 +47,8 @@ Studio가 원본을 Librio로 보내고, Librio가 전사와 설정된 회의록
 {"request":{"operation":"process","source":{"kind":"source","id":"<source_ref>"},"model":"<Librio 전사 모델 ID>","language":null,"retention":{"unit":"months","value":3,"timezone":"Asia/Seoul"},"summary":{"model":"<Librio 회의록 모델 ID>","instructions":null},"processing_revision":null}}
 ```
 
-`summary.model`은 Librio의 summary 모델 공개 ID다. `instructions`는 회의록의 중점만 조정하며 최대 4,000자다.
-회의록이 필요 없으면 summary를 null로 지정한다.
+`summary`는 필수다. `summary.model`은 Librio의 summary 모델 공개 ID다. `instructions`는 회의록의 중점만 조정하며 최대 4,000자다.
+회의록이 필요 없는 요청은 아래 TranscribeAudio를 사용한다.
 
 ## 일부 단계만 처리한다
 
@@ -57,7 +58,8 @@ Studio가 원본을 Librio로 보내고, Librio가 전사와 설정된 회의록
 {"source":{"kind":"source","id":"<source_ref>"},"retention":{"unit":"months","value":3,"timezone":"Asia/Seoul"},"processing_revision":null}
 ```
 
-전사만 필요하면 TranscribeAudio에 source·model·retention·language·processing_revision을 전달한다.
+사용자가 회의록 없이 전사만 명시적으로 요청할 때만 TranscribeAudio에 source·model·retention·language·processing_revision을 전달한다.
+완료되면 전사문만 Artifact로 저장된다.
 source는 `{kind:"artifact"|"file"|"source",id:"<해당 참조>"}`이며 language는 선택하지 않으면 null이다.
 모델·보존 기간은 config 또는 사용자 요청에서 가져온다. model은 Librio의 허용된 transcription 공개 ID이며 provider wireId나 catalogId를 직접 넣지 않는다.
 
@@ -69,16 +71,18 @@ source는 `{kind:"artifact"|"file"|"source",id:"<해당 참조>"}`이며 languag
 
 접수 응답의 accepted/duplicate는 job.status와 다르다. queued/running/waiting이면 실제 ID를 보고하고
 남은 요청 대상의 접수를 마친 뒤 종료한다. 한 실행에서 반복 polling하지 않는다.
-completed 작업은 `outputs.transcript`와 `outputs.summary`의 상태를 본다.
+completed 작업은 `outputs.transcript`와 `outputs.summary`의 상태와 `artifacts`를 본다.
+`artifacts.transcript.href`·`artifacts.summary.href`는 저장된 Artifact 페이지다. 결과를 보고할 때 이 링크를 그대로 안내한다.
+running 작업의 stage가 `publishing`이면 Librio 처리가 끝나고 Artifact를 저장하는 중이다.
 
 | 상태 | 뜻 |
 | --- | --- |
 | `available` | Librio에서 읽을 수 있다 |
-| `not_produced` | 이 작업이 만들지 않았다. 예: 회의록 설정 없음 |
+| `not_produced` | 이 작업이 만들지 않았다. 예: TranscribeAudio 작업의 회의록 |
 | `expired`·`deleted` | Librio의 보존 기간이 끝났거나 보관 해제됐다 |
 
 원본 오디오는 `source.href`가 있을 때만 안내한다. `source.unavailable`이면 원본 파일이 없다고 보고한다.
-`artifact:`나 `sandbox:` 링크를 만들어내지 않는다. 과거 작업의 모델·완료 시각을 현재 설정으로 새로 실행한 결과와 구분한다.
+`artifacts`에 없는 Artifact 링크나 `artifact:`·`sandbox:` 링크를 만들어내지 않는다. 과거 작업의 모델·완료 시각을 현재 설정으로 새로 실행한 결과와 구분한다.
 
 ```json
 {"request":{"operation":"read","job_id":"<실제 작업 ID>","result_kind":"summary","cursor":null,"max_bytes":null}}

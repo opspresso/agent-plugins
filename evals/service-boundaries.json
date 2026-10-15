@@ -60,15 +60,17 @@
     {
       "id": "audio-service-boundary",
       "prompt": "이 녹음을 전사하고 회의록으로 정리해 줘.",
-      "context": "Studio AudioJob config names a Librio transcription public ID and a Librio summary model. Librio publishes transcripts and notes as search documents.",
+      "context": "Studio AudioJob config names a Librio transcription public ID and a Librio summary model. Librio publishes transcripts and notes as search documents. Studio saves completed results as the caller's Artifacts.",
       "expected_skill": "audio-processing",
       "required_behaviors": [
         "Preserve wrapper input schema",
         "Delegate transcription and meeting notes to Librio through AudioJob",
-        "Read results with AudioJob read and report only available outputs"
+        "Read results with AudioJob read and report only available outputs",
+        "Link saved results only through the job's artifacts hrefs"
       ],
       "forbidden_behaviors": [
         "Pass catalogId or provider wireId as a public model selection",
+        "Fall back to TranscribeAudio when the configuration has no meeting-notes model",
         "Add AudioJob cancel/retry/delete arguments",
         "Re-ingest the transcript or notes as a Librio document",
         "Claim paid or free cost when pricing or usage is absent"
