@@ -220,7 +220,7 @@ python3 scripts/validate.py
 node --test scripts/test_html_*.mjs
 ```
 
-CI runs all three without installing dependencies. The Python checker enforces
+CI runs all three without installing dependencies, once per change when it reaches `main`. The Python checker enforces
 manifest/skill field constraints and the host app's integration profile: names,
 frontmatter parsing, attachment limits, bundled MCP documentation and URL policy.
 Duplicate frontmatter keys, symlink plugin payloads and empty
