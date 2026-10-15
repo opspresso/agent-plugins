@@ -50,6 +50,19 @@ Studio가 원본을 Librio로 보내고, Librio가 전사와 회의록을 만든
 `summary`는 필수다. `summary.model`은 Librio의 summary 모델 공개 ID다. `instructions`는 회의록의 중점만 조정하며 최대 4,000자다.
 회의록이 필요 없는 요청은 아래 TranscribeAudio를 사용한다.
 
+## 회의록만 다시 만든다
+
+완료된 transcribe·process 작업의 전사로 회의록만 새로 만든다. 업로드·전사를 다시 하지 않는다.
+
+```json
+{"request":{"operation":"notes","job_id":"<완료된 작업 ID>","summary":null,"processing_revision":"<새 값>"}}
+```
+
+summary가 null이면 Agent 설정의 회의록 모델을 쓴다. 형식이나 중점을 바꾸라는 요청은 `summary.instructions`에 담고,
+그때는 `summary.model`에 config의 회의록 모델 ID를 함께 넣는다. 새 회의록마다 processing_revision을 새 값으로 쓰고
+같은 요청의 재전송에서는 유지한다. 결과는 회의록 Artifact 하나이며 전사 Artifact는 원래 작업의 것을 안내한다.
+원본 작업이 완료되지 않았거나 전사를 읽을 수 없으면 거절된다. notes 작업 자체는 다시 notes의 원본이 될 수 없다.
+
 ## 일부 단계만 처리한다
 
 원본 보관만 필요할 때 ImportFile을 사용한다. Librio를 호출하지 않는다.
