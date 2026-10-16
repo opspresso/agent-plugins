@@ -11,11 +11,17 @@ on:
 
 jobs:
   validate:
-    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    runs-on: [self-hosted, macOS, ARM64]
     steps:
       - uses: actions/checkout@v7
-      # No setup-python step: the script is standard library only, and the
-      # runner image already has a Python new enough for it.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
       - run: python3 -m unittest discover -s scripts -p 'test_*.py'
       - run: python3 scripts/validate.py
       - run: node --test scripts/test_html_*.mjs
@@ -24,7 +30,7 @@ jobs:
     # agent-studio's Sync to GitLab mirrors this repository; it no longer polls for changes.
     needs: validate
     if: github.event_name == 'push'
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, ARM64]
     steps:
       - name: Request the GitLab sync
         env:
