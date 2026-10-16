@@ -238,3 +238,8 @@ model routing, rendering or live integration behavior. For workflow changes,
 also review [service boundary scenarios](evals/service-boundaries.json) and realistic positive and near-miss
 requests using [the evaluation guide](plugins/agent-craft/skills/skill-writer/evaluation.md),
 and distinguish scenario review from actual model/tool execution.
+
+## CI runner
+
+공개 저장소의 workflow는 GitHub-hosted `ubuntu-latest`를 사용합니다. main 검증이 통과하면 같은 job에서
+Agent Studio에 GitLab sync를 요청합니다. PR 자체는 CI를 시작하지 않습니다.
