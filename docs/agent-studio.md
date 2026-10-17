@@ -77,6 +77,11 @@ must configure the appropriate network access before using these declarations.
 This setting permits internal connections; it does not grant upstream access.
 Credentials and RBAC remain in the service deployments.
 
+In the `argocd-env-apps` deployment, `argocd`, `grafana` and `kubernetes` are
+read-only, and each MCP service admits only Agent Studio execution pods through a
+NetworkPolicy. Agents investigate through these servers and change desired state
+through the GitOps repository.
+
 Sync the `devops` plugin to import the endpoints and matching MCP descriptions,
 then bind the servers to the intended Agent's current settings or enable supported dynamic
 discovery. Verify tool discovery and a representative authorized read for each

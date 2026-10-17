@@ -1,6 +1,6 @@
 ---
 description: >
-  Investigate Argo CD application health, sync status, revisions and GitOps drift. Changes, sync and resource actions require a requested change and effective Argo CD permission.
+  Investigate Argo CD application health, sync status, revisions and GitOps drift. Read-only: the bundled deployment offers no create, update, delete, sync or resource-action tools. Make changes through the GitOps repository.
 ---
 
 # argocd
@@ -10,7 +10,8 @@ The `argocd-env-apps` k3s deployment exposes this service inside the cluster.
 See [in-cluster MCP setup](../../../../docs/agent-studio.md#in-cluster-mcp-services)
 for network access, plugin sync and agent bindings.
 
-Configure upstream URL, credentials and RBAC in the deployment. The MCP endpoint
+The bundled deployment sets `MCP_READ_ONLY=true`, and its Argo CD token role is
+the permission boundary. Configure upstream URL, credentials and RBAC in the deployment. The MCP endpoint
 uses internal HTTP; the upstream Argo CD API token remains deployment-managed.
 Keep the description aligned with the deployed tools and permission boundary.
 
