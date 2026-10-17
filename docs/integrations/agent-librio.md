@@ -20,6 +20,8 @@ Keep credentials, provider endpoints and connection IDs in installation settings
 | `document_ingest` | Accept a scoped document with a stable idempotency key |
 | `document_ingest_status` | Check processing and distinguish accepted work from `ready` |
 | `document_ingest_retry` | Retry a failed document using its observed `expectedAttempts` and a stable key |
+| `knowledge_object_types`, `knowledge_objects`, `knowledge_object` | Read ontology object types, list objects of a type, and read one object (`knowledge:read`) |
+| `knowledge_object_update` | Change editable properties of one object; send the state version that was read (`knowledge:write`) |
 
 Long-term memories come from Memory's `recall`, not Librio. Select the discovered
 server by its purpose and trusted connection, not the bare tool name. A source document ID,
@@ -43,8 +45,10 @@ processing completion are different facts.
 
 Independent clients using their own Librio credential or an explicitly configured
 local issuer can discover `recording_reserve`, `recording_archive`,
-`audio_job_submit`, `audio_job_cancel`, `audio_job_retry` and `audio_job_delete`
-when authorized. Read tools are `audio_models`, `audio_status`, `audio_list`,
+`audio_job_submit`, `audio_job_cancel`, `audio_job_retry`, `audio_job_delete`,
+`recording_delete` and `recording_delete_status` when authorized. `recording_delete`
+permanently removes a recording and everything derived from it; call it only on an
+explicit permanent-deletion request. Read tools are `audio_models`, `audio_status`, `audio_list`,
 `audio_request_status` and `audio_output_read`. These are Librio MCP names, not
 operations to add to Studio's AudioJob request object.
 
