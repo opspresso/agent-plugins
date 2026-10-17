@@ -28,6 +28,13 @@ in installation secret configuration, never skills, prompts or task inputs.
 | `handoff_create` | Save goal, summary, next actions, blockers and references with an idempotency key |
 | `handoff_list`, `handoff_get` | Find active tasks and inspect full context before resuming |
 | `handoff_update`, `handoff_close` | Change progress or close using the observed `expectedVersion` |
+| `memory_delete`, `handoff_delete` | Permanently erase memories or a handoff with all history. Offered only to credentials that hold `memory:delete` or `handoff:delete` |
+
+Permanent deletion is a separate grant. Studio delegation and organization tokens
+never hold the delete scopes, so Studio Agents do not see the delete tools. A
+personal client token holds them only when the user enables permanent deletion
+when the token is issued. Call a delete tool only on an explicit
+permanent-deletion request; use `forget` or `handoff_close` otherwise.
 
 The actual discovered schema is authoritative. Handoff references identify a
 project, branch, task or native session; they do not contain a resumable CLI
