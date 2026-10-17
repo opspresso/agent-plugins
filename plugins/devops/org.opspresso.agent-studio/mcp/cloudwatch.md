@@ -6,7 +6,7 @@ description: >
 # cloudwatch
 
 Bundled endpoint: `http://mcp-cloudwatch.agent-mcps.svc.cluster.local/mcp`.
-The `argocd-env-demo` k3s deployment exposes AWS Labs CloudWatch MCP through
+The `argocd-env-apps` k3s deployment exposes AWS Labs CloudWatch MCP through
 Streamable HTTP inside the cluster. See
 [in-cluster MCP setup](../../../../docs/agent-studio.md#in-cluster-mcp-services)
 for network access, plugin sync and agent bindings.

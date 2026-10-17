@@ -60,7 +60,7 @@ does not make its tool contract match.
 ### In-cluster MCP services
 
 The `devops` plugin declares four MCP services deployed by the sibling
-`argocd-env-demo` repository in k3s:
+`argocd-env-apps` repository in k3s:
 
 | Server | Streamable HTTP endpoint |
 |---|---|

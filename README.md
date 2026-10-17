@@ -3,7 +3,7 @@
 A collection of task-focused plugins using [Agent Plugins 1.0.0](https://agent-plugins.org/)
 and [Agent Skills](https://agentskills.io/specification). Each plugin groups related
 capabilities. Skills are reusable across environments; bundled MCP endpoints
-include the supported `argocd-env-demo` deployment profile.
+include the supported `argocd-env-apps` deployment profile.
 Everything is [MIT-licensed](LICENSE).
 
 This repository owns declarations, discovery metadata and task guidance. It does
@@ -91,7 +91,7 @@ For Plaud recording import, transcription and summaries, use the [Audio agent pr
 ## Integrations
 
 Manifests contain provider-hosted endpoints and the declared in-cluster MCP
-services deployed by `argocd-env-demo`. Account connections, credentials, model
+services deployed by `argocd-env-apps`. Account connections, credentials, model
 selections, regions and runtime bindings belong to the installation.
 Never put credentials in manifests, URLs or skill text.
 This repository permits only `streamable-http` declarations with `type` and `url`;
@@ -108,7 +108,7 @@ account connection, host app OAuth compatibility requirements and verification.
 Adding these declarations does not connect accounts or grant access to private
 content.
 
-The `devops` plugin declares these MCP services from the `argocd-env-demo` k3s
+The `devops` plugin declares these MCP services from the `argocd-env-apps` k3s
 deployment in the `agent-mcps` namespace, with matching host app descriptions:
 
 - [Argo CD](plugins/devops/org.opspresso.agent-studio/mcp/argocd.md)

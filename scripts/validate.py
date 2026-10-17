@@ -46,7 +46,7 @@ SKILL_NAME = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 # The host app's registry slug rule, independent of plugin/skill spec names.
 MCP_NAME = re.compile(r"^[a-z0-9-]+$")
 
-# Canonical ClusterIP endpoints deployed by argocd-env-demo. This exception is
+# Canonical ClusterIP endpoints deployed by argocd-env-apps. This exception is
 # limited to each named server's exact URL, not the entire cluster DNS suffix.
 INTERNAL_MCP_URLS = {
     name: f"http://mcp-{name}.agent-mcps.svc.cluster.local/mcp"
