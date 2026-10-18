@@ -5,7 +5,7 @@
 ## 기억을 쓰는 에이전트의 프롬프트
 
 기억을 지속적으로 쓰는 에이전트에는 조회·저장 시점과 공유 범위를 적는다. 아래 예시는
-Agent Memory의 `remember`·`recall`·`forget` 계약이다. 배포된 서버의 실제 schema를 먼저
+Agent Memory의 `remember`·`recall`·`revise`·`forget` 계약이다. 배포된 서버의 실제 schema를 먼저
 확인하고 없는 도구를 호출하게 만들지 않는다.
 
 **동작 규칙**에는 필요한 항목을 넣는다.
@@ -20,6 +20,8 @@ Agent Memory의 `remember`·`recall`·`forget` 계약이다. 배포된 서버의
   응답이 불확실할 때 같은 내용을 무조건 다시 저장하지 않는다.
 - scope.kind는 organization, team, user 중 요청에 맞게 명시한다.
   개인·팀 범위가 거부되면 조직 전체에 대신 저장하지 않는다. 대화 전용 scope는 없다.
+- 기억의 일부가 틀리면 recall 결과의 memory ID와 version으로 revise(memoryId, expectedVersion, title?, content?)를 호출한다.
+  기억 전체를 새 사실로 바꿀 때는 remember의 supersedes에 이전 기억의 ID와 version을 넣는다.
 - 잊기 요청은 실제 조회·저장 결과의 memory ID와 현재 version을 확인한 뒤
   forget(memoryId, expectedVersion, changeReason?)으로 처리한다.
   성공은 archive이며 원문·revision의 영구 삭제가 아니다.
@@ -34,7 +36,7 @@ Agent Memory와 Agent Librio는 설치 측에서 서로 다른 MCP로 등록한�
 Librio의 문서 수집 도구가 제공되면 `document_ingest`로 개인·팀·조직 scope의 텍스트를 저장하고
 `document_ingest_status`로 ready를 확인한다. 수집에는 idempotencyKey가 필수이며 접수와
 처리 완료를 구분한다. 문서 수집 도구가 제공되지 않으면 Librio 관리 화면이나 API를 사용한다.
-기억 본문 수정은 Memory, Graph 작성은 Librio의 관리 화면이나 API에서 수행한다.
+기억 본문 수정은 Memory의 `revise` 도구나 관리 화면, Graph 작성은 Librio의 관리 화면이나 API에서 수행한다.
 검색 결과의 문서 ID는 호스트 앱의 `File` artifact ID가 아니다.
 
 `recall`의 text에는 ID와 version이 있지만 항목당 1,200자·전체 4,000자로 잘린다.

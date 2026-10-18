@@ -33,7 +33,7 @@ Video metadata alone does not establish what was spoken.
 
 Agent Memory owns durable memories and short-term task handoffs. `recall` searches
 Memory only and returns compact text plus each memory's ID, version, content,
-source and scope. `remember` writes scoped memory, and `forget` archives an observed version.
+source and scope. `remember` writes scoped memory and can supersede observed versions, `revise` saves a new version of an observed memory, and `forget` archives an observed version.
 `handoff_create/list/get/update/close` preserve progress with TTL and version checks;
 Forge retains actual native sessions and file checkpoints.
 
