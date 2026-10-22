@@ -242,4 +242,4 @@ and distinguish scenario review from actual model/tool execution.
 ## CI runner
 
 콘텐츠 검증은 GitHub-hosted `ubuntu-latest`에서 `main` push 또는 수동 실행으로 수행합니다.
-PR 자체는 CI를 시작하지 않습니다. 이 저장소는 다른 Git 저장소로 자동 미러링하지 않습니다.
+PR 자체는 CI를 시작하지 않습니다.
