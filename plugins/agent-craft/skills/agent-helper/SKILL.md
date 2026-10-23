@@ -74,10 +74,13 @@ Helper는 운영자가 관리하는 private Agent다. 전용 대화의 요청자
 | `subagentList` | 독립된 전문 작업을 다른 접근 가능한 Agent에 위임할 때만 연결한다 |
 | `parameters` | `temperature`, `maxTokens`, `reasoningEffort`, `structuredOutput`·`jsonSchema`, `urlFetch`, `memoryRecall`·`memoryCapture`, `dynamicCapabilities`, `policy` 등. 바꿀 키만 보내고 `null`은 기본값으로 되돌린다 |
 | `maxTurn` | 도구 호출이 많은 작업만 늘린다 |
+| `costLimits` | 일·월 알림과 차단 기준(USD). 바꿀 값만 보내고 `null`은 제거한다. 알림 기준은 차단 기준 이하다 |
 
 외부 주소 읽기(`urlFetch`), Slack 읽기(`slackWorkspace`), 동적 기능 탐색처럼 접근 범위를 넓히는 설정은
-필요한 이유를 사용자에게 설명한다. `studioTools`는 Helper로 켤 수 없다. 자격 증명·MCP header·메신저 연동·
-비용 한도·공개 범위는 Agent 화면에서 사용자가 직접 설정하도록 안내한다.
+필요한 이유를 사용자에게 설명한다. 부서 코드(`departmentCode`), 비용 한도(`costLimits`), 공개 범위(`visibility`)도
+바꿀 수 있다. `public`은 조직 전체에 프롬프트를 공개하므로 사용자가 요청할 때만 바꾼다.
+`studioTools`, MCP header·OAuth, Slack·Telegram·Teams 연동, API token, trigger는 Helper로 바꾸지 않는다.
+자격 증명을 대화로 받지 않고 Agent 화면 링크와 편집할 항목을 안내한다.
 
 ## 전용 Skill
 
