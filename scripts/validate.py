@@ -27,6 +27,7 @@ import json
 import re
 import sys
 from pathlib import Path
+from typing import NamedTuple
 from urllib.parse import unquote, urlsplit
 
 PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
@@ -38,6 +39,36 @@ PLUGIN_FIELDS = {
 }
 AUTHOR_FIELDS = {"name", "email", "url"}
 SKILL_FIELDS = {"name", "description", "license", "compatibility", "metadata", "allowed-tools"}
+
+# The host app's extension namespace: plugin.json `extensions` key, extension
+# directory name, and the prefix of its SKILL.md `metadata` keys.
+STUDIO = "org.opspresso.agent-studio"
+SKILL_ICON_KEY = f"{STUDIO}.icon"
+STUDIO_EXTENSION_FIELDS = {"icon", "mcpSourceOutputs"}
+
+# Copy of `CATALOG_ICONS` in agent-studio `src/domain/catalog/icon.ts`, the
+# owner of this list. The console renders only these Tabler icon names and its
+# sync drops any other name, so an unlisted name fails here first. Repository
+# policy: every plugin, skill and MCP server declares one.
+CATALOG_ICONS = frozenset("""
+address-book alert-triangle api app-window apps archive bell bolt book book-2
+books box braces brain brand-aws brand-docker brand-figma brand-github
+brand-gitlab brand-gmail brand-google brand-google-drive brand-jira brand-notion
+brand-openai brand-slack brand-teams brand-telegram briefcase browser bug
+calculator calendar calendar-event chart-area-line chart-bar chart-dots
+chart-line chart-pie checklist clipboard-text cloud cloud-computing code
+code-plus cpu credit-card database device-desktop device-mobile file file-code
+file-description file-search file-spreadsheet file-text file-type-doc
+file-type-pdf filter flask folder folder-code git-branch git-merge
+git-pull-request globe hammer heart hierarchy-2 home id key language layout
+layout-dashboard link list-check lock mail map message-chatbot message-circle
+microphone mood-smile moon-stars music notebook notes package palette pencil
+photo player-play plug-connected presentation presentation-analytics prompt
+puzzle receipt report-analytics robot rocket route school search server
+server-cog settings shield-check shopping-cart sitemap sparkles stack-2
+steering-wheel table tag target template terminal-2 tool transform truck user
+users video wand world world-search writing yin-yang zoom-code
+""".split())
 
 # `^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$` from the plugin schema.
 PLUGIN_NAME = re.compile(r"^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$")
@@ -55,6 +86,7 @@ INTERNAL_MCP_URLS = {
 
 FRONTMATTER = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n?", re.S)
 KEY = re.compile(r"^([A-Za-z_-]+):\s*(.*)$")
+MAP_ENTRY = re.compile(r"^\s+([A-Za-z0-9_.-]+):\s*(\S.*)$")
 
 MAX_DESCRIPTION = 1024
 MAX_COMPATIBILITY = 500
@@ -82,36 +114,63 @@ def recommend(where: Path, message: str) -> None:
     recommendations.append(f"{where}: {message}")
 
 
-def parse_frontmatter(text: str, *, where: Path | None = None) -> dict[str, str] | None:
-    """The flat `key: value` subset every client here actually reads.
+class Frontmatter(NamedTuple):
+    fields: dict[str, str]
+    """Scalar values by lowercased key."""
+    maps: dict[str, dict[str, str]]
+    """One-level string maps (`metadata:`) by lowercased key; inner keys keep their case."""
 
-    Match the host app's paired quotes, lowercase keys and folded scalars
-    (`>`, `|`, `>-`, `|-`). Nested mapping entries are not consumed.
-    When validating a file, report prose the runtime would silently drop.
+
+def strip_quotes(value: str) -> str:
+    """Remove a matched pair of surrounding quotes, as the host app does."""
+    return re.sub(r"^([\"'])([\s\S]*)\1$", r"\2", value)
+
+
+def parse_frontmatter(text: str, *, where: Path | None = None) -> Frontmatter | None:
+    """The subset the host app reads: the same rules as its `parseFrontmatter`.
+
+    Match its paired quotes, lowercase keys, folded scalars (`>`, `|`, `>-`,
+    `|-`) and one-level string maps (a `key:` with no value, then indented
+    `child: value` lines). When validating a file, report text the runtime
+    would silently drop.
     """
     match = FRONTMATTER.match(text)
     if not match:
         return None
     fields: dict[str, str] = {}
+    maps: dict[str, dict[str, str]] = {}
     lines = re.split(r"\r?\n", match.group(1))
     index = 0
-    key = None
     while index < len(lines):
         line = lines[index].rstrip()
         header = KEY.match(line)
         index += 1
         if not header:
-            if (
-                where is not None and line.strip() and not line.lstrip().startswith("#")
-                and not (key == "metadata" and line.startswith((" ", "\t")))
-            ):
+            if where is not None and line.strip() and not line.lstrip().startswith("#"):
                 fail(where, f"frontmatter line {index + 1} is ignored by the host app; "
                      "use an indented > or | scalar for multiline descriptions")
             continue
         key = header.group(1).lower()
-        if where is not None and key in fields:
+        if where is not None and (key in fields or key in maps):
             fail(where, f"duplicate frontmatter key {key!r}")
-        value = re.sub(r"^([\"'])([\s\S]*)\1$", r"\2", header.group(2))
+        if header.group(2) == "":
+            entries: dict[str, str] = {}
+            while index < len(lines) and re.match(r"^\s+\S", lines[index]):
+                entry = MAP_ENTRY.match(lines[index].rstrip())
+                index += 1
+                if entry:
+                    entries[entry.group(1)] = strip_quotes(entry.group(2))
+                elif where is not None and not lines[index - 1].lstrip().startswith("#"):
+                    fail(where, f"frontmatter line {index + 1} is not a `key: value` entry "
+                         f"of {key!r}; the host app ignores it")
+            # A `key:` with no entries below it stays an empty scalar, so a
+            # present-but-empty field such as `compatibility:` is still reported.
+            if entries:
+                maps[key] = entries
+            else:
+                fields[key] = ""
+            continue
+        value = strip_quotes(header.group(2))
         if value in {">", "|", ">-", "|-"}:
             folded = []
             while index < len(lines) and re.match(r"^\s+\S", lines[index]):
@@ -119,7 +178,15 @@ def parse_frontmatter(text: str, *, where: Path | None = None) -> dict[str, str]
                 index += 1
             value = " ".join(folded)
         fields[key] = value
-    return fields
+    return Frontmatter(fields, maps)
+
+
+def check_icon(where: Path, label: str, icon: object) -> None:
+    """Repository policy: each component declares an icon the console renders."""
+    if icon is None:
+        fail(where, f"{label} is required; use a name from CATALOG_ICONS")
+    elif not isinstance(icon, str) or icon not in CATALOG_ICONS:
+        fail(where, f"{label} {icon!r} is not a supported icon; use a name from CATALOG_ICONS")
 
 
 def check_plugin(manifest: Path) -> None:
@@ -171,6 +238,11 @@ def check_plugin(manifest: Path) -> None:
         or any(not isinstance(value, dict) for value in extensions.values())
     ):
         fail(manifest, "extensions must be an object whose values are objects")
+        return
+    studio = (extensions or {}).get(STUDIO, {})
+    for extra in sorted(set(studio) - STUDIO_EXTENSION_FIELDS):
+        fail(manifest, f"extensions.{STUDIO}.{extra} is not a field the host app reads")
+    check_icon(manifest, f"extensions.{STUDIO}.icon", studio.get("icon"))
 
 
 def check_mcp(manifest: Path) -> None:
@@ -255,9 +327,10 @@ def check_mcp_docs(plugin: Path, servers: set[str]) -> None:
         if doc is None:
             fail(manifest, f"{name}: missing org.opspresso.agent-studio/mcp/{name}.md")
             continue
-        fields = parse_frontmatter(doc.read_text(), where=doc)
-        if fields is None or not fields.get("description", "").strip():
+        frontmatter = parse_frontmatter(doc.read_text(), where=doc)
+        if frontmatter is None or not frontmatter.fields.get("description", "").strip():
             fail(doc, "description is required in frontmatter for host app sync")
+        check_icon(doc, "frontmatter icon", frontmatter.fields.get("icon") if frontmatter else None)
     for name, doc in sorted(docs.items()):
         if name not in servers:
             fail(doc, f"no matching {name!r} server in mcp.json")
@@ -269,10 +342,11 @@ def check_skill(skill: Path) -> None:
         return
     directory = skill.parent.name
     text = skill.read_text()
-    fields = parse_frontmatter(text, where=skill)
-    if fields is None:
+    frontmatter = parse_frontmatter(text, where=skill)
+    if frontmatter is None:
         fail(skill, "no YAML frontmatter")
         return
+    fields = frontmatter.fields
 
     name = fields.get("name", "")
     if "name" not in fields:
@@ -296,8 +370,11 @@ def check_skill(skill: Path) -> None:
     elif len(compatibility) > MAX_COMPATIBILITY:
         fail(skill, f"compatibility is {len(compatibility)} chars, over {MAX_COMPATIBILITY}")
 
-    for extra in sorted(set(fields) - SKILL_FIELDS):
+    for extra in sorted((set(fields) | set(frontmatter.maps)) - SKILL_FIELDS):
         fail(skill, f"{extra!r} is not a frontmatter field the spec defines")
+    if "metadata" in fields:
+        fail(skill, "metadata must be a map of `key: value` entries")
+    check_icon(skill, f"metadata {SKILL_ICON_KEY}", frontmatter.maps.get("metadata", {}).get(SKILL_ICON_KEY))
 
     lines = len(text.splitlines())
     if lines > MAX_BODY_LINES:
