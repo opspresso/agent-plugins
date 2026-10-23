@@ -18,6 +18,7 @@ and handoffs; Librio owns documents, RAG, knowledge and audio. See the
 |---|---|
 | Configure an Agent and connect tools | [Host app integration](docs/agent-studio.md) |
 | Run coding and file tasks | [Workspace agent profile](docs/code-agent.md) |
+| Help users create or improve Agents | [Helper Agent profile](docs/helper-agent.md) |
 | Process recordings | [Audio agent profile](docs/audio-agent.md) |
 | Write or update documentation | [Documentation writing guidelines](#documentation-writing-guidelines) |
 | Add or change a skill | [Writing and maintaining skills](#writing-and-maintaining-skills) |
@@ -75,7 +76,7 @@ repository because the supported registry is flat.
 | design | html-wireframe, html-prototype, html-explainer, frontend-design, diagram-design, tufte-charts, html-report, image-generation | — |
 | engineering | code-review, fix-issue, implement-feature, refactor-code, dependency-upgrade, ci-failure-investigator, security-remediation, project-generator, pr-description, engineering-writing | — |
 | execution | workspace-task, sandbox-task | — |
-| agent-craft | prompt-writer, skill-writer, mcp-writer, simple-orchestration, structured-output | — |
+| agent-craft | agent-helper, prompt-writer, skill-writer, mcp-writer, simple-orchestration, structured-output | — |
 | saju | saju-analysis | — |
 
 Bundling is not automatic tool availability or authorization. Bind the capabilities
