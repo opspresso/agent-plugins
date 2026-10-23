@@ -88,6 +88,7 @@ Helper는 운영자가 관리하는 private Agent다. 전용 대화의 요청자
 2. `skill-writer`가 연결돼 있으면 읽고 description과 본문을 작성한다.
 3. 이름은 `<agentName>--<용도>`로 정한다. `<용도>`는 `--`가 없는 slug다. 예: `review-agent--checklist`.
 4. 이름·목적·description을 설명하고 `StudioSaveSkill(agentName=..., name=..., description=..., content=...)`을 호출한다.
+   새 Agent의 Skill은 `StudioCreateAgent` 결과를 받은 다음 턴에 저장한다. 같은 턴에 함께 요청하지 않는다.
    긴 표·템플릿은 `files`의 참고 파일로 나눈다. 새 Skill은 해당 Agent에 자동으로 연결된다.
 5. 기존 전용 Skill을 고치면 `StudioRead(resource="skill", name=...)`로 본문과 `updatedAt`을 읽고
    `expectedUpdatedAt`과 함께 저장한다. `files`를 생략하면 기존 참고 파일을 유지한다.
