@@ -4,7 +4,7 @@ description: >
   mapped get_file returns a private source_ref for audio-processing and AudioJob
   transcription and summary; no manual download URL is needed. Plaud transcripts and
   notes are existing provider output, not new internal transcription. This server does not transcribe audio.
-icon: microphone
+icon: brand-plaud
 ---
 
 # plaud

@@ -6,7 +6,7 @@ description: >
   verify rendered layout or produce a PPTX/PDF artifact.
   Preserve supplied templates and master/layout relationships; new decks use the
   offered document-authoring skill's design contract when no user style is supplied.
-icon: presentation-analytics
+icon: brand-google-slides
 ---
 
 # google-slides

@@ -5,7 +5,7 @@ description: >
   출력 경로에 맞춰 강조·링크·코드·목록·멘션을 정리하며 기본은 mrkdwn이다.
   Slack 대화 검색이나 앱·봇 구현 자체를 위한 스킬은 아니다.
 metadata:
-  org.opspresso.agent-studio.icon: message-circle
+  org.opspresso.agent-studio.icon: brand-slack
 ---
 
 # Slack 응답 문법

@@ -7,7 +7,7 @@ compatibility: >
   Studio의 ImportFile·TranscribeAudio·AudioJob wrapper와 연결된 Agent Librio가 필요하다. Librio가 전사문·회의록을 만들고, Studio가 완료된 결과를 요청자의 Artifact로 저장한다.
   출처 조회에는 해당 MCP 연결과 검증된 사용자 문맥이 필요하다.
 metadata:
-  org.opspresso.agent-studio.icon: player-play
+  org.opspresso.agent-studio.icon: headphones
 ---
 
 # 오디오 처리

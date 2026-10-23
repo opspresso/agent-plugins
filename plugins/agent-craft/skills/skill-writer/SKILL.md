@@ -5,7 +5,7 @@ description: >
   실제 로드 방식에 맞게 구성하고, 목적별 선택과 실행 결과를 평가한다.
   에이전트 전체 시스템 프롬프트 작성은 prompt-writer를 쓴다.
 metadata:
-  org.opspresso.agent-studio.icon: wand
+  org.opspresso.agent-studio.icon: book-2
 ---
 
 # 스킬 작성

@@ -5,7 +5,7 @@ description: >
   재현 조건과 기대 동작을 확인하고 좁은 수정과 회귀 검증을 수행한다.
   원인 설명만 요청하면 코드를 바꾸지 않으며 새 기능 개발은 implement-feature를 쓴다.
 metadata:
-  org.opspresso.agent-studio.icon: hammer
+  org.opspresso.agent-studio.icon: bug
 ---
 
 # Issue와 버그 수정

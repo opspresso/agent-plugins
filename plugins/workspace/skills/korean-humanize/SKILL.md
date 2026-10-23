@@ -5,7 +5,7 @@ description: >
   사실·인용·격식을 보존하며 표현을 다듬는다. 새 업무 메일은 korean-writing,
   PR·커밋·릴리스 노트 작성은 engineering-writing을 쓴다.
 metadata:
-  org.opspresso.agent-studio.icon: mood-smile
+  org.opspresso.agent-studio.icon: feather
 ---
 
 # 한국어 AI 티 윤문

@@ -5,7 +5,7 @@ description: >
   코드·테스트·의존성·실행 환경·일시적 실패를 구별하고 요청된 경우에만 수정한다.
   서비스의 운영 장애는 incident-triage, 단순 PR 검토는 code-review를 쓴다.
 metadata:
-  org.opspresso.agent-studio.icon: bug
+  org.opspresso.agent-studio.icon: zoom-exclamation
 ---
 
 # CI 실패 조사

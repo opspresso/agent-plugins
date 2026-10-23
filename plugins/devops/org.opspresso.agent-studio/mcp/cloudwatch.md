@@ -1,7 +1,7 @@
 ---
 description: >
   Query AWS CloudWatch metrics, alarms and collected logs. Query scans can incur cost; telemetry does not establish arbitrary AWS resource state. Account, region and credential selection follow the configured connection.
-icon: chart-line
+icon: brand-aws
 ---
 
 # cloudwatch
