@@ -223,7 +223,20 @@ does not receive it.
 | Skill | `SKILL.md` frontmatter → `metadata:` with the entry `org.opspresso.agent-studio.icon: <name>` |
 | Bundled MCP server | `org.opspresso.agent-studio/mcp/<server>.md` frontmatter → `icon: <name>` |
 
-`<name>` is a Tabler icon name, for example `git-branch`, from the supported set.
+`<name>` comes from the supported set: Tabler icon names such as `git-branch`,
+and service marks that Tabler lacks, such as `brand-kubernetes` and `agent-memory`.
+
+Choose the icon by what the component is:
+
+- A plugin or skill uses an icon for the kind of work it does, for example
+  `zoom-code` for code review and `urgent` for incident triage.
+- A skill for one service uses that service's mark, for example `brand-slack`.
+- A bundled MCP server uses the mark of the service it connects to, for example
+  `brand-github` or `brand-kubernetes`. Use a function icon only when the set has
+  no mark for that service; CloudWatch uses `brand-aws` for this reason.
+- To add a missing service mark, add it to agent-studio first, then copy the
+  name into `scripts/validate.py`.
+
 The set is owned by agent-studio (`CATALOG_ICONS` in `src/domain/catalog/icon.ts`)
 and copied into `scripts/validate.py`. Change both lists together. The host app
 syncs an entry that declares an unknown name without its icon and reports

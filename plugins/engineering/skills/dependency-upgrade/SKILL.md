@@ -5,7 +5,7 @@ description: >
   실제 버전과 전이 의존성, 공식 변경 사항을 확인하고 manifest·lockfile·사용 코드를 함께 검증한다.
   버전 추천만 요청하면 설치하지 않으며 취약점 전체 대응은 security-remediation을 쓴다.
 metadata:
-  org.opspresso.agent-studio.icon: package
+  org.opspresso.agent-studio.icon: package-import
 ---
 
 # 의존성 업그레이드

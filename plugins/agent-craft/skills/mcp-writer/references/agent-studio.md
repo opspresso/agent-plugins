@@ -11,8 +11,8 @@
 - secret이 들어갈 `headers`는 저장소에 넣지 않고 설치 측에서 설정한다.
 - 번들 서버 description은 같은 plugin의 `org.opspresso.agent-studio/mcp/<name>.md`에 둔다.
   별도 등록한 서버는 실제 노출 도구와 권한에 맞춰 설치 측 description을 설정한다.
-- extension의 frontmatter `icon`은 콘솔 아이콘이다. 지원 목록의 Tabler 아이콘 이름(예:
-  `brand-github`)을 적는다. 서버 자체 tool 아이콘은 MCP `tools/list`의 `icons`로 제공한다.
+- extension의 frontmatter `icon`은 콘솔 아이콘이다. 연결하는 서비스의 마크(예: `brand-github`,
+  `brand-kubernetes`)를 지원 목록에서 고른다. 마크가 없을 때만 기능 아이콘을 쓴다. 서버 자체 tool 아이콘은 MCP `tools/list`의 `icons`로 제공한다.
 - extension의 frontmatter `description`만 모델에게 전달된다. 본문은 운영자용이므로
   등록·인증·배포 설정·진단 절차를 적는다. 모델의 호출 조건은 description이나 연결된 스킬에 둔다.
 - `content`가 있으면 호스트 앱은 그 블록을 모델에게 전달하고 별도

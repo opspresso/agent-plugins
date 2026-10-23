@@ -8,7 +8,7 @@ compatibility: >
   SaveFile 빌트인이 제시된 런에서는 HTML 파일로 남기고, 없으면 코드 블록으로 낸다.
   브라우저 도구가 있으면 렌더링과 상호작용을 확인하고, 없으면 미검증 항목을 밝힌다.
 metadata:
-  org.opspresso.agent-studio.icon: presentation
+  org.opspresso.agent-studio.icon: bulb
 ---
 
 # HTML 설명 지면

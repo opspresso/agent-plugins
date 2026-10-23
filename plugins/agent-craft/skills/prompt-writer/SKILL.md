@@ -5,7 +5,7 @@ description: >
   목표와 권한, 예외 처리가 일관된 프롬프트를 만들고 실제 요청으로 점검한다.
   개별 작업용 SKILL.md 작성은 skill-writer를 쓴다.
 metadata:
-  org.opspresso.agent-studio.icon: prompt
+  org.opspresso.agent-studio.icon: message-2-code
 ---
 
 # 프롬프트 작성 스킬

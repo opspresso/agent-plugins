@@ -5,7 +5,7 @@ description: >
   답장 초안을 만든다. 연결된 메일 검색·읽기 도구가 필요하며 없으면 제공된 메일만 다룬다.
   계정의 초안 저장·라벨 변경·발송은 해당 요청과 도구가 있을 때만 수행한다.
 metadata:
-  org.opspresso.agent-studio.icon: mail
+  org.opspresso.agent-studio.icon: inbox
 ---
 
 # 메일 정리와 답장

@@ -205,7 +205,9 @@ and their schemas.
 The console reads a plugin icon from `extensions.org.opspresso.agent-studio.icon`,
 a skill icon from the `SKILL.md` metadata entry `org.opspresso.agent-studio.icon`,
 and a bundled server icon from the `icon` frontmatter field of its extension
-document. Values are Tabler icon names from the host app's supported set; see
+document. Values come from the host app's supported set: Tabler icon names and
+service marks. A bundled server uses the mark of its service; a plugin or skill
+uses an icon for the kind of work it does. See
 [Console icons](../README.md#console-icons). Sync writes the icon with the entry.
 When a plugin-owned server document no longer declares an icon, sync clears the
 stored icon. An administrator sets icons for hand-registered entries in the

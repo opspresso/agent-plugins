@@ -5,7 +5,7 @@ description: >
   기존 디자인 시스템을 반영해 반응형 화면과 접근성을 다룬다.
   구조 비교용 와이어프레임은 html-wireframe, 시나리오 검증용 목업은 html-prototype을 쓴다.
 metadata:
-  org.opspresso.agent-studio.icon: layout-dashboard
+  org.opspresso.agent-studio.icon: device-desktop-code
 ---
 
 # 프론트엔드 디자인

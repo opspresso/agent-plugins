@@ -6,7 +6,7 @@ description: >
 compatibility: >
   Artifact를 읽는 File 도구 또는 AudioJob read, 그리고 개인 scope·멱등 키를 지원하는 기록 MCP가 필요하다.
 metadata:
-  org.opspresso.agent-studio.icon: address-book
+  org.opspresso.agent-studio.icon: archive
 ---
 
 # 요청한 개인 기록

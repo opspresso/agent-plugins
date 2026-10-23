@@ -5,7 +5,7 @@ description: >
   실제 환경의 지표·로그·상태·변경 이력을 연결해 원인, 완화책과 검증 방법을 제시한다.
   조사는 읽기 전용이며 변경 실행은 사용자가 요청한 운영 절차를 따른다.
 metadata:
-  org.opspresso.agent-studio.icon: alert-triangle
+  org.opspresso.agent-studio.icon: urgent
 ---
 
 # 서비스 장애 조사
