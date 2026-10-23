@@ -6,8 +6,8 @@ Agent Studio의 상단 헤더의 Helper는 운영자가 관리하는 하나의 p
 
 `agent-helper`는 화면 설명, Agent 생성·개선과 Agent 전용 Skill 작성 절차를 소유한다. `StudioRead`,
 `StudioCreateAgent`, `StudioUpdateAgent`, `StudioSaveSkill`, `StudioDeleteSkill`, `StudioSaveTrigger`,
-`StudioDeleteTrigger`, `StudioUpdateIntegration`은 Studio 내부 권한과 저장소를 사용하는 내장 도구다.
-변경 도구는 Agent 정책과 관계없이 사용자 승인을 받는다. 비밀 값은 대화로 받지 않고 사용자가 해당 화면에 입력한다.
+`StudioDeleteTrigger`, `StudioUpdateIntegration`, `StudioRequestCredential`은 Studio 내부 권한과 저장소를 사용하는 내장 도구다.
+변경 도구는 Agent 정책과 관계없이 사용자 승인을 받는다. 비밀 값은 대화로 받지 않는다. 사용자가 승인 카드의 보안 입력이나 해당 화면에 직접 입력한다.
 전용 Skill은 Studio에 직접 저장되며 이 저장소의 sync 대상이 아니다. 공유 Skill은 이 저장소에서 관리하고 이름에 `--`를 쓰지 않는다.
 이 저장소에 별도 MCP 서버나 credentials를 만들지 않는다. Plugin sync 이후 기존 Helper의 Skill 목록은 운영자가
 Agent 설정에서 갱신한다. sync가 사용자 설정을 덮어쓰지 않는다. Studio 도구 사용 규칙은 Studio가 실행마다 붙이므로
