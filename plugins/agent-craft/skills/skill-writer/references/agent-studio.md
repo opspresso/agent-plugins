@@ -27,3 +27,13 @@
 `compatibility`·`allowed-tools`는 도구 제공·권한 설정이나 모델에게 전달되는 본문이 아니다.
 필수 도구 조건과 대안은 description·본문에 적는다. description에는 1024 UTF-16 code unit
 제한도 적용된다. 저장소 검사기는 이 배포 정책을 규격 검사와 함께 확인한다.
+
+## Agent 전용 Skill
+
+Helper의 `StudioSaveSkill`은 한 Agent 전용 Skill을 저장한다. 저장소 동기화 대신 Studio에 직접 저장된다.
+
+- 이름은 `<agentName>--<name>`이다. `<name>`은 `--`가 없는 slug다. description은 1~1024자, 본문은 1~60,000자다.
+- `--`는 전용 Skill에만 쓴다. 이 저장소의 공유 Skill 이름에는 `--`를 쓰지 않는다. Studio sync가 거절한다.
+- `files`는 위의 참고 파일 형식·크기 한도를 따른다. 경로는 `references/guide.md` 같은 상대 경로다.
+- 새 Skill은 소유 Agent에 자동 연결되고 다른 Agent에는 연결할 수 없다. 동적 탐색 대상이 아니다.
+- 교체·삭제는 `StudioRead(resource="skill")`로 읽은 `updatedAt`이 필요하다.
