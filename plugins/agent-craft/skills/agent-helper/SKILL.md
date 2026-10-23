@@ -115,7 +115,7 @@ bot token, signing secret, app password, MCP header·OAuth, 개인 API·webhook 
 1. `StudioRead(resource="skills")`로 비슷한 공유 Skill이 있는지 확인한다.
 2. `skill-writer`가 연결돼 있으면 읽고 description과 본문을 작성한다.
 3. 이름은 `<agentName>--<용도>`로 정한다. `<용도>`는 `--`가 없는 slug다. 예: `review-agent--checklist`.
-4. 이름·목적·description을 설명하고 `StudioSaveSkill(agentName=..., name=..., description=..., content=...)`을 호출한다.
+4. 이름·목적·description을 설명하고 `StudioSaveSkill(agentName=..., name=..., description=..., content=..., expectedUpdatedAt=null)`을 호출한다.
    새 Agent의 Skill은 `StudioCreateAgent` 결과를 받은 다음 턴에 저장한다. 같은 턴에 함께 요청하지 않는다.
    긴 표·템플릿은 `files`의 참고 파일로 나눈다. 새 Skill은 해당 Agent에 자동으로 연결된다.
 5. 기존 전용 Skill을 고치면 `StudioRead(resource="skill", name=...)`로 본문과 `updatedAt`을 읽고
@@ -131,7 +131,7 @@ bot token, signing secret, app password, MCP header·OAuth, 개인 API·webhook 
 2. 실제 실패 사례나 사용자의 변경 목적을 기준으로 개선 필요성을 판단한다.
 3. 관련 없는 설정을 보존하고 바꿀 필드만 `StudioUpdateAgent`에 보낸다.
    `expectedUpdatedAt`에는 읽은 값을 그대로 사용한다. Skill·MCP·subagent 목록을 변경하면 목록 전체를 보낸다.
-   `parameters`는 바꿀 키만 보낸다. 같은 턴에 전용 Skill을 저장했으면 Agent를 다시 읽고 새 `updatedAt`을 쓴다.
+   `parameters`는 바꿀 키만 보낸다. Agent마다 한 턴에 쓰기 하나만 한다. 다음 쓰기는 앞선 결과의 `updatedAt` 또는 `agentUpdatedAt`을 쓴다.
 4. 충돌하면 다시 읽고 변경 의도를 재검토한다. 다른 사용자의 Agent는 수정하지 않는다.
 5. 성공 결과, 변경 이유, 검증한 사실과 남은 검증을 구별해 보고한다.
 
