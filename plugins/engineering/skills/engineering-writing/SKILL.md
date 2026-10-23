@@ -4,6 +4,8 @@ description: >
   PR 본문, 커밋 메시지, 이슈 코멘트, 릴리스 노트, 설계 문서와 README의 문장을 작성하거나
   개선할 때 쓴다. 기술적 원인과 결과를 독자가 이해할 수 있게 쓰고 저장소의 형식과 용어를
   따른다. 일반 업무 문서는 korean-writing, 기존 한국어 글의 윤문은 korean-humanize를 쓴다.
+metadata:
+  org.opspresso.agent-studio.icon: writing
 ---
 
 # 개발 산출물 글쓰기

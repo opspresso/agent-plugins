@@ -25,41 +25,44 @@ class ValidateSkillTest(TestCase):
         name: str = "sample",
         description: str = "Sample skill",
         extra: str = "",
+        icon: str | None = "book",
     ) -> Path:
         skill = root / directory
         skill.mkdir()
         skill_file = skill / "SKILL.md"
+        metadata = f"metadata:\n  {validate.SKILL_ICON_KEY}: {icon}\n" if icon is not None else ""
         skill_file.write_text(
-            f"---\nname: {name}\ndescription: {description}\n{extra}---\nBody\n"
+            f"---\nname: {name}\ndescription: {description}\n{extra}{metadata}---\nBody\n"
         )
         return skill_file
 
     def test_folded_description_is_joined(self) -> None:
         fields = validate.parse_frontmatter(
             "---\nname: sample\ndescription: >\n  First line\n  second line\n---\nBody\n"
-        )
+        ).fields
 
         self.assertEqual("First line second line", fields["description"])
 
     def test_frontmatter_matches_studio_scalar_boundaries(self) -> None:
         for marker in (">", "|", ">-", "|-"):
             with self.subTest(marker=marker):
-                fields = validate.parse_frontmatter(
+                frontmatter = validate.parse_frontmatter(
                     f"---\r\nNAME: 'sample'\r\ndescription: {marker}\r\n"
                     "  First line\r\n  second line\r\nmetadata:\r\n"
                     "  owner: team\r\n---"
                 )
                 self.assertEqual(
-                    {"name": "sample", "description": "First line second line", "metadata": ""},
-                    fields,
+                    {"name": "sample", "description": "First line second line"},
+                    frontmatter.fields,
                 )
+                self.assertEqual({"metadata": {"owner": "team"}}, frontmatter.maps)
 
     def test_frontmatter_preserves_unpaired_quotes_and_plain_values(self) -> None:
         for value in ("'til dawn", "\"mismatched'", "> plain value"):
             with self.subTest(value=value):
                 fields = validate.parse_frontmatter(
                     f"---\nname: sample\ndescription: {value}\n  ignored continuation\n---\n"
-                )
+                ).fields
                 self.assertEqual(value, fields["description"])
 
     def test_quoted_skill_name_is_accepted(self) -> None:
@@ -83,11 +86,29 @@ class ValidateSkillTest(TestCase):
     def test_frontmatter_allows_metadata_and_comments(self) -> None:
         with TemporaryDirectory() as temporary:
             skill_file = self.write_skill(
-                Path(temporary), description=">-\n  Complete description",
-                extra="# Operator comment\nmetadata:\n  owner: team\n",
+                Path(temporary), description=">-\n  Complete description", icon=None,
+                extra=f"# Operator comment\nmetadata:\n  owner: team\n  {validate.SKILL_ICON_KEY}: book\n",
             )
             validate.check_skill(skill_file)
         self.assertEqual([], validate.problems)
+
+    def test_skill_icon_is_required_and_must_be_a_catalog_icon(self) -> None:
+        for icon, expected in ((None, "is required"), ("IconBook", "not a supported icon"), ("book", None)):
+            with self.subTest(icon=icon), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                validate.check_skill(self.write_skill(Path(temporary), icon=icon))
+                if expected is None:
+                    self.assertEqual([], validate.problems)
+                else:
+                    self.assertEqual(1, len(validate.problems))
+                    self.assertIn(expected, validate.problems[0])
+
+    def test_metadata_must_be_a_map_of_pairs(self) -> None:
+        for extra in ("metadata: book\n", f"metadata:\n  - {validate.SKILL_ICON_KEY}\n"):
+            with self.subTest(extra=extra), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                validate.check_skill(self.write_skill(Path(temporary), icon=None, extra=extra))
+                self.assertTrue(any("metadata" in problem or "key: value" in problem for problem in validate.problems))
 
     def test_duplicate_frontmatter_keys_are_reported(self) -> None:
         with TemporaryDirectory() as temporary:
@@ -186,7 +207,8 @@ class ValidateSkillTest(TestCase):
             body = "\n".join("line" for _ in range(validate.MAX_BODY_LINES + 1))
             skill_file = skill / "SKILL.md"
             skill_file.write_text(
-                f"---\nname: sample\ndescription: Sample skill\n---\n{body}\n"
+                f"---\nname: sample\ndescription: Sample skill\nmetadata:\n"
+                f"  {validate.SKILL_ICON_KEY}: book\n---\n{body}\n"
             )
 
             validate.check_skill(skill_file)
@@ -343,7 +365,8 @@ class ValidateManifestTest(TestCase):
                 validate.problems.clear()
                 plugin = Path(temporary) / "sample"
                 manifest = self.write_json(plugin / "plugin.json", {
-                    "$schema": validate.PLUGIN_SCHEMA, "name": "sample", field: None,
+                    "$schema": validate.PLUGIN_SCHEMA, "name": "sample",
+                    "extensions": {validate.STUDIO: {"icon": "package"}}, field: None,
                 })
                 validate.check_plugin(manifest)
                 self.assertEqual(1, len(validate.problems))
@@ -513,11 +536,46 @@ class ValidateManifestTest(TestCase):
             )
             extension = root / "org.opspresso.agent-studio" / "mcp"
             extension.mkdir(parents=True)
-            (extension / "server.md").write_text('---\ndescription: ""\n---\nNotes\n')
+            (extension / "server.md").write_text('---\ndescription: ""\nicon: tool\n---\nNotes\n')
             validate.check_mcp(manifest)
 
         self.assertEqual(1, len(validate.problems))
         self.assertIn("description is required", validate.problems[0])
+
+    def test_plugin_icon_is_required_and_namespace_fields_are_known(self) -> None:
+        cases = [
+            ({}, "icon is required"),
+            ({validate.STUDIO: {"icon": "Package"}}, "not a supported icon"),
+            ({validate.STUDIO: {"icon": "package", "colour": "blue"}}, "not a field the host app reads"),
+            ({validate.STUDIO: {"icon": "package"}, "com.example.other": {"icon": 1}}, None),
+        ]
+        for extensions, expected in cases:
+            with self.subTest(extensions=extensions), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                manifest = self.write_json(Path(temporary) / "sample" / "plugin.json", {
+                    "$schema": validate.PLUGIN_SCHEMA, "name": "sample", "extensions": extensions,
+                })
+                validate.check_plugin(manifest)
+                if expected is None:
+                    self.assertEqual([], validate.problems)
+                else:
+                    self.assertEqual(1, len(validate.problems))
+                    self.assertIn(expected, validate.problems[0])
+
+    def test_mcp_document_icon_is_required_and_must_be_a_catalog_icon(self) -> None:
+        for line, expected in (("", "is required"), ("icon: Tool\n", "not a supported icon"), ("icon: tool\n", None)):
+            with self.subTest(line=line), TemporaryDirectory() as temporary:
+                validate.problems.clear()
+                root = Path(temporary)
+                extension = root / "org.opspresso.agent-studio" / "mcp"
+                extension.mkdir(parents=True)
+                (extension / "server.md").write_text(f"---\ndescription: Server\n{line}---\nNotes\n")
+                validate.check_mcp_docs(root, {"server"})
+                if expected is None:
+                    self.assertEqual([], validate.problems)
+                else:
+                    self.assertEqual(1, len(validate.problems))
+                    self.assertIn(expected, validate.problems[0])
 
     def test_main_rejects_extension_without_mcp_manifest(self) -> None:
         with TemporaryDirectory() as temporary:
@@ -525,11 +583,12 @@ class ValidateManifestTest(TestCase):
             plugin = root / "plugins" / "sample"
             self.write_json(
                 plugin / "plugin.json",
-                {"$schema": validate.PLUGIN_SCHEMA, "name": "sample"},
+                {"$schema": validate.PLUGIN_SCHEMA, "name": "sample",
+                 "extensions": {validate.STUDIO: {"icon": "package"}}},
             )
             extension = plugin / "org.opspresso.agent-studio" / "mcp"
             extension.mkdir(parents=True)
-            (extension / "server.md").write_text("---\ndescription: Server\n---\nNotes\n")
+            (extension / "server.md").write_text("---\ndescription: Server\nicon: tool\n---\nNotes\n")
 
             with patch.object(validate, "__file__", str(root / "scripts" / "validate.py")):
                 with redirect_stdout(StringIO()):

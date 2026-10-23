@@ -182,7 +182,8 @@ boundaries, workflow and conditional references.
 - Templates and style catalogs are defaults. Do not replace user branding,
   language or genre to make outputs conform to a preferred example.
 
-`name` must match the skill directory. References needed during a host app run must
+`name` must match the skill directory. Every skill declares a console icon; see
+[Console icons](#console-icons). References needed during a host app run must
 be in the owning skill bundle; repository operator docs are not runtime files.
 An optional companion skill must not block a task that can be completed with
 inline guidance and available tools.
@@ -210,6 +211,24 @@ its manifest key. Its frontmatter carries selection conditions and consequential
 limits. Its body carries setup and verification notes. Extension text cannot
 override the connected server's actual tool schema.
 
+## Console icons
+
+The host app shows an icon beside each plugin, skill and MCP server. Each one in
+this repository must declare an icon. The icon is display data only; the model
+does not receive it.
+
+| Component | Declaration |
+|---|---|
+| Plugin | `plugin.json` → `"extensions": { "org.opspresso.agent-studio": { "icon": "<name>" } }` |
+| Skill | `SKILL.md` frontmatter → `metadata:` with the entry `org.opspresso.agent-studio.icon: <name>` |
+| Bundled MCP server | `org.opspresso.agent-studio/mcp/<server>.md` frontmatter → `icon: <name>` |
+
+`<name>` is a Tabler icon name, for example `git-branch`, from the supported set.
+The set is owned by agent-studio (`CATALOG_ICONS` in `src/domain/catalog/icon.ts`)
+and copied into `scripts/validate.py`. Change both lists together. The host app
+syncs an entry that declares an unknown name without its icon and reports
+`invalid-icon`. In this repository the validator rejects that name first.
+
 ## Validation
 
 Run from the repository root:
@@ -223,8 +242,8 @@ node --test scripts/test_html_*.mjs
 CI runs all three without installing dependencies, once per change when it reaches `main`. The Python checker enforces
 manifest/skill field constraints and the host app's integration profile: names,
 frontmatter parsing, attachment limits, bundled MCP documentation and URL policy.
-Duplicate frontmatter keys, symlink plugin payloads and empty
-optional compatibility declarations fail validation. Markdown attachment links
+Duplicate frontmatter keys, symlink plugin payloads, empty
+optional compatibility declarations and missing or unsupported console icons fail validation. Markdown attachment links
 are checked regardless of extension case.
 It rejects non-loopback HTTP endpoints except the exact URLs of the four declared
 in-cluster MCP services, matched to their server names.

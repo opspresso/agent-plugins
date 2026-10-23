@@ -4,6 +4,8 @@ description: >
   SKILL.md를 만들거나 스킬의 검색 설명·실행 절차·참고 파일을 개선할 때 쓴다.
   실제 로드 방식에 맞게 구성하고, 목적별 선택과 실행 결과를 평가한다.
   에이전트 전체 시스템 프롬프트 작성은 prompt-writer를 쓴다.
+metadata:
+  org.opspresso.agent-studio.icon: wand
 ---
 
 # 스킬 작성

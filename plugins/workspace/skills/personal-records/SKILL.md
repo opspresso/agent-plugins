@@ -5,6 +5,8 @@ description: >
   문서로 저장해 달라는 요청이나 장기 기억에 남겨 달라는 요청에 사용한다.
 compatibility: >
   Artifact를 읽는 File 도구 또는 AudioJob read, 그리고 개인 scope·멱등 키를 지원하는 기록 MCP가 필요하다.
+metadata:
+  org.opspresso.agent-studio.icon: address-book
 ---
 
 # 요청한 개인 기록

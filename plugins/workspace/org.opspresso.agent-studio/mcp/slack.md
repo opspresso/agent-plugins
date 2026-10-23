@@ -4,6 +4,7 @@ description: >
   the Agent's connected Slack account. Send messages or change workspace content
   only when explicitly requested and supported. Access requires an eligible Slack
   app and granted scopes; missing private-channel access is not an empty result.
+icon: brand-slack
 ---
 
 # slack

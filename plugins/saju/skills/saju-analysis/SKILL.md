@@ -5,6 +5,8 @@ description: >
   절기 기준으로 원국과 대운을 산출하고 고전·현대 관법을 각각 분석해 근거와 차이를 비교한다.
   풀이를 쉬운 한국어로 먼저 설명하고 필요한 명리 근거를 덧붙인다.
   궁합·택일·작명·풍수는 범위 밖이다.
+metadata:
+  org.opspresso.agent-studio.icon: moon-stars
 ---
 
 # 사주 심층 분석

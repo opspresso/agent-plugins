@@ -4,6 +4,8 @@ description: >
   웹 페이지·랜딩 페이지·React·Vue 컴포넌트를 설계하고 제품에 사용할 UI 코드로 구현한다.
   기존 디자인 시스템을 반영해 반응형 화면과 접근성을 다룬다.
   구조 비교용 와이어프레임은 html-wireframe, 시나리오 검증용 목업은 html-prototype을 쓴다.
+metadata:
+  org.opspresso.agent-studio.icon: layout-dashboard
 ---
 
 # 프론트엔드 디자인

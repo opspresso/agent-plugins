@@ -4,6 +4,8 @@ description: >
   실패한 CI·GitHub Actions 실행의 로그와 revision을 조사해 원인과 해결 방법을 찾을 때 쓴다.
   코드·테스트·의존성·실행 환경·일시적 실패를 구별하고 요청된 경우에만 수정한다.
   서비스의 운영 장애는 incident-triage, 단순 PR 검토는 code-review를 쓴다.
+metadata:
+  org.opspresso.agent-studio.icon: bug
 ---
 
 # CI 실패 조사

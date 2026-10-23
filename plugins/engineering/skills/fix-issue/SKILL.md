@@ -4,6 +4,8 @@ description: >
   GitHub Issue·버그 보고·재현 사례를 바탕으로 오류의 근본 원인을 찾아 수정할 때 쓴다.
   재현 조건과 기대 동작을 확인하고 좁은 수정과 회귀 검증을 수행한다.
   원인 설명만 요청하면 코드를 바꾸지 않으며 새 기능 개발은 implement-feature를 쓴다.
+metadata:
+  org.opspresso.agent-studio.icon: hammer
 ---
 
 # Issue와 버그 수정

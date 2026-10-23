@@ -1,6 +1,7 @@
 ---
 description: >
   Inspect Kubernetes workloads, logs, events, nodes and namespaces for scheduling, rollout and service failures. Read-only: the bundled deployment offers no write tools. Make changes through the repository that owns desired state.
+icon: steering-wheel
 ---
 
 # kubernetes

@@ -3,6 +3,7 @@ description: >
   Search AWS service documentation, API references, What's New and
   Well-Architected guidance for configuration and architecture questions.
   Provides public documentation, not live AWS account or resource state.
+icon: brand-aws
 ---
 
 # aws-knowledge

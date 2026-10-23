@@ -4,6 +4,8 @@ description: >
   기존 한국어 글의 번역투·상투구·과한 수식과 AI처럼 보이는 말투를 진단하거나 윤문할 때 쓴다.
   사실·인용·격식을 보존하며 표현을 다듬는다. 새 업무 메일은 korean-writing,
   PR·커밋·릴리스 노트 작성은 engineering-writing을 쓴다.
+metadata:
+  org.opspresso.agent-studio.icon: mood-smile
 ---
 
 # 한국어 AI 티 윤문

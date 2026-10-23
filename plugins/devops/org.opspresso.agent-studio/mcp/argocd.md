@@ -1,6 +1,7 @@
 ---
 description: >
   Investigate Argo CD application health, sync status, revisions and GitOps drift. Read-only: the bundled deployment offers no create, update, delete, sync or resource-action tools. Make changes through the GitOps repository.
+icon: rocket
 ---
 
 # argocd

@@ -4,6 +4,7 @@ description: >
   CI job logs require the Actions toolset; security alerts require their toolset and account access.
   Use Workspace for Sandbox file changes and reviewed Git publication; use offered GitHub review or issue tools only for requested remote feedback.
   No tool discovery result grants write permission.
+icon: brand-github
 ---
 
 # github

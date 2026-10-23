@@ -7,6 +7,8 @@ description: >
 compatibility: >
   SaveFile 빌트인이 제시된 런에서는 리포트를 파일로 남기고, 없으면 코드 블록으로 낸다.
   둘 다 같은 HTML 이고 산출 방법만 다르다.
+metadata:
+  org.opspresso.agent-studio.icon: report-analytics
 ---
 
 # HTML 리포트

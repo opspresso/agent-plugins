@@ -4,6 +4,8 @@ description: >
   에이전트 시스템 프롬프트를 작성하거나 역할·도구 사용·출력 규칙을 개선할 때 쓴다.
   목표와 권한, 예외 처리가 일관된 프롬프트를 만들고 실제 요청으로 점검한다.
   개별 작업용 SKILL.md 작성은 skill-writer를 쓴다.
+metadata:
+  org.opspresso.agent-studio.icon: prompt
 ---
 
 # 프롬프트 작성 스킬

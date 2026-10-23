@@ -4,6 +4,8 @@ description: >
   기존 프로젝트에 새 기능이나 명시적인 동작 변경을 구현할 때 쓴다.
   요구사항을 관찰 가능한 완료 조건으로 정리하고 기존 구조에 맞춰 구현·검증한다.
   버그 복구는 fix-issue, 동작을 유지하는 구조 개선은 refactor-code, 새 프로젝트는 project-generator를 쓴다.
+metadata:
+  org.opspresso.agent-studio.icon: code-plus
 ---
 
 # 기능 구현

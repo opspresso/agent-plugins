@@ -4,6 +4,8 @@ description: >
   Git에 선언된 운영 상태·배포 설정·이미지 버전을 GitOps 경로로 변경할 때 쓴다.
   대상 환경의 저장소, 값 우선순위와 배포 경로를 확인해 변경안과 PR을 준비하고 요청 범위의 반영을 확인한다.
   장애 원인 조사만 필요하면 incident-triage를 쓴다.
+metadata:
+  org.opspresso.agent-studio.icon: git-branch
 ---
 
 # GitOps 변경

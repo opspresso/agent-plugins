@@ -4,6 +4,8 @@ description: >
   한국어 업무 메일·메신저·결재 요청·보고 멘트를 작성하거나 초안을 다듬을 때 쓴다.
   상대와 채널에 맞는 격식으로 용건·근거·요청을 전달한다. 긴 글의 AI 말투 윤문은
   korean-humanize, PR·커밋·릴리스 노트는 engineering-writing을 쓴다.
+metadata:
+  org.opspresso.agent-studio.icon: language
 ---
 
 # 한국어 사내 글쓰기

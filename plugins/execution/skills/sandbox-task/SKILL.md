@@ -7,6 +7,8 @@ description: >
 compatibility: >
   Studio Workspace 또는 직접 발견한 Forge 실행 도구가 필요하다. Forge는 command·Codex·Claude·OpenCode Runtime을 실행한다.
   산출물 파일은 Workspace에 남으며 별도 Artifact 다운로드 기능이 있다고 가정하지 않는다.
+metadata:
+  org.opspresso.agent-studio.icon: box
 ---
 
 # Sandbox에서 작업 수행

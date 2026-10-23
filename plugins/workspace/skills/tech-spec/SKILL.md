@@ -3,6 +3,8 @@ name: tech-spec
 description: >
   기능·시스템의 기술 명세, TechSpec·RFC·설계안을 작성하거나 개선할 때 쓴다.
   목표·설계·대안·실패 경로와 검증 기준을 정리해 구현과 검토에 필요한 결정을 드러낸다.
+metadata:
+  org.opspresso.agent-studio.icon: file-description
 ---
 
 # TechSpec 작성

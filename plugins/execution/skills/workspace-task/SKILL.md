@@ -7,6 +7,8 @@ description: >
 compatibility: >
   Studio의 Workspace 빌트인은 독립 Forge 서비스에 실행을 위임한다. 직접 Forge MCP를 사용할 때는 발견한 schema를 따른다.
   Skill 설치가 Runtime·저장소 권한·계정 연결을 만들지는 않는다.
+metadata:
+  org.opspresso.agent-studio.icon: folder-code
 ---
 
 # 지속형 Workspace 작업 조율

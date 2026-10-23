@@ -1,10 +1,11 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "execution",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Run coding, file processing and automation tasks in persistent Workspaces and isolated Sandboxes. Reuse task state, inspect outputs and checks, and finish coding requests through a work-branch PR, with separate confirmation for main publication, tags, releases and deployment.",
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
   "license": "MIT",
-  "keywords": ["workspace", "sandbox", "coding", "files", "automation"]
+  "keywords": ["workspace", "sandbox", "coding", "files", "automation"],
+  "extensions": { "org.opspresso.agent-studio": { "icon": "terminal-2" } }
 }

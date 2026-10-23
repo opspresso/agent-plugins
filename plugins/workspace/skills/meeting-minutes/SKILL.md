@@ -7,6 +7,8 @@ description: >
 compatibility: >
   녹음 조회·다운로드·전사는 해당 출처의 접근 권한과 실행 도구가 필요하다.
   전사문이나 회의 메모가 제공되면 외부 연결 없이 작성한다.
+metadata:
+  org.opspresso.agent-studio.icon: notes
 ---
 
 # 회의록 작성

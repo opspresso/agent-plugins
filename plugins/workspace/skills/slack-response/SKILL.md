@@ -4,6 +4,8 @@ description: >
   Slack에 보낼 답변·공지·요약을 작성하거나 기존 Markdown을 Slack 응답 문법에 맞출 때 쓴다.
   출력 경로에 맞춰 강조·링크·코드·목록·멘션을 정리하며 기본은 mrkdwn이다.
   Slack 대화 검색이나 앱·봇 구현 자체를 위한 스킬은 아니다.
+metadata:
+  org.opspresso.agent-studio.icon: message-circle
 ---
 
 # Slack 응답 문법

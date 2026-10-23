@@ -3,6 +3,7 @@ description: >
   Search and read Notion pages, databases and comments, or find workspace users.
   Create and edit workspace content when requested through the project's
   connected Notion OAuth account; unavailable access requires supplied content.
+icon: brand-notion
 ---
 
 # notion

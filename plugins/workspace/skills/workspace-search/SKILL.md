@@ -4,6 +4,8 @@ description: >
   Google Drive·Docs·Sheets·Slides, Slack, Notion 등 업무 자료에서 문서·논의·결정의
   근거를 찾고 출처와 함께 답한다. 연결된 검색·읽기 도구가 필요하며 없으면 제공된 자료만
   사용한다. 공개 웹 조사나 문서 편집·게시 자체를 위한 스킬은 아니다.
+metadata:
+  org.opspresso.agent-studio.icon: search
 ---
 
 # 업무 자료 검색
