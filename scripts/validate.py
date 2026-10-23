@@ -51,23 +51,27 @@ STUDIO_EXTENSION_FIELDS = {"icon", "mcpSourceOutputs"}
 # sync drops any other name, so an unlisted name fails here first. Repository
 # policy: every plugin, skill and MCP server declares one.
 CATALOG_ICONS = frozenset("""
-address-book alert-triangle api app-window apps archive bell bolt book book-2
-books box braces brain brand-aws brand-docker brand-figma brand-github
-brand-gitlab brand-gmail brand-google brand-google-drive brand-jira brand-notion
-brand-openai brand-slack brand-teams brand-telegram briefcase browser bug
-calculator calendar calendar-event chart-area-line chart-bar chart-dots
-chart-line chart-pie checklist clipboard-text cloud cloud-computing code
-code-plus cpu credit-card database device-desktop device-mobile file file-code
-file-description file-search file-spreadsheet file-text file-type-doc
-file-type-pdf filter flask folder folder-code git-branch git-merge
-git-pull-request globe hammer heart hierarchy-2 home id key language layout
-layout-dashboard link list-check lock mail map message-chatbot message-circle
-microphone mood-smile moon-stars music notebook notes package palette pencil
-photo player-play plug-connected presentation presentation-analytics prompt
-puzzle receipt report-analytics robot rocket route school search server
-server-cog settings shield-check shopping-cart sitemap sparkles stack-2
-steering-wheel table tag target template terminal-2 tool transform truck user
-users video wand world world-search writing yin-yang zoom-code
+address-book agent-forge agent-librio agent-memory alert-triangle api
+app-window apps archive bell bolt book book-2 books box braces brain brand-argo
+brand-aws brand-docker brand-figma brand-github brand-gitlab brand-gmail
+brand-google brand-google-calendar brand-google-docs brand-google-drive
+brand-google-sheets brand-google-slides brand-grafana brand-jira
+brand-kubernetes brand-notion brand-openai brand-plaud brand-slack brand-teams
+brand-telegram briefcase browser bug bulb calculator calendar calendar-event
+chart-area-line chart-bar chart-dots chart-line chart-pie checklist click
+clipboard-text cloud cloud-computing code code-plus components cpu credit-card
+database device-desktop device-desktop-code device-mobile feather file
+file-code file-description file-search file-spreadsheet file-text file-type-doc
+file-type-pdf filter flask folder folder-code folder-plus git-branch git-merge
+git-pull-request globe hammer headphones heart hierarchy-2 home id inbox
+infinity key language layout layout-dashboard link list-check lock mail map
+message-2-code message-chatbot message-circle microphone mood-smile moon-stars
+music notebook notes package package-import palette pencil photo photo-ai
+player-play plug-connected presentation presentation-analytics prompt puzzle
+receipt report-analytics robot rocket route school search server server-cog
+settings shield-check shopping-cart sitemap sparkles stack-2 steering-wheel
+table tag target template terminal-2 tool transform truck urgent user users
+video wand world world-search writing yin-yang zoom-code zoom-exclamation
 """.split())
 
 # `^(?!.*(?:--|\.\.))[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$` from the plugin schema.
