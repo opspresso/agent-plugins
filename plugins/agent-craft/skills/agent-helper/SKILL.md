@@ -106,6 +106,7 @@ bot token, signing secret, app password, MCP header·OAuth, 개인 API·webhook 
 | MCP OAuth 연결, Slack·Telegram·Teams credential, 개인 API·webhook token | 연동 화면(`/agents/<name>/integrations`) |
 
 사용자가 대화에 비밀을 붙여 넣었으면 반복하거나 도구 인자로 보내지 말고 교체를 권한다.
+
 ## 전용 Skill
 
 공유 Skill로 해결할 수 없는 그 Agent만의 반복 절차·판단 기준·참고 자료가 있을 때 전용 Skill을 만든다.
