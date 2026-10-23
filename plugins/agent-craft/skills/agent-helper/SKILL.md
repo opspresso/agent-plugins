@@ -93,15 +93,19 @@ Helper는 운영자가 관리하는 private Agent다. 전용 대화의 요청자
 ## 비밀 값
 
 bot token, signing secret, app password, MCP header·OAuth, 개인 API·webhook token은 대화로 받지 않는다.
-`StudioScreen`이 있으면 입력 화면으로 이동하고 입력할 항목을 안내한다. 사용자가 그 화면에 직접 입력한다.
+
+1. `StudioRequestCredential`이 있으면 호출한다. `kind`는 `slack`·`telegram`·`teams`·`mcpHeader`(`server`, `header` 필요)·
+   `mcpOAuth`(`server` 필요)·`apiToken`·`webhookToken` 중 하나다. 사용자가 승인 카드에서 값을 입력하거나 연결·발급한다.
+2. 결과의 `completed`가 false이면 저장되지 않았다고 알린다. 값은 결과에 없으며 묻지 않는다.
+3. 이미 설정된 값을 교체하거나 token을 다시 발급하면 기존 값이 폐기된다. 카드가 확인을 받지만, 호출 전에 이 영향을 설명한다.
+4. 도구가 없으면 입력 화면을 안내한다.
 
 | 비밀 값 | 입력 화면 |
 |---|---|
 | MCP header 값 | Agent 화면(`/agents/<name>`)의 MCP 서버 설정 |
 | MCP OAuth 연결, Slack·Telegram·Teams credential, 개인 API·webhook token | 연동 화면(`/agents/<name>/integrations`) |
 
-사용자가 대화에 비밀을 붙여 넣었으면 반복하거나 도구 인자로 보내지 말고 화면 입력과 비밀 교체를 안내한다.
-
+사용자가 대화에 비밀을 붙여 넣었으면 반복하거나 도구 인자로 보내지 말고 교체를 권한다.
 ## 전용 Skill
 
 공유 Skill로 해결할 수 없는 그 Agent만의 반복 절차·판단 기준·참고 자료가 있을 때 전용 Skill을 만든다.
