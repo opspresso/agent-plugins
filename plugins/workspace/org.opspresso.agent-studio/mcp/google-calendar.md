@@ -4,6 +4,7 @@ description: >
   Create, update, delete or respond to events only when requested and supported
   by the connected account's scopes. Requires Workspace MCP Developer Preview
   access; time proposals do not reserve slots or send invitations.
+icon: calendar
 ---
 
 # google-calendar

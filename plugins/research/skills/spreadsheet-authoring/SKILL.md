@@ -7,6 +7,8 @@ description: >
 compatibility: >
   XLSX는 File과 artifact 저장소, Google Sheets는 실제 MCP와 계정 권한이 필요하다.
   도구가 없으면 제공된 값·수식으로 분석하고 저장·계산 성공을 주장하지 않는다.
+metadata:
+  org.opspresso.agent-studio.icon: file-spreadsheet
 ---
 
 # 스프레드시트 작성·점검

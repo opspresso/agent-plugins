@@ -4,6 +4,7 @@ description: >
   create or copy files when requested and supported. Requires the Agent's
   connected Google account and Workspace MCP Developer Preview access. A Drive
   file ID is not a host app artifact ID; inaccessible files need supplied content.
+icon: brand-google-drive
 ---
 
 # google-drive

@@ -7,6 +7,8 @@ description: >
 compatibility: >
   GenerateImage·EditImage 빌트인이 제시된 런에서만 동작한다. 두 툴은 그 능력이 실제로
   있는 런에만 나타나므로, 목록에 없으면 이미지를 만들 수 없다고 밝힌다.
+metadata:
+  org.opspresso.agent-studio.icon: photo
 ---
 
 # 이미지 생성 스킬

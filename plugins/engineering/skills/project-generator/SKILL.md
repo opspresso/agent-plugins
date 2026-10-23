@@ -4,6 +4,8 @@ description: >
   새 웹 앱·API·CLI·라이브러리·자동화 프로젝트의 실행 가능한 초기 구조를 만들 때 쓴다.
   목적과 스택·실행 환경을 확인하고 최소 기능·설정 예시·실행 방법을 생성해 검증한다.
   기존 프로젝트 기능 추가는 implement-feature이며 새 원격 저장소 생성·공개 배포는 별도 요청이다.
+metadata:
+  org.opspresso.agent-studio.icon: template
 ---
 
 # 새 프로젝트 생성

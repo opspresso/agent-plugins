@@ -7,6 +7,8 @@ description: >
 compatibility: >
   파일 작업은 File과 artifact 저장소, Google 작업은 해당 MCP와 계정 권한이 필요하다.
   기존 파일은 file_id, Google 문서는 실제 Google ID로 접근하며 없는 기능은 완료로 보고하지 않는다.
+metadata:
+  org.opspresso.agent-studio.icon: file-text
 ---
 
 # 문서·발표 자료 작성

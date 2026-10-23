@@ -4,6 +4,7 @@ description: >
   change labels when requested. Requires the project's connected Google account
   and Workspace MCP Developer Preview access. Draft creation does not send email;
   use supplied text if mailbox access is unavailable.
+icon: brand-gmail
 ---
 
 # gmail

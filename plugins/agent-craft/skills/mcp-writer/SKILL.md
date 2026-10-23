@@ -3,6 +3,8 @@ name: mcp-writer
 description: >
   MCP 서버의 도구·리소스 API를 설계·구현하거나 기존 서버의 사용성·보안을 검토할 때 쓴다.
   검색 설명, 입력·응답 계약, 인증·오류 처리와 대상 클라이언트 연결 방법을 정리한다.
+metadata:
+  org.opspresso.agent-studio.icon: plug-connected
 ---
 
 # MCP 서버 작성

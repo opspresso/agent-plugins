@@ -7,6 +7,8 @@ description: >
 compatibility: >
   저장소 서비스나 로컬 변경을 읽을 수 있는 도구를 사용한다. GitHub MCP는 선택 가능한 경로다.
   접근 도구가 없으면 사용자가 제공한 diff·파일 내용·변경 자료로 검토한다.
+metadata:
+  org.opspresso.agent-studio.icon: git-pull-request
 ---
 
 # PR 제목과 본문 작성

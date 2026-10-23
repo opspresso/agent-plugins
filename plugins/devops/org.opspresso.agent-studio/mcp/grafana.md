@@ -1,6 +1,7 @@
 ---
 description: >
   Explore Grafana dashboards, datasources, metrics, logs, alerting and incidents for the connected environment. Read-only: the bundled deployment offers no write tools and no raw SQL query tools. Available reads depend on datasource permissions.
+icon: chart-area-line
 ---
 
 # grafana

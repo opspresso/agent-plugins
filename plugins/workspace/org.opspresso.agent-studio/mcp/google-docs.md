@@ -6,6 +6,7 @@ description: >
   IDs cannot be used as host app artifact IDs.
   Preserve the target's template and named styles; use the offered document-authoring
   skill for a new document's design contract rather than provider defaults.
+icon: file-type-doc
 ---
 
 # google-docs

@@ -3,6 +3,8 @@ name: tufte-charts
 description: >
   정량 데이터의 비교·추세·분포·상관관계를 차트로 설계하고 HTML·SVG·React 코드로 만든다.
   서비스 의존성·조직도·처리 흐름은 diagram-design, 전체 HTML 보고서 구성은 html-report를 쓴다.
+metadata:
+  org.opspresso.agent-studio.icon: chart-dots
 ---
 
 # Tufte 차트

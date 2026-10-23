@@ -4,6 +4,8 @@ description: >
   Google Calendar 등 연결된 캘린더에서 일정을 확인하고 빈 시간을 비교하거나 요청된
   일정 생성·변경·취소를 수행한다. 실제 캘린더 조회·변경 도구와 계정 권한이 필요하다.
   도구가 없으면 제공된 일정으로 후보안을 내며 예약이나 초대 완료를 주장하지 않는다.
+metadata:
+  org.opspresso.agent-studio.icon: calendar-event
 ---
 
 # 일정 조회와 조율

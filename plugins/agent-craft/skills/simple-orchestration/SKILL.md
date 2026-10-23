@@ -7,6 +7,8 @@ description: >
 compatibility: >
   위임이 허용되고 실제 위임 도구와 적합한 에이전트가 제공돼야 한다.
   기능이 없거나 위임 비용이 큰 작업은 직접 수행한다.
+metadata:
+  org.opspresso.agent-studio.icon: hierarchy-2
 ---
 
 # 단순 오케스트레이션

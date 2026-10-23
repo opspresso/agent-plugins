@@ -4,6 +4,8 @@ description: >
   대화·문서·도구 결과에서 항목을 추출하거나 JSON·CSV·표로 변환할 때 쓴다.
   지정 스키마와 출력 형식을 지키고 누락값·불확실성을 구분한다.
   서식이나 수식이 있는 XLSX 파일 생성은 spreadsheet-authoring을 쓴다.
+metadata:
+  org.opspresso.agent-studio.icon: braces
 ---
 
 # 구조화 출력

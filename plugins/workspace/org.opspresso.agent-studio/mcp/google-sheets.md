@@ -6,6 +6,7 @@ description: >
   and range; this accesses a live sheet rather than an XLSX artifact.
   Preserve existing styles; use the offered spreadsheet-authoring design contract
   for new sheets and keep formatting writes separate from value/formula writes.
+icon: table
 ---
 
 # google-sheets
