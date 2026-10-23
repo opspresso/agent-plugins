@@ -20,7 +20,9 @@
 ## frontmatter와 권한
 
 호스트 앱은 평평한 key와 들여쓴 scalar를 읽는다. 여러 줄 description은 `>`·`|`·`>-`·`|-`로
-작성하고 중간 빈 줄을 피한다. 중첩 metadata는 실행 설정이 아니다.
+작성하고 중간 빈 줄을 피한다. `metadata`는 한 단계의 `key: value` map만 읽으며 실행 설정이 아니다.
+콘솔 아이콘은 `metadata`의 `org.opspresso.agent-studio.icon`에 지원 목록의 Tabler 아이콘 이름(예:
+`git-branch`)으로 적는다. 목록에 없는 이름은 아이콘 없이 동기화된다. 아이콘은 모델에게 전달되지 않는다.
 `compatibility`·`allowed-tools`는 도구 제공·권한 설정이나 모델에게 전달되는 본문이 아니다.
 필수 도구 조건과 대안은 description·본문에 적는다. description에는 1024 UTF-16 code unit
 제한도 적용된다. 저장소 검사기는 이 배포 정책을 규격 검사와 함께 확인한다.

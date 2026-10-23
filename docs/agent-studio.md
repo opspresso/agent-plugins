@@ -193,10 +193,25 @@ from attachment limits. Executable scripts and binary assets are not carried.
 Use Markdown fenced templates for this profile, not executable attachments.
 These limits are enforced by this repository's validator.
 
-Frontmatter uses the host app's flat scalar parsing. Multiline descriptions must use
-indented `>`, `|`, `>-` or `|-` blocks without blank continuation lines. Nested
-metadata does not configure runtime permissions. The description limit also
-applies in UTF-16 code units. Confirm actual offered tools and their schemas.
+Frontmatter uses the host app's parsing: flat scalars, indented `>`, `|`, `>-` or
+`|-` blocks, and one level of `key: value` entries under a key with no value (the
+Agent Skills `metadata` map). Multiline descriptions must not contain blank
+continuation lines. Metadata does not configure runtime permissions. The
+description limit also applies in UTF-16 code units. Confirm actual offered tools
+and their schemas.
+
+### Console icons
+
+The console reads a plugin icon from `extensions.org.opspresso.agent-studio.icon`,
+a skill icon from the `SKILL.md` metadata entry `org.opspresso.agent-studio.icon`,
+and a bundled server icon from the `icon` frontmatter field of its extension
+document. Values are Tabler icon names from the host app's supported set; see
+[Console icons](../README.md#console-icons). Sync writes the icon with the entry.
+When a plugin-owned server document no longer declares an icon, sync clears the
+stored icon. An administrator sets icons for hand-registered entries in the
+console. The console also shows the tool icons that an MCP server returns from
+`tools/list`. It accepts only inline images (`data:`) and HTTPS images from the
+server's own origin.
 
 ## Registration and sync ownership
 
