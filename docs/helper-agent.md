@@ -5,11 +5,10 @@ Agent Studio의 상단 헤더의 Helper는 운영자가 관리하는 하나의 p
 사용 가능한 `agent-helper`, `prompt-writer`, `skill-writer`, `simple-orchestration`을 연결한다.
 
 `agent-helper`는 화면 설명, Agent 생성·개선과 Agent 전용 Skill 작성 절차를 소유한다. `StudioRead`,
-`StudioCreateAgent`, `StudioUpdateAgent`, `StudioSaveSkill`, `StudioDeleteSkill`은 Studio 내부 권한과
-저장소를 사용하는 내장 도구다. 변경 도구는 Agent 정책과 관계없이 사용자 승인을 받는다.
-전용 Skill은 Studio에 직접 저장되며 이 저장소의 sync 대상이 아니다. 공유 Skill은 이 저장소에서 관리한다.
-이 저장소에 별도 MCP 서버나 credentials를 만들지 않는다. Plugin sync 이후 기존 Helper의
-Skill 목록은 운영자가 Agent 설정에서 갱신한다. sync가 사용자 설정을 덮어쓰지 않는다.
+`StudioCreateAgent`, `StudioUpdateAgent`, `StudioSaveSkill`, `StudioDeleteSkill`, `StudioSaveTrigger`,
+`StudioDeleteTrigger`, `StudioUpdateIntegration`은 Studio 내부 권한과 저장소를 사용하는 내장 도구다.
+변경 도구는 Agent 정책과 관계없이 사용자 승인을 받는다. 비밀 값은 대화로 받지 않고 사용자가 해당 화면에 입력한다.
+전용 Skill은 Studio에 직접 저장되며 이 저장소의 sync 대상이 아니다. 공유 Skill은 이 저장소에서 관리하고 이름에 `--`를 쓰지 않는다.
 
 Helper의 현재 화면 공유를 끄면 화면 자료를 다음 메시지에 첨부하지 않는다. 앞선 대화의
 자료는 기존 Chat 수명을 따른다. 입력값·비공개 영역은 화면 수집에서 제외되며 사용자가
