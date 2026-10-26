@@ -12,17 +12,25 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@v7
         with:
           node-version: 24
           package-manager-cache: false
-      # The hosted Ubuntu image supplies Python for these standard-library tests.
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
       - run: python3 -m unittest discover -s scripts -p 'test_*.py'
       - run: python3 scripts/validate.py
       - run: node --test scripts/test_html_*.mjs
