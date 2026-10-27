@@ -1,0 +1,74 @@
+---
+name: app-delivery
+description: >
+  앱 하나를 저장소 생성·개발부터 리소스·빌드·테스트·배포·서비스 확인까지 Agent Broker와 Agent Forge로 진행할 때 쓴다.
+  application.yaml로 앱을 선언하고 Broker project_apply·delivery_start로 dev·prod에 배포한 뒤 URL을 확인한다.
+  코드 변경만 필요하면 implement-feature, 기존 GitOps 설정 변경은 gitops-change를 쓴다.
+metadata:
+  org.opspresso.agent-studio.icon: rocket
+---
+
+# 앱 전달
+
+사용자가 요청한 앱을 실행 중인 서비스로 만든다. 저장소·코드·`application.yaml`·리소스·Delivery·응답하는 URL이
+모두 확인될 때 완료다. PR이나 이미지 push만으로 완료라고 하지 않는다.
+
+필요한 연결: Agent Broker MCP(`project_apply`, `delivery_start` 등)와 Agent Forge MCP(Workspace·Git).
+둘 중 하나가 없으면 할 수 있는 단계까지만 진행하고, 없는 연결과 남은 단계를 알린다.
+
+## 1. 요구사항과 이름
+
+1. 앱의 목적·핵심 기능·데이터·외부 API와 필요한 Environment(`dev`, `prod`)를 확인한다. 정해진 부분은 묻지 않는다.
+2. 저장소 owner를 정한다. 사용자가 정하지 않았으면 Agent 지침이 정한 기본 owner를 쓰고, 그것도 없으면 묻는다.
+3. 이름(slug)을 정한다. `^[a-z][a-z0-9-]{1,30}[a-z0-9]$`이고 `-dev`·`-prod`로 끝날 수 없다.
+   저장소 이름과 같게 하면 추적이 쉽다. 주소는 `https://<slug>-dev.<앱 도메인>`(dev), `https://<slug>.<앱 도메인>`(prod)이다.
+
+## 2. 저장소와 코드
+
+1. 새 저장소는 연결된 `project-generator` 절차로 Forge `repository_create`를 실행한다. 공개 범위는 사용자 요청을 따른다.
+2. 코드를 구현한다. 배포에 필요한 조건은 다음과 같다. 세부 규칙과 예시는 [application.yaml과 배포 조건](references/application-yaml.md)을 읽는다.
+   - 저장소 루트의 `application.yaml`
+   - `Dockerfile`: linux/arm64에서 빌드되고, `PORT` 환경 변수의 포트에서 HTTP를 받는다.
+   - health 경로(기본 `/health`): 의존 리소스가 준비되면 2xx를 반환한다.
+   - 테스트 명령: 외부 리소스 없이 끝나야 한다. Delivery의 test 단계에는 Broker Variable이 없다.
+3. Forge Run의 checks(test·lint·build)로 확인한다. `dev` 리소스가 있으면 Forge가 Run에 그 값을 넣으므로 실제 DB로도 확인할 수 있다.
+4. Git `review`·`commit`·`push`·`pull-request`로 PR을 만든다. main 병합은 보호 작업이다. 사용자에게 Forge 승인 링크를 주고
+   승인을 기다린다. 승인 없이 다른 경로로 병합하지 않는다.
+
+## 3. 선언 적용과 리소스
+
+1. 병합된 main의 `application.yaml` 내용을 그대로 `project_apply`에 넘긴다(`repository`, `application`).
+   Delivery는 배포할 revision의 파일 SHA-256이 적용한 내용과 같은지 확인하므로, 한 글자라도 다르면 `application_changed`로 실패한다.
+2. 결과의 리소스가 `ready`가 될 때까지 `project_get`으로 확인한다. `failed`이면 원인을 보고한다.
+3. `missingSecrets`가 있으면 각 `secret_request` 링크를 사용자에게 준다. 값은 Chat으로 받지 않는다.
+   사용자가 입력했다고 하면 `project_get`으로 Variable 이름이 생겼는지 확인한다.
+4. `invalid_application`이면 오류의 필드를 고쳐 2단계의 PR로 다시 반영한다.
+
+## 4. Delivery
+
+1. `delivery_start`(`project`, `environment`, 선택 `ref`)를 호출한다. 기본 ref는 `main`이다.
+   - `dev`는 바로 실행된다.
+   - `prod`는 `awaiting_approval`과 `approvalUrl`을 반환한다. 링크를 사용자에게 주고 소유자가 Broker 콘솔에서 승인하게 한다.
+2. Studio가 Delivery를 따라가다 끝나면 결과를 Chat에 전달하고 대화를 이어 준다. 같은 Delivery를 기다리며
+   `delivery_get`을 반복 호출하지 않는다. 사용자가 진행 상황을 물으면 한 번 조회해 단계(`step`)를 알린다.
+3. 결과를 확인한다.
+   - `succeeded`: `url`과 health 경로, 배포한 `revision`(짧은 SHA)을 알린다.
+   - `failed`: `step`과 `errorCode`를 확인하고 `delivery_logs`(`deliveryId`, `step`)로 원인을 읽는다.
+     코드 문제는 2단계로 고친 뒤 새 Delivery를 시작한다. `application_changed`는 3단계부터 다시 한다.
+     같은 실패를 원인 확인 없이 다시 시작하지 않는다.
+   - `rejected`: 소유자가 거절했거나 승인이 만료됐다. 다시 시작할지 사용자에게 확인한다.
+4. `environment_not_ready`이면 오류가 알려 준 리소스·secret을 3단계로 준비한다. `delivery_in_progress`이면 진행 중인
+   Delivery가 끝나기를 기다린다.
+
+## 5. 운영과 변경
+
+- Variable 값을 바꾸면 새 Delivery가 Pod를 다시 시작해 값을 읽게 한다.
+- 설정(복제 수·자원·환경 변수)은 `application.yaml`을 고치는 PR → 병합 → `project_apply` → Delivery 순서로 바꾼다.
+  GitOps 저장소의 배포 값 파일을 직접 고치지 않는다.
+- 장애 조사는 `incident-triage`를 쓴다. 앱 namespace는 `app-<slug>-<env>`, Deployment 이름은 `app`이다.
+- 리소스·Project 삭제는 Broker 콘솔에서 소유자만 한다. MCP로 삭제를 시도하지 않는다.
+
+## 보고
+
+단계마다 확인한 사실만 보고한다: 저장소와 PR, 적용한 선언의 SHA, 리소스 상태, Delivery ID·상태·URL.
+승인을 기다리는 단계와 사용자가 할 일(승인, secret 입력)을 분리해 알린다.

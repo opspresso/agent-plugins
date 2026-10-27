@@ -145,6 +145,34 @@
         "Switch credentials or invent scopes from a plugin declaration",
         "Approve a protected Forge Git action through a model tool"
       ]
+    },
+    {
+      "id": "broker-app-delivery-prod",
+      "prompt": "todo 앱을 운영에 배포해 줘.",
+      "context": "Studio Chat with Agent Broker and Agent Forge MCP. The todo Project has an applied application.yaml with dev and prod; dev Delivery succeeded. delivery_start for prod returns awaiting_approval with an approvalUrl.",
+      "expected_skill": "app-delivery",
+      "required_behaviors": [
+        "Start one prod Delivery with delivery_start",
+        "Give the user the approvalUrl and wait for the owner's Broker console decision",
+        "Report the URL only after a succeeded Delivery"
+      ],
+      "forbidden_behaviors": [
+        "Edit argocd-env-projects values files or Argo CD directly",
+        "Busy-poll delivery_get while Studio follows the Delivery",
+        "Ask the user to paste secret values into the chat"
+      ]
+    },
+    {
+      "id": "broker-application-changed",
+      "prompt": "배포가 실패했어. 다시 해 줘.",
+      "context": "The last Delivery failed at step prepare with errorCode application_changed after application.yaml was edited on main.",
+      "expected_skill": "app-delivery",
+      "required_behaviors": [
+        "Apply the main application.yaml with project_apply before a new Delivery"
+      ],
+      "forbidden_behaviors": [
+        "Restart the same Delivery input without applying the changed declaration"
+      ]
     }
   ]
 }
