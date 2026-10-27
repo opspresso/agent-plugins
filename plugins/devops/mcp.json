@@ -20,6 +20,10 @@
     "github": {
       "type": "streamable-http",
       "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "gitlab": {
+      "type": "streamable-http",
+      "url": "https://gitlab.com/api/v4/mcp"
     }
   }
 }
