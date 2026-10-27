@@ -32,13 +32,14 @@ metadata:
    - health 경로(기본 `/health`): 의존 리소스가 준비되면 2xx를 반환한다.
    - 테스트 명령: 외부 리소스 없이 끝나야 한다. Delivery의 test 단계에는 Broker Variable이 없다.
 3. Forge Run의 checks(test·lint·build)로 확인한다. `dev` 리소스가 있으면 Forge가 Run에 그 값을 넣으므로 실제 DB로도 확인할 수 있다.
-4. Git `review`·`commit`·`push`·`pull-request`로 PR을 만든다. main 병합은 보호 작업이다. 사용자에게 Forge 승인 링크를 주고
-   승인을 기다린다. 승인 없이 다른 경로로 병합하지 않는다.
+4. Git `review`·`commit`·`push`·`pull-request`로 PR을 만든다. `pull-request`는 승인을 만들지 않는다.
+5. PR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approvalUrl`을 반환한다.
+   그 링크를 사용자에게 주고, 병합 Run이 `succeeded`인지 확인한 뒤 다음 단계로 간다. 승인 없이 다른 경로로 병합하지 않는다.
 
 ## 3. 선언 적용과 리소스
 
-1. 병합된 main의 `application.yaml` 내용을 그대로 `project_apply`에 넘긴다(`repository`, `application`).
-   Delivery는 배포할 revision의 파일 SHA-256이 적용한 내용과 같은지 확인하므로, 한 글자라도 다르면 `application_changed`로 실패한다.
+1. 배포할 revision(기본 병합된 main)의 `application.yaml` 내용을 그대로 `project_apply`에 넘긴다(`repository`, `application`).
+   Delivery는 그 revision의 파일 SHA-256이 적용한 내용과 같은지 확인하므로, 한 글자라도 다르면 `application_changed`로 실패한다.
 2. 결과의 리소스가 `ready`가 될 때까지 `project_get`으로 확인한다. `failed`이면 원인을 보고한다.
 3. `missingSecrets`가 있으면 각 `secret_request` 링크를 사용자에게 준다. 값은 Chat으로 받지 않는다.
    사용자가 입력했다고 하면 `project_get`으로 Variable 이름이 생겼는지 확인한다.
@@ -54,7 +55,8 @@ metadata:
 3. 결과를 확인한다.
    - `succeeded`: `url`과 health 경로, 배포한 `revision`(짧은 SHA)을 알린다.
    - `failed`: `step`과 `errorCode`를 확인하고 `delivery_logs`(`deliveryId`, `step`)로 원인을 읽는다.
-     코드 문제는 2단계로 고친 뒤 새 Delivery를 시작한다. `application_changed`는 3단계부터 다시 한다.
+     코드 문제는 2단계로 고친 뒤 새 Delivery를 시작한다. `application_changed`이면 Delivery에 쓴 ref의 `application.yaml`을
+     읽어 그 내용을 3단계로 적용하거나, 적용한 선언과 같은 파일을 가진 ref로 다시 시작한다. 다른 ref의 파일을 적용하지 않는다.
      같은 실패를 원인 확인 없이 다시 시작하지 않는다.
    - `rejected`: 소유자가 거절했거나 승인이 만료됐다. 다시 시작할지 사용자에게 확인한다.
 4. `environment_not_ready`이면 오류가 알려 준 리소스·secret을 3단계로 준비한다. `delivery_in_progress`이면 진행 중인
