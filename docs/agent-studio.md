@@ -17,11 +17,38 @@ contracts before changing a plugin's tool instructions or connection settings.
 
 | Project | Owns | Plugin consequence |
 |---|---|---|
-| `agent-studio` | Plugin sync, current Agent bindings, builtin tools, attachment extraction and artifact delivery | A component must be offered through saved bindings or enabled dynamic discovery; describe only inputs and results the run can access |
+| `agent-studio` | Plugin sync, current Agent bindings, builtin tools, attachment extraction, artifact delivery, MCP file references and service result delivery to Chat | A component must be offered through saved bindings or enabled dynamic discovery; describe only inputs and results the run can access |
 | `agent-models` | Model families, provider offerings, capabilities and pricing | A catalog, not an MCP server; use the available model `id`, not its provider `wireId`, in Agent settings |
 | `agent-memory` | Long-term memories and short-term task handoffs | Bind the exact service URL, current caller and `recall`/`remember`/`handoff_*` scopes |
-| `agent-librio` | Documents, RAG, knowledge graph, recordings, transcription and summaries | Bind its separate MCP/HTTP connection; use public model IDs and original source provenance |
-| `agent-forge` | Workspaces, Sandbox execution, native sessions, checkpoints and Git effects | Studio's `Workspace` wrapper or directly discovered Forge HTTP/MCP use the same remote execution service |
+| `agent-librio` | Documents, RAG, knowledge graph, recordings, transcription, meeting notes, audio profiles and job history | Bind its Tools entry; audio runs through Librio MCP tools with the user's audio profile |
+| `agent-forge` | Workspaces, Sandbox execution, native sessions, checkpoints, Workspace profiles, Git connections, protected-action approvals and run history | Bind its Tools entry; coding work runs through Forge MCP tools with the user's Workspace profile |
+
+### Service-owned tools
+
+Studio has no builtin audio or Workspace tools. Agent Memory, Agent Librio and
+Agent Forge are independent services. Studio connects to each only through MCP:
+
+- Deployment settings (`MEMORY_*`, `LIBRIO_*`, `FORGE_*`) create one Tools entry
+  per service. Plugin sync does not own these entries.
+- Each MCP connection is offered to the Agent as one native specialist. Every
+  request carries a short-lived token delegated from the current Studio user.
+- Each service owns its settings (named profiles), execution and history. People
+  manage them in the service console; the Tools detail page shows the settings
+  and history links the service advertises through
+  `org.opspresso.agent.tool-management`.
+- When a service accepts long-running work (`audio_job_submit`, `run_submit`,
+  `repository_create` and their retries), Studio records the keyed submission and
+  delivers the terminal result to the original Chat once. Librio transcript and
+  meeting-note outputs arrive as Chat files. An authenticated schedule tick
+  (`/api/triggers/scan`) drives delivery.
+- A tool parameter annotated with `org.opspresso.agent.file-reference` takes a
+  Studio file ID. Studio converts it at dispatch to a short-lived verified
+  reference that the service downloads. A recording attached in Chat becomes a
+  Chat file whose ID is passed to Librio `recording_import`. Chat attachments are
+  limited to 10 MiB; larger recordings are uploaded in the Librio console.
+- Never resubmit uncertain work. Inspect the original request with
+  `audio_request_status`, `run_lookup_request`, `workspace_lookup_request` or
+  `repository_lookup_request`.
 
 Document processing belongs to the host app's builtin `File` tool and artifact
 store. It needs no MCP registration or separate server binding. YouTube caption
@@ -118,20 +145,19 @@ the intended Plaud account for the meeting Agent. Cloud Sync is required.
 Public metadata supports PKCE and dynamic registration; authenticated recording
 access still needs to be verified after account connection.
 
-The intended workflow is recording selection → mapped `source_ref` → the host app's
-`AudioJob` → Librio original → Librio transcript and optional meeting notes, both
-published as Librio search documents → explicitly requested Memory records.
-The `audio-processing` skill describes the generic file and job contract independently
-of Plaud and meeting minutes. Enable the Agent's `audioProcessing` tools and
-configure the Librio service, its private source bucket and allowed transcription and summary connections first. Studio owns source transfer, job progress, cost checks and output read-through; it stores no transcript copy. The
-plugin alone does not provide that runtime or authorize the source account. Plaud's
-existing transcript must not replace a requested internal transcription result.
+Plaud finds recordings and returns Plaud's existing transcripts and notes. The
+plugin's `get_file` mapping hides the download URL behind an opaque `source_ref`,
+but no current Studio or Librio tool accepts `source_ref`. To transcribe a Plaud
+recording with Librio, the user attaches the audio file in Chat or uploads it in
+the Librio console; the `audio-processing` skill then runs `recording_import` →
+`audio_job_submit`. Librio publishes transcripts and meeting notes as search
+documents; Memory records are written only on explicit request. Plaud's existing
+transcript must not replace a requested Librio transcription.
 
 Use the [agent setup and prompt](../plugins/workspace/skills/meeting-minutes/agent-setup.md)
 to configure the Agent and the [operator notes](../plugins/workspace/org.opspresso.agent-studio/mcp/plaud.md)
-for connection and data handling. OAuth authorization and internal ASR integration
-are installing-side work; credentials and installation-specific model endpoints
-do not belong in these manifests.
+for connection and data handling. Credentials and installation-specific model
+endpoints do not belong in these manifests.
 
 ## What the skills assume
 
@@ -242,40 +268,35 @@ external actions.
 ## Persistent Workspace and Sandbox tasks
 
 The execution plugin supplies reusable task guidance, not a shell or account credentials.
-Enable `parameters.workspaceTools` in the Agent's current settings. Configure repositories, access mode
-and default runtime in the Agent's Workspace tools tab; choose from Forge's allowed native model channels.
-The operator configures the Forge service and its Sandbox provider, worker and model gateway. The `Workspace` builtin is available only to signed-in members
-of an enabled Agent; bind workspace-task and sandbox-task in its current settings.
-Studio's general Forge MCP binding is read-only; execution goes through the Workspace wrapper with durable dispatch and current policy. Independent coding clients can use their own Forge credentials directly.
-The actual tool schemas remain authoritative. Model tool inputs cannot choose the Forge URL, caller identity, organization or provider credentials. The plugin grants none of these permissions.
+Bind the Agent Forge Tools entry and the workspace-task and sandbox-task skills.
+The operator configures the Forge service, its Sandbox provider, worker and model gateway.
+Each user creates a Workspace profile (runtime, central model, repository rules,
+checks and deployment workflows), selects a default, connects GitHub and registers
+repositories in the Forge console. The plugin grants none of these permissions.
+The actual tool schemas remain authoritative. Model tool inputs cannot choose the
+Forge URL, caller identity, organization or provider credentials.
 
 ### Start and observe a task
 
-`options` reads available runtimes, default_runtime and registered repositories. There is no default repository. `start` queues a
-new Workspace; `run` continues a returned workspace_id. For work without Git,
-repository and base_branch are null. `status` and bounded `wait` return output,
-checks, Diff and a cursor. Keep queued/running distinct from success. `cancel` stops
-a run and `close` saves state and removes compute. The native task continues if the
-parent Agent response ends; follow the returned workspace_path. Read all output pages using next_seq and has_more; output_loss remains a permanent warning even after the final page. Uncertain dispatch or lost responses must be reconciled through the same stored receipt, not a new execution.
-When the offered `start` schema includes `title`, use a short purpose label in the
-user's language. It labels the Workspace and its Chat; the script or coding task
-stays in `task`. Do not copy a command script into the title or send an unsupported field.
+Read the profile with `profile_list`/`profile_get`, reuse an existing Workspace from
+`workspace_list`, or create one with `workspace_create`. Prepare a repository with
+a Git `prepare` run on an `agent/` branch, then submit command, native task or Git
+steps with `run_submit`. One run executes per Workspace at a time. Keep
+queued/running distinct from success. Read `run_result`, then `run_events` up to
+`lastEventSeq` until `hasMore` is false; `outputLoss` remains a permanent warning.
+`interrupted` means an uncertain external effect and is never replayed automatically.
+Lost responses are reconciled with `run_lookup_request` or `workspace_lookup_request`,
+not a new execution.
 
 ### Git publication
 
-A coding request includes commit, work-branch push and pull-request publication through
-prepare_git without another approval, unless the user limits the scope. Main merge,
-direct main push, tags, releases and configured workflow dispatch require a separate
-request and confirmation in the Workspace review UI. Tags bind to reviewed main;
-releases bind to an existing tag and its exact commit. General agent
-descriptions and system prompts identify capabilities; account, repository,
-branch and requested file changes belong in each user's task input.
-
-### Reuse and close a Workspace
-
-Read options.current_workspace before creating compute. Repeated start returns the
-selection without queueing another task; run continues it. close keeps files and
-selection, and run/prepare_git can restore a closed Workspace. attach_repository
-requires an empty Git-free workdir. A Workspace path is a browser URL, not a file path.
+A coding request includes review, commit, work-branch push and pull-request runs
+without another approval, unless the user limits the scope. Protected branch
+publication, merge, tags, releases and deployment workflow dispatch require a
+separate request and the Workspace owner's approval in the Forge console; MCP has
+no approval tool. Tags bind to the reviewed HEAD; releases bind to an existing tag
+and its exact commit. General agent descriptions and system prompts identify
+capabilities; account, repository, branch and requested file changes belong in
+each user's task input.
 See the [Workspace agent profile](code-agent.md) for task bindings, runtime limits,
 GitHub Actions toolset configuration and the general system prompt.

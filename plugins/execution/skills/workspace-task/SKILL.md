@@ -1,21 +1,26 @@
 ---
 name: workspace-task
 description: >
-  코드·파일·데이터·자동화 작업을 지속형 Workspace에서 실행하거나 이어갈 때 쓴다.
-  기존 공간과 Session을 재사용하고 작업 접수·검증·Git 게시 단계를 조율한다.
-  실행에는 Workspace 도구가 필요하며 원격 자료를 읽는 것만으로 충분한 요청에는 공간을 만들지 않는다.
+  코드·파일·데이터·자동화 작업을 Agent Forge의 지속형 Workspace에서 실행하거나 이어갈 때 쓴다.
+  기존 Workspace를 재사용하고 실행 접수·결과 확인·Git 게시 단계를 조율한다.
+  실행에는 Forge MCP 도구가 필요하며 원격 자료를 읽는 것만으로 충분한 요청에는 Workspace를 만들지 않는다.
 compatibility: >
-  Studio의 Workspace 빌트인은 독립 Forge 서비스에 실행을 위임한다. 직접 Forge MCP를 사용할 때는 발견한 schema를 따른다.
-  Skill 설치가 Runtime·저장소 권한·계정 연결을 만들지는 않는다.
+  연결된 Agent Forge MCP(workspace_create, run_submit, run_result 등)가 필요하다.
+  Workspace profile·실행·Git 연결·보호 작업 승인·이력은 Forge가 소유한다. Skill 설치가 Runtime·저장소 권한·계정 연결을 만들지는 않는다.
 metadata:
   org.opspresso.agent-studio.icon: folder-code
 ---
 
 # 지속형 Workspace 작업 조율
 
-Workspace는 파일·Git·Session을 유지하는 작업 공간이고 Sandbox는 그 파일을 실행하는 일시적 자원이다.
-Studio의 조율 Agent는 사용자 의도·현재 권한·승인·대화 재개를 관리한다. Forge는 실행·Session·checkpoint·Git 효과를 소유하고, 코딩 Runtime은 파일 수정·검사를 수행한다.
+Workspace는 파일·Git·native Session을 유지하는 작업 공간이고 Sandbox는 그 파일을 실행하는 일시적 자원이다.
+Agent Forge는 Workspace profile·실행·checkpoint·Git 연결·보호 작업 승인·실행 이력을 소유한다.
+Studio는 Forge MCP 연결을 전담 specialist로 제공하고, Chat에서 접수한 실행의 terminal 결과를 원래 Chat에 한 번 전달한다.
 계정·저장소·브랜치·작업 파일은 사용자 요청에서 얻는다.
+
+사람이 profile·GitHub 연결·승인·이력을 다룰 때는 Forge 콘솔을 안내한다. Studio Tools의 Forge 상세 화면에
+설정·이력 링크가 있고, Workspace·Run 응답의 `links`에 `settingsUrl`·`historyUrl`·`workspaceUrl`·`runUrl`·`approvalUrl`이 있다.
+반환된 URL만 링크로 쓴다.
 
 ## 필요한 경로 선택
 
@@ -34,79 +39,49 @@ Studio의 조율 Agent는 사용자 의도·현재 권한·승인·대화 재개
 | 새 프로젝트 생성 | project-generator |
 | 파일·데이터 처리·스크립트 자동화 | sandbox-task |
 
-없는 Skill을 임의로 호출하지 않는다. 해당 작업을 직접 수행할 도구·자료가 있으면 그 범위에서
-진행하고 한계를 알린다. Skill 선택 때문에 새로운 게시·수정 범위를 추가하지 않는다.
+없는 Skill을 임의로 호출하지 않는다. Skill 선택 때문에 새로운 게시·수정 범위를 추가하지 않는다.
+도구 이름·입력·응답 유실 처리는 [Forge 도구](references/forge.md)를 읽는다. 실제 발견한 schema가 우선한다.
+Forge URL·조직·사용자 신원·provider credential·Git token은 서버 설정이며 모델이 입력하지 않는다.
 
-## 사용하는 도구 경계
+## Workspace 준비
 
-아래 `options/start/run/status/wait`는 Studio의 `Workspace` wrapper 계약이다. 직접 발견한
-Forge MCP를 사용하는 클라이언트는 [Forge 접수와 관측](references/forge.md)을 읽는다.
-두 경로의 이름과 필드를 섞지 않는다. Skill 설치는 서비스를 실행하거나 공간·권한을 만들지 않는다.
-Forge URL·org·owner·서명 키·provider credential은 서버 설정이며 모델이 입력하지 않는다.
-
-## 공간과 Runtime
-
-1. `{"request":{"operation":"options"}}`로 workdir, 허용 Runtime·저장소와 current_workspace를 읽는다.
-   코딩 CLI는 실제 모델 연결과 네트워크가 필요하고 GitHub MCP와 서버 Git 인증은 별개다.
-   네트워크·인증 설정 오류가 나면 설치 측 막힘으로 보고한다. 자연어 작업을 command에 보내거나
-   같은 작업을 새 공간에 반복 접수하지 않는다.
-2. 선택된 공간은 `run`으로 이어간다. `workspace_id`를 생략할 수 있다. 사용자가 다른 기존 공간을
-   지정했을 때만 `use_workspace`로 선택한다. start를 반복해도 새 작업이 접수되지 않는다.
-3. 선택이 없을 때 `start`에 runtime, repository, base_branch, task를 보낸다. 저장소 작업은 두 Git
-   선택 값을 모두 지정한다. 둘 다 null이면 Git-free이며 기본 저장소는 없다.
-   현재 schema에 `title`이 있으면 사용자의 언어로 짧은 작업 목적을 적는다. 제목은 표시용이고
-   `task`는 실행 입력이다. 특히 command의 셸 스크립트를 제목으로 복사하지 않는다.
-4. 사용자가 Runtime을 지정하지 않으면 options의 default_runtime을 따른다. 현재 허용 Runtime 목록에
-   없으면 Forge의 허용 모델 채널 또는 Agent 기본 Runtime 설정을 확인한다. command에는 실제 실행할
-   셸 스크립트를 구성해서 보내며 자연어 목록을 넣지 않는다. 코딩 Runtime에는 완결된 자연어 task를 보낸다.
-   선택된 Runtime은 run에서 바꿀 수 없다.
-
-새 저장소를 만들기 전 `check_repository_access`로 정확한 owner/name의 정책을 확인한다.
-모드는 selected(등록 목록), owners(지정 소유자), all(GitHub 계정의 전체 접근), new(등록 목록과 신규 자동 등록)다.
-`new`에서 allowed=false, creation_allowed=true이면 기존 접근은 막혀 있지만 요청한 신규 생성은 가능하다.
-새 저장소는 Workspace의 create_repository를 사용한다. 서버가 생성·초기화하고 신규 모드의 허용 목록에
-등록한다. MCP 생성 결과나 생성 시각을 등록 근거로 주장하지 않는다. 둘 다 차단되면 반환된
-`repository_policy_url`을 관리자에게 전달한다. 일반 Agent가 정책 모드를 변경하거나 없는 관리 메뉴를 안내하지 않는다.
-허용은 존재 여부가 아니다. clone 전 `check_repository`로 서버 계정의 접근·첫 commit·기준 branch를
-확인한다. 새 저장소 생성 요청은 허용을 확인한 뒤 project-generator의 원격 준비 절차로 생성·초기화한다.
-빈 저장소에는 clone할 main이 없으며, clone 실패는 Native task가 실행된 것이 아니다. 원인을 고친 뒤
-같은 저장소의 선택된 Workspace에서 run으로 재개한다.
+1. **profile 확인**: `profile_list`의 `selection`과 `profile_get`으로 사용할 `profileId`와 현재 `revision`을 읽는다.
+   profile은 Runtime·모델·저장소 규칙·검사·배포 workflow를 정한다. 선택이 없으면 Forge 콘솔 설정에서 선택하도록 안내한다.
+   사용자가 Runtime을 직접 지정하면 `model_channels`로 허용 채널을 확인하고 명시적 입력으로 만든다.
+2. **기존 Workspace 재사용**: 같은 작업의 후속 요청은 `workspace_list`·`workspace_get`으로 찾은 Workspace에서 이어간다.
+   `run_submit`은 `active` Workspace에만 접수된다. `suspended`이면 `workspace_resume`을 요청하고 `workspace_get`으로 `active`를 확인한다.
+   `closed`는 다시 열 수 없다. Workspace당 실행은 한 번에 하나다.
+3. **새 Workspace**: 재사용할 공간이 없을 때만 `workspace_create`에 `title`과 profile을 보낸다.
+   `title`은 사용자 언어의 짧은 작업 목적이다. 셸 스크립트를 제목으로 복사하지 않는다.
+4. **저장소 연결**: 저장소 작업이면 `git_connections`에서 등록된 저장소의 연결 `id`와 `defaultBranch`를 확인한다.
+   `{kind:"git", action:"prepare"}` 실행으로 `agent/`로 시작하는 작업 브랜치를 준비한다. 등록되지 않은 저장소는
+   사용자가 Forge 콘솔의 Git 설정에서 연결·등록해야 한다. credential을 인수로 보내지 않는다.
+   새 저장소 생성은 project-generator의 원격 준비 절차를 따른다.
 
 실행 지시를 만들 때는 [task 전달과 파일 작업](references/task-handoff.md)을 필요한 부분만 읽는다.
-workdir는 실제 경로다. workspace_url·approval_url은 반환된 그대로 링크로 사용한다. URL이 없으면
-workspace_path·approval_path의 상대 웹 경로를 그대로 사용하며 `/chats`에 `https://`를 붙이지 않는다.
-파일은 workdir의 상대 경로로 다룬다.
-`attach_repository`는 빈 Git-free 폴더에만 연결하며 이미 있는 파일을 덮거나 Git을 해제하지 않는다.
+command Runtime에는 실제 셸 스크립트를, native Runtime(codex·claude·opencode)에는 완결된 자연어 작업을 보낸다.
 
 ## 접수·완료·후속 요청
 
-queued/running은 완료가 아니다. 반환된 run_id로 wait/status를 읽고 after_seq=0부터 next_seq로
-출력을 이어간다. has_more면 남은 결과를 읽는다. output_loss=true는 영구 출력 유실이며
-마지막 페이지에서도 해소되지 않는다. 완료 상태만으로 전체 검증·게시 준비를 판단하지 않는다. 같은 작업을 새 ID로 재접수하지 않는다.
-진전 없는 상태 조회를 연속 반복하지 말고 현재 상태와 링크를 제공한다. 부모 응답이 끝나도 작업은 계속된다.
-reused=true, task_queued=false는 기존 공간만 반환한 것이다. 새 작업은 run으로 요청한다.
-
-접수 응답 유실이나 서비스 재연결에서는 기존 ID와 저장된 접수 결과를 관측한다. 새 task·새 키로
-불확실한 작업을 재실행하지 않는다. Studio wrapper의 내부 request key나 Forge ID를 임의로 입력하지 않는다.
-실행의 성공·실패·취소·중단과 실제 변경을 확인한다. 오류는 입력·환경·상태의 확인된 원인을 고친 뒤
-같은 공간에서 이어간다. 경로·도구·권한 오류를 새 Workspace나 다른 Git 경로로 우회하지 않는다.
-사용자가 작업 중지를 요청하면 cancel, 공간 종료를 요청하면 close를 사용한다. close는 선택과
-파일을 보존하며 run·prepare_git가 종료된 공간도 복원한다. 일반 턴 완료나 PR 생성 때문에 닫지 않는다.
+- `queued`·`running`은 완료가 아니다. 접수 응답의 작업 참조(`work`)와 실행 ID·상태를 보고한다.
+  Studio Chat에서 접수한 실행은 완료 결과가 원래 Chat에 전달된다. 같은 실행에서 상태를 반복 조회하지 않는다.
+- 결과는 `run_result`로 읽는다. `lastEventSeq`까지 `run_events`를 읽고 `hasMore:false`를 확인한다.
+  `outputLoss:true`나 `diffTruncated`는 출력 일부가 없다는 뜻이다. 완전한 결과로 표현하지 않는다.
+- `interrupted`는 외부 효과가 불확실한 상태다. 자동으로 다시 실행하지 않는다.
+- 응답을 잃으면 `run_lookup_request`·`workspace_lookup_request`로 원래 키의 접수를 확인한다.
+  결과가 불확실한 작업을 새 키나 새 입력으로 다시 제출하지 않는다.
+- 오류는 입력·환경·상태의 확인된 원인을 고친 뒤 같은 Workspace에서 이어간다. 새 Workspace나 다른 Git 경로로 우회하지 않는다.
+- 사용자가 중지를 요청하면 `run_cancel`, 재시도를 요청하면 `run_retry`(현재 `profileRevision` 필요)를 쓴다.
+  공간 정리는 사용자가 요청한 경우에만 `workspace_suspend`·`workspace_close`를 쓴다. 일반 턴 완료나 PR 생성 때문에 닫지 않는다.
 
 ## 검증·게시·전달
 
-Workspace의 checks, native task에서 직접 실행한 검사와 GitHub CI는 별개의 근거다.
-checks=[]로 GitHub 검사가 없다고 하지 않는다. GitHub CI는 새 status의 pull_request.ci나
-해당 SHA·run·attempt의 실제 실행 기록으로 확인한다. 릴리스 게시만으로 전체 빌드 완료를 추론하지 않는다.
+Run의 checks, native 작업에서 직접 실행한 검사와 GitHub CI는 별개의 근거다.
+checks가 없다고 GitHub 검사가 없다고 하지 않는다. CI는 GitHub 읽기 도구로 해당 SHA의 실제 실행 기록을 확인한다.
 
 코딩 요청은 사용자가 제한하지 않으면 새 작업 브랜치의 구현·검증·커밋·푸시·PR까지 포함한다.
-[Git 게시와 확인](references/git-actions.md)을 읽고 `prepare_git`로 PR까지 추가 승인 없이 진행한다.
+[Git 게시와 확인](references/git-actions.md)을 읽고 review → commit → push → pull-request 실행으로 추가 질문 없이 진행한다.
 조회·진단만 요청한 작업이나 Git-free 파일 처리에는 이 게시 범위를 추가하지 않는다.
-main 반영·태그·릴리즈·배포는 별도 사용자 요청과 확인을 따른다. 새 run은 미승인 검토를
-취소하므로 파일 수정을 마친 뒤 검토한다. 실행 중·결과 불명 상태의 게시를 자동 반복하지 않는다.
-Chat에서 만든 승인에 `source_chat_url`이 있으면 결과 전달 뒤 같은 채팅에서 자동 재개된다. 성공한
-단계 뒤에 사용자 요청의 미완료 단계가 있으면 다음 검토를 준비한다. 한 단계의 승인·성공을 전체 요청
-완료로 표현하지 않는다. PR 성공 결과에 ci_watch가 있으면 서버가 검사 완료를 기다렸다가 같은
-채팅에 workspace_ci_result를 전달한다. 상태를 반복 조회하지 않고 기다린다. 실패·거절·결과 불명은
-그대로 보고하며 같은 게시를 자동 재실행하지 않는다.
-실제 변경, 검증 근거, 미완료 작업과 클릭 가능한 Workspace/PR/산출물 링크를 전달한다.
+보호 branch 게시·merge·tag·release·deploy는 별도 사용자 요청이 필요하고, Forge 콘솔에서 Workspace 소유자가 승인해야 실행된다.
+모델은 승인할 수 없다. 실패·거절·결과 불명인 게시를 자동으로 반복하지 않는다.
+실제 변경, 검증 근거, 미완료 작업과 반환된 Workspace·PR·승인 링크를 전달한다.

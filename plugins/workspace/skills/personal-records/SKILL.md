@@ -1,20 +1,20 @@
 ---
 name: personal-records
 description: >
-  사용자가 지정한 Artifact나 오디오 결과를 Librio 개인 Document 또는 Memory 장기 기억에 기록한다.
+  사용자가 지정한 Artifact나 Librio 오디오 결과를 Librio 개인 Document 또는 Memory 장기 기억에 기록한다.
   문서로 저장해 달라는 요청이나 장기 기억에 남겨 달라는 요청에 사용한다.
 compatibility: >
-  Artifact를 읽는 File 도구 또는 AudioJob read, 그리고 개인 scope·멱등 키를 지원하는 기록 MCP가 필요하다.
+  Artifact를 읽는 File 도구 또는 Librio audio_output_read, 그리고 개인 scope·멱등 키를 지원하는 기록 MCP가 필요하다.
 metadata:
   org.opspresso.agent-studio.icon: archive
 ---
 
 # 요청한 개인 기록
 
-사용자가 기록할 대상(Artifact 또는 오디오 작업 결과)과 Memory 또는 Document를 지정한 경우에만 수행한다.
+사용자가 기록할 대상(Artifact 또는 Librio 오디오 작업 결과)과 Memory 또는 Document를 지정한 경우에만 수행한다.
 정기 작업, 다운로드, 전사, 요약 요청만으로 기록하지 않는다.
 
-오디오 보관 도구인 ImportFile·TranscribeAudio·AudioJob은 개인 Document/Memory 기록 도구가 아니다.
+Librio 오디오 도구(`recording_import`, `audio_job_submit` 등)는 개인 Document/Memory 기록 도구가 아니다.
 
 ## 공통 규칙
 
@@ -40,9 +40,11 @@ metadata:
 
 전사문과 회의록은 Librio가 이미 개인 검색 문서로 발행한다. Document로 다시 기록하지 않는다. 이 경우에는 Memory만 기록한다.
 
-1. `AudioJob status`로 작업이 completed이고 해당 `outputs.<kind>`가 `available`인지 확인한다. kind는 `transcript` 또는 `summary`다.
-2. `AudioJob read`로 해당 결과를 읽는다. `next_cursor`가 있으면 그 값을 바꾸지 않고 cursor로 보내, 요청한 범위를 모두 읽을 때까지 이어 읽는다.
-3. `remember`에 source.uri `urn:agent-studio:audio-job:<job_id>:<kind>`와 idempotencyKey `<job_id>:<kind>:memory:<항목번호>`를 사용한다.
+Studio Chat에 전달된 전사문·회의록 파일은 Artifact이지만, 오디오 결과의 기록 근거는 Librio 작업 ID를 사용한다.
+
+1. Librio `audio_status`(`resource:"job"`)로 작업이 `completed`이고 해당 `outputs.<kind>.availability`가 `available`인지 확인한다. kind는 `transcript` 또는 `summary`다.
+2. `audio_output_read`로 해당 결과를 읽는다. `hasMore`가 true이면 `nextCursor`를 바꾸지 않고 `cursor`로 보내, 요청한 범위를 모두 읽을 때까지 이어 읽는다.
+3. `remember`에 source.uri `urn:agent-librio:audio-job:<job_id>:<kind>`와 idempotencyKey `<job_id>:<kind>:memory:<항목번호>`를 사용한다.
 
 ## 결과 보고
 

@@ -1,39 +1,30 @@
 # Plaud 오디오 조회
 
-Plaud가 실제 녹음 출처이고 해당 MCP가 제공되는 경우에만 사용한다. 연결 설정은 운영자의
-영역이며, 이미 연결된 계정에서 읽을 수 있는 녹음은 추가 계정 정보나 다운로드 URL을 요구하지 않는다.
+Plaud가 실제 녹음 출처이고 해당 MCP가 연결된 경우에만 사용한다. 연결 설정은 운영자의 영역이다.
 
-## 요청 범위와 목록
+## Librio로 전달할 수 없는 이유
 
-- "최근 일주일 녹음을 가져와서 전사하고 요약해"는 실행 시각 기준 최근 7일의 녹음을 조회하고
-  기존 완료 결과를 재사용하며 미처리 녹음을 Agent 설정으로 접수하는 요청이다.
-  적용한 기간과 시간대를 결과에 밝힌다. 없는 시간대를 추정해 정확한 시각으로 단정하지 않는다.
+Studio의 Plaud `get_file` 매핑은 임시 다운로드 URL을 숨기고 `source_ref`를 반환한다.
+현재 `source_ref`를 입력으로 받는 Studio 도구나 Librio 도구는 없다. `recording_import`의 `source`는 Studio 파일 ID만 받는다.
+따라서 Plaud 녹음을 Chat에서 바로 Librio로 가져올 수 없다.
+
+- `source_ref`, Plaud 녹음 ID, `presigned_url`을 `recording_import`의 `source`로 보내지 않는다.
+- 사용자가 녹음 파일을 Chat에 첨부하면(문서 첨부 한도 10 MiB 이하) 그 파일 ID로 처리한다.
+- 더 큰 녹음은 사용자가 Librio 콘솔에서 올린다. 그 뒤 `audio_list`로 `recordingId`를 찾아 작업을 제출한다.
+- 정기 실행에서 Plaud 녹음을 자동으로 가져와 처리한다고 약속하지 않는다.
+
+## 녹음 찾기
+
 - `list_files`의 실제 schema를 사용한다. `date_from`·`date_to`는 `YYYY-MM-DD`, `query`는 이름 검색이다.
-  필터가 있으면 pagination이 무시되므로 page만 증가시켜 새 후보를 얻었다고 가정하지 않는다.
-  현재 서버의 `page_size` 최솟값은 10이다. 한 건만 처리하더라도 목록은 허용 크기로 읽고 그 안에서 선택한다.
-- 반환된 `data`의 실제 ID·시각을 확인한다. `duration`은 밀리초다. 필터 조회는 최신 500건을
-  탐색하는 예산이며 일치 결과 500건을 보장하는 것이 아니다. `complete=false`이면 `note`가
-  알려 주는 실제 탐색 범위를 보고하고 전체 기간을 조회했다고 말하지 않는다. 빈 `data`도
-  요청 기간까지 탐색하지 못한 결과일 수 있다. 도구 오류와 빈 목록은 구분한다.
-- 기존 `AudioJob list`의 `sourceIdentity.itemId`로 같은 녹음의 작업을 찾는다.
-  완료된 process 작업은 재사용하며 import·transcribe만 끝났으면 필요한 후속 단계만 수행한다.
-  기간 내 여러 후보가 있어도 Agent의 작업 한도를 바꾸거나 우회하지 않는다.
+  필터가 있으면 pagination이 무시된다. page만 늘려 새 후보를 얻었다고 가정하지 않는다.
+  현재 서버의 `page_size` 최솟값은 10이다.
+- 반환된 `data`의 실제 ID·제목·시각을 확인한다. `duration`은 밀리초다. 필터 조회는 최신 500건을 탐색하는 예산이며
+  일치 결과 500건을 보장하지 않는다. `complete=false`이면 `note`가 알려 주는 실제 탐색 범위를 보고한다.
+- 도구 오류와 빈 목록을 구분한다. 적용한 기간과 시간대를 결과에 밝힌다.
 
-## 파일 참조와 접수
+## Plaud의 기존 결과
 
-실제 녹음 ID로 `get_file(file_id=...)`을 호출한다. 호스트 앱의 workspace plugin 기본 매핑은
-`presigned_url`·`id`·`name`을 다음과 같은 도구 결과로 변환한다.
-
-```json
-{"source_ref":"<서버가 발급한 참조>","filename":"<녹음 이름>","mime_type":"audio/mpeg","source":"plaud","external_id":"<녹음 ID>"}
-```
-
-`source_ref`가 있으면 정상이며 추가 매핑이나 URL 조회가 필요하지 않다.
-[앱 도구](agent-studio.md)의 config → submit에 `source.kind="source"`, `source.id=source_ref`를 넣는다.
-외부 녹음 ID는 중복 확인·상세 조회용이며 source_ref나 Artifact ID를 대신하지 않는다.
-원본 임시 URL과 같은 녹음 ID의 갱신은 호스트 앱이 처리한다. 매핑 실패는 정확한 오류를 보고한다.
-
-원본 보관·전사·회의록은 Librio의 허용 모델과 worker가 수행한다. Plaud의 기존 transcript·note를
-새로 전사한 결과로 대신하지 않는다. 조회 성공·작업 접수·전사 완료·요약 완료를 구분한다.
+`get_file`·`get_transcript`·`get_note`의 전사·요약은 Plaud가 만든 기존 결과다. Librio 전사를 요청했다면 이 결과로 대신하지 않는다.
+대체가 필요하면 사용자의 허가를 받고 출처를 Plaud로 명시한다.
 
 공식 계약: [Plaud MCP](https://docs.plaud.ai/plaud-mcp-cli/mcp).

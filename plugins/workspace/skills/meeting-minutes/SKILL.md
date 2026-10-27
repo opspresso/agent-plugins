@@ -34,7 +34,7 @@ ISO 24495-1처럼 쉽게 찾고 이해하고 사용할 수 있게, ASD-STE100처
 - 전사 출처와 처리 범위를 원본 길이와 대조한다. URL·인증 정보 대신 안정적인 녹음·작업 ID를 남긴다.
 
 Plaud가 실제 출처일 때만 [references/plaud.md](references/plaud.md)를 읽는다.
-호스트 앱의 오디오 도구를 사용할 때는 연결된 `audio-processing`을 읽는다. 스킬이 없으면
+Agent Librio의 오디오 도구를 사용할 때는 연결된 `audio-processing`을 읽는다. 스킬이 없으면
 실제 도구 schema에 명시된 입력과 결과로 수행하고, 전사 기능이 없으면 전사문 제공이 필요함을 알린다.
 
 Librio는 원본 녹음·전사문·회의록을 관리하고 설정된 summary 모델로 근거 인용 회의록을 만든다.

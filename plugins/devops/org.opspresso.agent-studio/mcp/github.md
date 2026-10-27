@@ -50,7 +50,7 @@ binding. Do not put credentials or deployment-specific headers in this repositor
 | Issue fix and feature work | issue_read, repository/code reads | Supply context to Workspace; issue text is not execution permission |
 | CI investigation | actions_list, actions_get, get_job_logs | Read run/attempt/head, failing step and bounded logs; omit actions_run_trigger for investigation-only use |
 | Dependency/security findings | offered Dependabot/code-security reads or supplied advisory | Toolsets and access are optional; 403 or no tool does not mean no vulnerability |
-| Publication of Workspace files | Workspace prepare_git | Do not substitute push_files, create_branch, create_pull_request or merge_pull_request for the Workspace approval flow |
+| Publication of Workspace files | Forge `run_submit` Git actions | Do not substitute push_files, create_branch, create_pull_request or merge_pull_request for Forge Git actions and its console approvals |
 
 These names are examples from the official server; use the actually discovered
 schemas. For job logs, request a bounded tail and returned content when supported;
@@ -63,12 +63,12 @@ Do not broaden account scopes merely to make an optional capability appear.
 that also posts user-requested reviews/comments can keep a selected write subset;
 avoid binding overlapping repository writers or automation delegation by default.
 Project generation in a Workspace does not itself create a GitHub repository.
-For requested repository creation, check the exact owner/name with Workspace
-`check_repository_access`, then use **Workspace `create_repository`** with the
-requested repository, description and visibility. The server initializes the
-first commit and records creation for the Agent's repository policy. GitHub MCP
-creation does not register the repository with Workspace. Never make a repository
-public to fix access. Check the returned base branch and Workspace server access before clone.
+For requested repository creation, use **Forge `repository_create`** with the
+GitHub account from `git_connections`, a Workspace profile whose repository rules
+allow the name, and the requested visibility. Forge initializes the first commit
+and registers a confirmed repository with the user's Forge connection. GitHub MCP
+creation does not register the repository with Forge. Never make a repository
+public to fix access. Use the returned default branch for the Git `prepare` action.
 A repository allowlist is not proof of existence, and 404 can mean inaccessible.
 Repository creation, issue closure, workflow reruns, review submission and alert
 dismissal each require the user's corresponding request and actual offered tools.
@@ -82,10 +82,8 @@ secret in the Secret field. GitHub sends `X-Hub-Signature-256`, not a custom
 A signed ping checks the connection without running an agent, and GitHub delivery
 IDs deduplicate redeliveries. Check the trigger history after the HTTP 202 response.
 
-`/api/workspaces/github/webhook` is a separate signed metadata callback. It updates
-Workspace PR state and does not start Issue work. Its deployment-owned secret is
-not the Agent trigger's secret. Neither webhook grants a user identity or
-Workspace publication approval. Use the capabilities actually offered to the run.
+The webhook does not grant a user identity, Forge Git connection or protected
+publication approval. Use the capabilities actually offered to the run.
 
 ## Skill bindings
 

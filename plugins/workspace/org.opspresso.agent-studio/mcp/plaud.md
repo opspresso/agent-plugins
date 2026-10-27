@@ -1,9 +1,10 @@
 ---
 description: >
-  Find Plaud recordings by name or date through the connected account. In the host app,
-  mapped get_file returns a private source_ref for audio-processing and AudioJob
-  transcription and summary; no manual download URL is needed. Plaud transcripts and
-  notes are existing provider output, not new internal transcription. This server does not transcribe audio.
+  Find Plaud recordings by name or date through the connected account and read Plaud's
+  existing transcripts and notes as provider output. In the host app, mapped get_file
+  returns an opaque source_ref instead of the download URL; no current Studio or Librio
+  tool accepts source_ref, so Plaud audio cannot be sent to Librio transcription from Chat.
+  This server does not transcribe audio.
 icon: brand-plaud
 ---
 
@@ -36,30 +37,34 @@ existing transcripts and notes. Obtain a fresh URL from the same recording ID
 when it expires. Treat the URL as temporary access to private audio, not as a
 permanent citation or an artifact ID.
 
-## Internal transcription and meeting minutes
+## Transcription and meeting minutes
 
-Use `meeting-minutes` for recording selection, internal-transcript provenance,
+Use `meeting-minutes` for recording selection, transcript provenance,
 decisions, action items and review. Its `agent-setup.md` supplies a project prompt
-and the required transcription integration boundary.
+and the transcription boundary.
 
-The repository registers Plaud; the host app supplies the optional `ImportFile`,
-`TranscribeAudio` and `AudioJob` builtins when the Agent enables `audioProcessing`.
-Bind `audio-processing` for the generic submission and recovery contract. The workspace
-plugin declares the default `get_file` projection in plugin.json under
+Agent Librio transcribes recordings and writes meeting notes. Studio reaches it
+only through the Librio MCP tools: `recording_import` takes a Studio file ID,
+which Studio converts to a short-lived verified file reference, and
+`audio_job_submit` starts processing. See the `audio-processing` skill.
+
+The workspace plugin declares the default `get_file` projection in plugin.json under
 `extensions.org.opspresso.agent-studio.mcpSourceOutputs.plaud`. The host app applies it
 when the Agent binding has no explicit override: `presigned_url` is kept server-side and
-an opaque `source_ref` is returned to the model. No manual mapping is needed for
-this response shape. Default source identity is scoped to the authenticated connection.
-The declared `refreshArgument: file_id` refreshes the URL from the same recording.
-Agent binding overrides take priority; an explicit empty array disables mapping. A changed
-response shape requires an updated plugin declaration or a deliberate binding override.
-The host app refuses replay after the connection, effective mapping or returned item ID changes.
-`FetchUrl` and document `File` remain unsuitable for audio transcription.
+an opaque `source_ref` is returned to the model. The declared `refreshArgument: file_id`
+refreshes the URL from the same recording. Agent binding overrides take priority; an
+explicit empty array disables mapping. The mapping keeps the URL out of model context.
+It does not create a Studio file ID, and no current tool accepts `source_ref` as input.
+
+To transcribe a Plaud recording with Librio, the user attaches the audio file to the
+Chat (within the document attachment limit of 10 MiB) or uploads it in the Librio
+console. Do not promise scheduled Plaud-to-Librio collection. `FetchUrl` and document
+`File` remain unsuitable for audio transcription.
 
 The hosted Plaud MCP processes requests in the US, and recordings must already
-be cloud-synced. Internal ASR keeps the transcription stage internal; it does not
+be cloud-synced. Librio transcription keeps the transcription stage internal; it does not
 make acquisition from Plaud an offline workflow. Do not substitute Plaud's
-transcript or its Embedded Transcription API for a requested internal model.
+transcript or its Embedded Transcription API for a requested Librio transcription.
 
 Sources:
 - [Official MCP tools and data contract](https://docs.plaud.ai/plaud-mcp-cli/mcp)

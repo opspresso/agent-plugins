@@ -37,13 +37,15 @@ Plaud is an optional recording source. Specialized skills such as Korean editing
 and saju retain their explicit scope rather than becoming general-purpose rules.
 
 The `agent-studio` application is the supported host integration. Its display
-name is configured per deployment. Its builtin file, image and
-audio tool recipes remain specific to that runtime; this repository does not
-claim every skill executes unchanged in every client. General authoring skills
-separate client-specific contracts into references. In another runtime, verify
-the available capabilities and schemas before adapting those recipes.
-See [host app integration](docs/agent-studio.md) for loading, file delivery,
-audio jobs, memory and sync ownership.
+name is configured per deployment. Its builtin file and image tool recipes remain
+specific to that runtime; this repository does not claim every skill executes
+unchanged in every client. Audio and coding Workspaces are service-owned: Librio
+and Forge expose them as MCP tools, and each service keeps its own settings,
+execution and history. General authoring skills separate client-specific
+contracts into references. In another runtime, verify the available capabilities
+and schemas before adapting those recipes.
+See [host app integration](docs/agent-studio.md) for loading, file references,
+service result delivery, memory and sync ownership.
 
 ## Layout
 
@@ -87,7 +89,7 @@ already granted for the requested work.
 For persistent coding, file and automation work, use the [Workspace agent profile](docs/code-agent.md).
 It maps common engineering tasks to focused skills, the shared Workspace/Sandbox
 execution contract and GitHub context tools, with a versioned general system prompt.
-For Plaud recording import, transcription and summaries, use the [Audio agent profile](docs/audio-agent.md).
+For recording transcription and meeting notes through Agent Librio, use the [Audio agent profile](docs/audio-agent.md).
 
 ## Integrations
 

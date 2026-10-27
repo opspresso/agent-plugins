@@ -1,25 +1,35 @@
 # 오디오 도우미 구성
 
-Studio의 한 Agent가 AudioJob으로 Plaud 수집을 조율한다. Librio는 원본 보관·전사·회의록과 그 검색 문서를 소유한다. Studio는 원본 전송·작업 진행·비용 확인과 결과 읽기 중계를 담당한다.
+Studio의 한 Agent가 Agent Librio MCP로 녹음 처리를 위임한다. Librio는 오디오 설정(profile)·원본·전사·회의록·작업 이력과
+검색 문서를 소유한다. Studio는 Chat 파일을 짧은 시간만 유효한 참조로 Librio에 전달하고, 완료된 결과를 원래 Chat에 한 번 전달한다.
 [시스템 프롬프트](prompts/audio-agent.md)를 사용하고 `audio-processing`을 명시적으로 연결한다.
 회의록 양식이 필요하면 `meeting-minutes`, 문장 편집이 필요하면 `korean-humanize`를 추가한다.
 
 ## 설치 조건
 
-- Agent의 오디오 처리 도구, Plaud MCP 연결과 `get_file`의 source_ref 매핑.
-- Librio가 허용한 **transcription** 연결의 공개 모델 ID와 Librio 서버의 endpoint·credential.
-  채팅 모델 등록이나 과거 AudioJob 성공 이력만으로 현재 전사 모델의 준비를 판단하지 않는다.
-- Agent AudioJob config의 전사 모델·언어·보존 기간·동시 접수 한도와 선택적 회의록(summary) 모델·지시문.
-- Librio 비공개 원본 저장소와 audio worker, Studio→Librio 서명 위임과 현재 사용자 바인딩.
-  EKS의 S3·Pod Identity와 k3s의 MinIO 연결은 각 설치 설정이다.
-- 회의록은 Librio의 **summary** 연결을 사용한다. embedding·decision·전사 모델을 회의록 모델로
-  선택하지 않는다. catalogId와 provider wireId는 공개 연결 ID와 다르며 가격 누락은 unknown이다.
+- Studio 배포의 Librio 연결(`LIBRIO_URL`, `LIBRIO_OIDC_CLIENT_ID`)과 Agent에 연결한 Agent Librio Tools 항목.
+  Studio는 MCP 요청마다 현재 사용자에게 위임한 단기 token을 보낸다. 쓰기 도구에는 편집 가능한 사용자 등급이 필요하다.
+- Librio의 원본 저장소, audio worker, 허용된 전사(**transcription**)·회의록(**summary**) 모델.
+  공급자 주소·credential·가격은 Models와 Librio 설치 설정이다.
+- 사용자별 오디오 profile. Librio 콘솔의 오디오 설정에서 전사 모델·선택 회의록 모델과 지시문·언어·보존 기간·
+  작업 수 한도를 저장하고 기본 profile을 선택한다. Studio Tools의 Librio 상세 화면에 설정·이력 링크가 있다.
+- 비동기 결과 전달에는 인증된 schedule tick(`/api/triggers/scan`)이 필요하다. tick이 없으면 결과가 Chat에 전달되지 않는다.
+
+## 입력 경로
+
+- Chat에 첨부한 녹음(문서 첨부 한도 10 MiB 이하)은 파일 ID로 `recording_import`에 전달된다.
+- 더 큰 녹음은 Librio 콘솔에서 올린다. Agent는 `audio_list`로 녹음을 찾아 작업을 제출한다.
+- Plaud MCP의 `source_ref`를 받는 도구는 현재 없다. Plaud 녹음의 자동 수집·처리는 지원하지 않는다.
 
 ## 처리 결과 확인
 
-먼저 config와 Plaud 읽기 도구를 확인한 뒤, 사용자가 지정한 녹음 한 건으로 원본 Artifact와
-`AudioJob read`의 전사문·회의록 실제 내용을 확인한다. 같은 요청을 반복했을 때 기존 job과 결과를 재사용하는지도 확인한다.
-계정 연결은 테스트·운영에서 각각 확인하며 OAuth token을 다른 설치로 복사하지 않는다.
-정기 수집은 별도 schedule trigger와 scan ticker가 활성화돼야 한다. 배포 health만으로 처리 성공을 판정하지 않는다.
+녹음 한 건을 Chat에 첨부해 처리를 요청한다. 다음을 확인한다.
 
-전사문·회의록은 Librio가 검색 문서로 직접 발행한다. Studio는 이를 복사하거나 다시 수집하지 않는다. 사용자가 별도로 요청한 장기 선호·결정 기록은 Memory에 저장한다. Plugin 설치만으로 서비스·계정·공간·기록 권한이 생기지 않는다.
+1. 응답에 Librio 작업 ID와 접수 상태가 있고, 같은 요청을 반복해도 새 작업이 생기지 않는다.
+2. 완료 뒤 원래 Chat에 결과가 전달되고 전사문·회의록이 Chat 파일로 저장된다.
+3. Librio 콘솔의 녹음 화면에 같은 작업과 사용한 profile·모델이 기록된다.
+4. Librio 검색 도구로 해당 회의 내용을 찾을 수 있다.
+
+배포 health만으로 처리 성공을 판정하지 않는다. 계정 연결은 테스트·운영에서 각각 확인하며 token을 다른 설치로 복사하지 않는다.
+Studio는 전사문·회의록을 다시 수집하지 않는다. 사용자가 별도로 요청한 장기 선호·결정 기록은 Memory에 저장한다.
+Plugin 설치만으로 서비스·계정·기록 권한이 생기지 않는다.
