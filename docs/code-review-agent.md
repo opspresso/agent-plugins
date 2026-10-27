@@ -3,32 +3,31 @@
 ## Agent와 저장소 선택
 
 [code-review-agent.md](prompts/code-review-agent.md) 프롬프트와 `code-review` Skill을 연결한다.
-Agent의 Webhook 동작에서 GitHub PR 리뷰를 선택하고 설치의 GitHub 계정이 접근 가능한
-저장소 전체 또는 명시적 `owner/repo` 목록을 설정한다. 공유 GitHub 연결로 댓글을 쓰는
-설정이므로 관리자가 활성화한다. 기본 Agent 공개 범위는 검토 자료의 접근 범위에 맞춘다.
+Agent의 Webhook 동작에서 GitHub PR 리뷰를 선택하고, Agent의 GitHub MCP 계정이 접근 가능한
+저장소 전체 또는 명시적 `owner/repo` 목록(최대 20개)을 설정한다. 리뷰 게시 설정은 관리자가 활성화한다.
+기본 Agent 공개 범위는 검토 자료의 접근 범위에 맞춘다.
+
+필수 조건:
+
+- 호스트 앱의 `GITHUB_API_URL`·`GITHUB_WEB_URL`이 대상 GitHub authority를 가리킨다.
+- Agent에 같은 authority의 OAuth를 쓰는 GitHub MCP 하나를 바인딩한다.
+- Agent 정책에서 `ReviewSource`를 차단하거나 승인 대상으로 두지 않는다.
 
 ## GitHub Webhook 연결
 
-GitHub 저장소에서 Payload URL을 `/api/webhook/{agent}`로, Content type을
-`application/json`으로 지정하고 해당 Agent Webhook Secret과 Pull requests 이벤트를
-등록한다. 시크릿은 저장소 파일·Agent 프롬프트·PR·로그에 넣지 않는다.
-저장소를 읽을 수 있어도 Pull requests 쓰기 권한이 없으면 댓글 게시가 실패한다.
-
-## Workspace 실행 설정
-
-Agent의 Workspace 도구와 command 런타임, 대상 저장소 정책, Sandbox와 worker를 설정하고
-Webhook의 `내 권한으로 실행`을 소유자가 명시적으로 켠다. 공유 GitHub 리뷰 권한과
-Workspace 실행 위임은 별도 설정이다. webhook actor의 동시 실행 한도는 2 이상이어야 한다.
+호출할 사용자는 본인의 Webhook 토큰을 발급받고, Agent에 바인딩한 GitHub MCP를 본인 계정으로 연결한다.
+실행은 토큰 발급 사용자의 개인 OAuth 권한을 사용한다. 그 GitHub 계정에는 대상 저장소의 Contents 읽기와
+Pull requests 읽기·쓰기 권한이 필요하다. GitHub 저장소 Webhook에는 개인 토큰 화면에서 복사한 URL을 Payload URL로,
+Content type은 `application/json`으로 지정하고 Pull requests 이벤트를 등록한다.
+시크릿은 저장소 파일·Agent 프롬프트·PR·로그에 넣지 않는다.
 
 ## 리뷰 실행과 게시
 
-호스트 앱이 서명·저장소·PR·HEAD를 검증하고 Workspace를 만든 뒤 서버 Git bundle로 정확한
-HEAD를 받는다. Agent는 Skill·ReviewSource와 준비된 Workspace에서 관련 코드와 테스트를
-읽고 필요한 격리 검사를 실행한다. 검사의 실제 완료 결과를 읽고 최종 리뷰 본문을 작성한다.
-호스트가 해당 커밋에 COMMENT 리뷰를 게시하고 보고를 기록한 뒤 Workspace와 Sandbox를 닫는다.
-실패에도 Workspace를 정리한다. Agent가 게시 위치나 다른 저장소를 고르지 않으며,
-소스 수정·Git publication·PR 승인·merge·배포를 실행하지 않는다.
-최대 파일 수·diff 문맥 한도와 누락 여부는 실제 실행 입력과 게시 본문에 표시된다.
+호스트 앱이 서명·저장소·PR·HEAD를 검증하고 리뷰 Agent를 백그라운드 작업으로 실행한다. Workspace는 만들지 않는다.
+Agent는 Skill과 해당 PR에 고정된 `ReviewSource`로 PR의 파일·patch·검사 결과를 읽는다. 코드나 테스트는 실행하지 않는다.
+호스트가 head SHA에 고정한 COMMENT 리뷰 하나를 게시하고, 본문에 코드를 실행하지 않았다고 적는다.
+Agent가 게시 위치나 다른 저장소를 고르지 않으며 소스 수정·Git publication·PR 승인·merge·배포를 실행하지 않는다.
+전달한 파일·diff 범위와 누락 여부는 실행 입력과 게시 본문에 표시된다.
 
 ## 이벤트와 결과 확인
 

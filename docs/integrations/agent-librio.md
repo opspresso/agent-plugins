@@ -4,10 +4,10 @@ Agent Librio owns source documents, document processing, RAG passages,
 source-grounded knowledge, recordings, transcripts and meeting summaries. It is
 separate from Agent Memory's durable preferences and short-term task handoffs.
 
-Register the installation's exact MCP URL (normally `/api/mcp`) independently of
-Plugin sync. Studio signs delegation for that configured URL with
-`aud=agent-librio`; the service validates the issuer/subject binding and current
-membership. Email headers and matching service names do not delegate identity.
+Studio's deployment settings (`LIBRIO_URL`, `LIBRIO_OIDC_CLIENT_ID`) create one
+Tools entry for the service's `/api/mcp` endpoint. Plugin sync does not own it.
+Studio issues a delegated user token for that exact URL on every MCP request;
+the service validates the issuer/subject binding and current membership. Email headers and matching service names do not delegate identity.
 Keep credentials, provider endpoints and connection IDs in installation settings.
 
 ## Discovered knowledge tools
@@ -25,39 +25,46 @@ Keep credentials, provider endpoints and connection IDs in installation settings
 
 Long-term memories come from Memory's `recall`, not Librio. Select the discovered
 server by its purpose and trusted connection, not the bare tool name. A source document ID,
-recording ID or graph node ID is not a Studio Artifact ID.
+recording ID or graph node ID is not a Studio file ID.
 
-## Audio through Studio
+## Audio tools
 
-Studio keeps the public `ImportFile`, `TranscribeAudio` and `AudioJob` wrappers.
-They orchestrate source access and delegate original storage, transcription and
-meeting notes to Librio. Studio passes the Agent's summary model and optional
-instructions with the job, then reads transcript and notes pages through its own
-read-only delegation. Studio stores no copy and never re-ingests the outputs.
+Studio connects to Librio only through this MCP server. Each MCP connection is
+offered to the Agent as one native specialist, and every call carries a
+short-lived token delegated from the current Studio user. Librio owns audio
+settings (named profiles), recordings, processing jobs, outputs and history.
+Studio keeps no copy of them.
 
-Read the actual wrapper schema. Do not expose internal Librio request keys,
-recording IDs or service credentials as new AudioJob arguments. Console lifecycle
-APIs do not imply model tools named cancel, retry or delete. Verify current output
-availability before linking a completed recording or transcript. Retention and
-processing completion are different facts.
+| Step | Tool |
+|---|---|
+| Read settings | `audio_profile_get` (omit `id` for the user's default), `audio_profile_list`, `audio_models` |
+| Import a Chat file | `recording_import` with the Studio file ID in `source` |
+| Submit processing | `audio_job_submit` with `profileId`/`profileRevision` or explicit model IDs, not both |
+| Observe | `audio_status`, `audio_list` |
+| Recover a lost response | `audio_request_status` with the original key |
+| Read text outputs | `audio_output_read` (bounded pages, unchanged cursor) |
+| Explicit lifecycle requests | `audio_job_cancel`, `audio_job_retry`, `audio_job_delete`, `recording_archive`, `recording_delete`, `recording_delete_status` |
 
-## Direct clients and Studio have different execution paths
+`recording_import.source` declares the `org.opspresso.agent.file-reference`
+annotation. The model passes a Studio file ID; Studio replaces it at dispatch
+with a short-lived verified reference (`url`, `checksum`, `sizeBytes`,
+`expiresAt`). Recording attachments are limited to 512 MiB; larger recordings are
+uploaded in the Librio console. Plaud's mapped `source_ref` is not a Studio file
+ID, and no current tool accepts it.
 
-Independent clients using their own Librio credential or an explicitly configured
-local issuer can discover `recording_reserve`, `recording_archive`,
-`audio_job_submit`, `audio_job_cancel`, `audio_job_retry`, `audio_job_delete`,
-`recording_delete` and `recording_delete_status` when authorized. `recording_delete`
-permanently removes a recording and everything derived from it; call it only on an
-explicit permanent-deletion request. Read tools are `audio_models`, `audio_status`, `audio_list`,
-`audio_request_status` and `audio_output_read`. These are Librio MCP names, not
-operations to add to Studio's AudioJob request object.
+Submission and retry responses carry a work reference in
+`structuredContent.work` and `_meta["org.opspresso.agent.work"]`. Studio records
+keyed submissions, delivers the terminal result to the original Chat once and
+saves available transcript and meeting-note outputs as Chat files. Never resubmit
+uncertain work under a new key or `processingRevision`; inspect the original
+request with `audio_request_status`.
 
-Studio's general Librio MCP delegation includes `audio:read` but excludes
-`audio:write`. AudioJob's server-side HTTP flow creates durable dispatch context
-and verifies current policy before execution. Required-policy Studio issuers cannot
-submit directly without that stored context. Do not swap credentials or use
-another MCP route to bypass this boundary.
+When the deployment sets `AUTH_BASE_URL`, MCP initialize advertises
+`org.opspresso.agent.tool-management` with `settingsUrl` and `historyUrl`.
+Studio's Tools detail page shows those links. Job responses also include a
+console-relative `historyHref`.
 
 Librio publishes each transcript and meeting note as the caller's search document.
-AudioJob has no external-record options. Save a decision or fact to Memory only on
+Do not ingest them again as documents. Save a decision or fact to Memory only on
 explicit request, through the `personal-records` skill and the Memory MCP.
+See [Librio audio contract](https://github.com/opspresso/agent-librio/blob/main/docs/AUDIO.md).

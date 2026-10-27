@@ -18,43 +18,40 @@ metadata:
 필요 없는 인증·결제·클라우드·외부 서비스를 기본으로 추가하지 않는다. 중요한 정보가 없으면
 짧게 확인하고, 이미 정해진 부분은 진행한다.
 
-호스트 앱에서는 먼저 `Workspace.options`를 읽는다.
-사용자 지정 Runtime을 우선하고, 미지정이면 options의 default_runtime을 따른다. 코딩 Runtime에는
-완결된 자연어 task를 전달하며 command인 경우 실제 실행할 셸 스크립트를 구성한다.
+호스트 앱에서는 Agent Forge MCP로 실행한다. 연결된 `workspace-task`가 있으면 Workspace 준비 절차를 읽는다.
+사용자 지정 Runtime을 우선하고, 미지정이면 사용자가 선택한 Forge Workspace profile을 따른다. native Runtime에는
+완결된 자연어 작업을 전달하며 command인 경우 실제 실행할 셸 스크립트를 구성한다.
 CLI·명령행 도구를 만든다는 뜻과 command Runtime에서 이미 작성된 셸을 실행한다는 뜻을 구분한다.
 
-- 기존 저장소에 생성·게시할 요청이면 최초 `start`에 허용된 repository와 base_branch를 지정한다.
-- Git 없이 생성할 요청이면 두 값을 null로 시작한다. 등록 목록의 첫 저장소를 임의로 선택하지 않는다.
-- 현재 공간이 있으면 파일 목록을 확인하고 `run`으로 이어간다. 기존 파일을 덮지 않는 상대 경로를 사용한다.
-- `attach_repository`는 **빈 Git-free workdir에만** 가능하다. Git 없는 공간에 먼저 생성한 파일을
-  나중에 자동 attach·push할 수 있다고 약속하지 않는다. Git 게시가 필요하면 생성 전에 대상을 정한다.
+- 기존 저장소에 생성·게시할 요청이면 `git_connections`에 등록된 저장소로 Git `prepare`를 먼저 실행한다.
+- Git 없이 생성할 요청이면 `prepare` 없이 시작한다. 등록 목록의 첫 저장소를 임의로 선택하지 않는다.
+- 현재 Workspace가 있으면 파일 목록을 확인하고 같은 Workspace에서 이어간다. 기존 파일을 덮지 않는 상대 경로를 사용한다.
+- Git 준비는 기존 작업 파일을 덮어쓰지 않는다. Git 없는 공간에 먼저 생성한 파일을 나중에 저장소로
+  자동 게시할 수 있다고 약속하지 않는다. Git 게시가 필요하면 생성 전에 대상을 정한다.
 
 ## 원격 저장소 준비
 
-허용 목록에 이름이 있어도 원격 저장소가 존재하거나 clone 가능하다는 뜻은 아니다. 새 저장소 생성이
+등록 목록에 이름이 있어도 원격 저장소가 존재하거나 clone 가능하다는 뜻은 아니다. 새 저장소 생성이
 요청됐으면 파일 작업 전에 아래 순서를 완료한다.
 
-1. 연결된 GitHub 계정과 요청한 owner/name을 확인한다. Workspace가 제공되면 원격 생성 전에
-   `check_repository_access`의 기존 접근 `allowed`와 생성 권한 `creation_allowed`를 구분한다.
-   `new` 모드는 미등록 이름의 기존 접근은 거절하지만 Workspace를 통한 신규 생성은 허용할 수 있다.
-   둘 다 거절되면 `repository_policy_url`을 전달하고 정책 변경까지 보류한다. 관리 메뉴·권한을
-   추측하거나 다른 이름의 저장소를 만들지 않는다.
-   도구가 없는 환경에서는 실제 제공된 저장소 정책을 확인하고 범위가 불명확하면 외부 생성 전에 확인한다.
-2. 제공된 조회 도구로 같은 이름의 저장소를 확인한다.
+1. 연결된 GitHub 계정과 요청한 owner/name을 확인한다. Forge에서는 `git_connections`의 `accounts`에서
+   `accountId`를 확인한다. 연결이 없으면 사용자가 Forge 콘솔의 Git 설정에서 GitHub 계정을 연결해야 한다.
+2. 생성에 쓸 Workspace profile이 그 이름을 허용하는지 확인한다. `repositoryMode`가 `new`이면 유효한 모든 이름,
+   `selected`는 `repositories`, `owners`는 그 owner의 이름, `all`은 모든 이름을 허용한다. 허용되지 않으면
+   profile 소유자가 Forge 콘솔에서 profile을 바꿔야 한다고 알린다. 다른 이름의 저장소를 만들거나 profile을 임의로 넓히지 않는다.
+3. 제공된 조회 도구로 같은 이름의 저장소를 확인한다.
    404는 비공개 저장소 접근 거절일 수도 있다. 다른 이름·fork·공개 전환으로 우회하지 않는다.
-3. Workspace의 `create_repository`가 제공되면 이를 사용한다. `repository: "owner/name"`,
-   `description`, `private`를 전달하며 서버가 README와 첫 commit을 만든다. `new` 모드는 성공한
-   저장소를 자동 등록한다. 공개 범위는 사용자 요청을 따르고 정해지지 않았으면 private=true다.
-   반환된 status·allowed·repository_url·base_branch를 확인한다. Workspace 생성 기능이 없으면
-   해당 환경의 실제 저장소 권한 범위에서 제공된 GitHub 생성 도구로 초기화할 수 있으나 Workspace 자동 등록은 약속하지 않는다.
-   결과 불명·전송 중단에는 생성 호출을 반복하지 않는다. 이미 존재하는 저장소를 신규라고 주장해 등록하지 않는다.
-4. 기존 저장소가 비어 있으면 clone할 branch가 없다. 첫 commit을 만드는 지원 경로와 요청 범위를 확인하고
-   초기화한다. 존재하는 파일을 덮거나 Native Git 보호 경계를 우회하지 않는다.
-5. 제공되는 경우 `Workspace.check_repository`로 서버 계정의 접근과 반환된 base_branch를 확인한다.
-   GitHub MCP 계정과 Workspace 서버 계정의 접근은 별개다. 정책을 바꾼 뒤에는 options와 검사를 다시 읽는다.
-6. 준비된 저장소를 선택해 최초 start하거나, 이미 선택된 실패 Workspace가 같은 저장소라면 run으로 재개한다.
-   clone 실패를 새 Workspace 생성으로 해결하지 않는다. 네트워크·401·403·404·빈 저장소·없는 branch를
-   구분하고 확인된 원인을 고친 뒤 재개한다.
+4. Forge `repository_create`에 `accountId`, `profileId`, `profileRevision`, `repository: "owner/name"`,
+   선택 `description`, `private`, `requestKey`를 보낸다. 공개 범위는 사용자 요청을 따르고 정해지지 않았으면 `private: true`다.
+   `status:"created"`이면 Forge가 초기 commit을 만들고 저장소를 사용자 연결로 등록한다. 반환된 실제 `defaultBranch`를 사용한다.
+   `failed`는 GitHub 거절이다. `unknown`이거나 응답을 잃었으면 생성을 반복하지 않는다. `repository_lookup_request`·
+   `repository_get`으로 영수증을 읽고, `requiresUserDecision`이면 사용자가 대상을 확인해 Forge 콘솔에서 직접 등록하도록 안내한다.
+   대상이 존재해도 이 요청이 만들었다는 증거가 아니다.
+   Forge 생성 기능이 없으면 해당 환경의 실제 저장소 권한 범위에서 제공된 GitHub 생성 도구로 초기화할 수 있으나 Forge 등록은 약속하지 않는다.
+5. 기존 저장소가 비어 있으면 clone할 branch가 없다. 첫 commit을 만드는 지원 경로와 요청 범위를 확인하고
+   초기화한다. 존재하는 파일을 덮거나 Git 보호 경계를 우회하지 않는다.
+6. 준비된 저장소의 연결 `id`와 `defaultBranch`로 Git `prepare`를 실행한다. 실패하면 네트워크·권한·빈 저장소·없는 branch를
+   구분하고 확인된 원인을 고친 뒤 같은 Workspace에서 다시 준비한다. 새 Workspace 생성으로 해결하지 않는다.
 
 ## 구현과 검증
 
@@ -70,5 +67,5 @@ CLI·명령행 도구를 만든다는 뜻과 command Runtime에서 이미 작성
 다운로드 Artifact는 다르며, 실제 제공된 전달 도구가 없으면 Workspace 링크를 제공한다.
 내부 파일명은 상대 경로를 코드로 표시하고 `/workspace/...`를 다운로드 링크로 만들지 않는다.
 호스트 앱에서 저장소를 지정한 프로젝트 생성은 사용자가 제한하지 않으면 새 작업 브랜치에서 구현·검증 후
-`workspace-task`의 `prepare_git`로 커밋·푸시·PR까지 추가 승인 없이 완료한다.
+`workspace-task`의 Git 게시 절차로 커밋·푸시·PR까지 추가 승인 없이 완료한다.
 Git-free 결과물에는 원격 게시를 추가하지 않는다. main 반영·태그·릴리즈·배포는 별도 요청과 확인을 따른다.

@@ -3,9 +3,9 @@ name: sandbox-task
 description: >
   격리된 Sandbox에서 코드 변경, 문서·데이터 처리, 스크립트 실행과 검증을 수행할 때 쓴다.
   필요한 입력과 도구를 확인하고 파일·검사·Diff로 결과를 검증한다.
-  실행에는 Workspace 도구 또는 실제 Sandbox 실행 기능이 필요하며 호스트 쉘을 가정하지 않는다.
+  실행에는 Agent Forge 실행 도구 또는 실제 Sandbox 실행 기능이 필요하며 호스트 쉘을 가정하지 않는다.
 compatibility: >
-  Studio Workspace 또는 직접 발견한 Forge 실행 도구가 필요하다. Forge는 command·Codex·Claude·OpenCode Runtime을 실행한다.
+  연결된 Agent Forge MCP 실행 도구가 필요하다. Forge는 command·Codex·Claude·OpenCode Runtime을 실행한다.
   산출물 파일은 Workspace에 남으며 별도 Artifact 다운로드 기능이 있다고 가정하지 않는다.
 metadata:
   org.opspresso.agent-studio.icon: box
@@ -26,17 +26,16 @@ metadata:
 4. 명령은 종료할 수 있는 비대화형 형태로 구성하고 표준 출력·오류와 종료 코드를 남긴다.
    결과물을 다음 단계에서 다시 읽어 형식과 내용을 확인한다.
 
-호스트 앱에서는 먼저 `Workspace`의 `options`를 읽고 `current_workspace`와 `workdir`를 확인한다.
-선택된 Workspace가 있으면 ID를 생략한 `run`으로 이어간다. `start`를 반복해도 새 작업이 접수되지 않는다.
-원격 자료를 읽는 것만으로 충분한 작업에는 Sandbox를 만들지 않는다. 실제 파일 처리나 검증이 필요할 때 사용한다.
-파일은 `workdir`의 상대 경로에 쓴다. `workspace_path`는 웹 링크이며 `cd` 대상이 아니다.
-Runtime 미지정이면 options.default_runtime을 따른다. 코딩 Runtime에는 완결된 자연어 `task`를
-전달한다. `command`는 task 전체를 셸로 실행하므로 이미 작성된 스크립트나 검증된 짧은 명령에
-사용한다. CLI 프로젝트 생성도 자연어 코딩 작업이다. command 오류는 task에 설명·Markdown이
+호스트 앱에서는 Agent Forge MCP로 실행한다. 연결된 `workspace-task`가 있으면 Workspace 준비·재사용 절차를 읽는다.
+같은 작업의 후속 요청은 기존 Workspace에 `run_submit`으로 이어간다. 재사용할 공간이 없을 때만 `workspace_create`를 쓴다.
+원격 자료를 읽는 것만으로 충분한 작업에는 Workspace를 만들지 않는다. 실제 파일 처리나 검증이 필요할 때 사용한다.
+파일은 Workspace 작업 폴더의 상대 경로에 쓴다. 응답의 `links.workspaceUrl`은 웹 링크이며 `cd` 대상이 아니다.
+Runtime은 사용자의 지정 또는 선택한 Workspace profile을 따른다. native Runtime에는 `{kind:"task", prompt}`로 완결된
+자연어 작업을 전달한다. command Runtime은 `{kind:"command", script}` 전체를 셸로 실행하므로 이미 작성된 스크립트나
+검증된 짧은 명령에 사용한다. CLI 프로젝트 생성도 자연어 코딩 작업이다. command 오류는 script에 설명·Markdown이
 들어갔는지 먼저 확인한다. 셸은 `-eu`로 실행되므로 의도적인 실패 처리는 조건문으로 명시하고
-실패한 `cd` 뒤에 쓰기를 계속하지 않는다.
-선택이 없는 새 작업만 `start`를 쓰며 Git 없는 작업은 저장소와 브랜치를 모두 `null`로 전달한다.
-`wait`·`status`의 실제 결과로 완료를 판단한다.
+실패한 `cd` 뒤에 쓰기를 계속하지 않는다. Git 없는 작업은 Git `prepare` 실행 없이 시작한다.
+`run_result`와 `run_events`의 실제 결과로 완료를 판단한다.
 
 ## 작업 종류에 맞게 검증한다
 
@@ -49,20 +48,18 @@ Runtime 미지정이면 options.default_runtime을 따른다. 코딩 Runtime에�
   제공된 파일·텍스트에서 시작하고, 문서 편집·다운로드는 현재 제공된 File/SaveFile 등의 계약을 따른다.
 - Git 작업: 최종 Diff와 변경 파일 목록을 읽어 요청 밖 변경을 제거한다.
   호스트 앱의 코딩 요청은 사용자가 제한하지 않으면 커밋·작업 브랜치 push·PR까지 포함한다.
-  같은 공간의 `Workspace.prepare_git`로 추가 승인 없이 실행한다. main 반영·태그·릴리즈·배포는
-  별도 요청과 확인을 따르며 pending일 때만 확인 링크를 전달한다. 일반 파일 처리에 Git 게시를 추가하지 않는다.
-  종료된 공간도 복원되므로 게시를 위해 새 native task나 Workspace를 만들지 않는다.
+  같은 Workspace의 Forge Git 실행(review → commit → push → pull-request)으로 추가 질문 없이 진행한다.
+  main 반영·태그·릴리즈·배포는 별도 요청이 필요하고 Forge 콘솔에서 소유자가 승인해야 실행된다.
+  일반 파일 처리에 Git 게시를 추가하지 않는다. 게시를 위해 새 native task나 Workspace를 만들지 않는다.
   연결된 `workspace-task`가 있으면 게시 절차를 읽고, 없으면 실제 schema로 요청된 동작만 준비한다.
   Native Git 쓰기나 임시 index·권한 변경·GitHub 쓰기로 승인 경계를 우회하지 않는다.
 
 Sandbox의 출력 경로를 호스트 파일이나 Artifact URL로 표현하지 않는다. 다운로드 도구가 실제로
 제공되지 않으면 Workspace 링크·파일 경로와 확인한 내용을 알려 준다.
 
-Studio의 Workspace wrapper와 직접 Forge MCP의 필드는 서로 다르다. 직접 Forge를 사용하면
-발견된 workspace_create·run_submit·run_get·run_events·run_cancel 계약을 따른다.
-create/submit의 requestKey와 입력을 유지하고 응답이 유실되면 읽기 전용 receipt 조회부터 한다.
+Forge의 workspace_create·run_submit·run_get·run_events·run_result·run_cancel 계약을 따른다.
+create/submit의 requestKey와 입력을 유지하고 응답이 유실되면 `*_lookup_request` 조회부터 한다.
 terminal과 hasMore=false를 확인해도 outputLoss=true이면 전체 출력을 확인했다고 하지 않는다.
-Studio에서는 기존 wait/status의 next_seq·has_more·output_loss를 사용한다.
 
 ## 권한과 실패 처리
 
