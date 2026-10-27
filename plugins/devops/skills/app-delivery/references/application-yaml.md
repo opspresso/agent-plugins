@@ -83,6 +83,9 @@ environments:
 
 ## Node.js 예시
 
+이 예시의 `/health`는 DB 연결이나 migration 결과를 확인하지 않는다. PostgreSQL을 쓰고 기동 시 migration을 실행하는 앱은
+migration이 실패하면 `/health`가 실패하도록 이 핸들러를 바꾼다.
+
 ```dockerfile
 FROM node:24-alpine AS build
 WORKDIR /app
