@@ -6,7 +6,7 @@
 - Librio 콘솔의 오디오 설정에서 이름 있는 profile을 만들고 기본 profile로 선택한다.
   profile에는 Librio가 허용한 전사 모델 ID·언어·보존 기간과, 회의록이 필요하면 회의록(summary) 모델과 선택적 지시문을 저장한다.
   Studio Tools의 Librio 상세 화면에 설정·이력 링크가 있다. 접수된 작업은 당시 profile snapshot을 사용한다.
-- 녹음은 Chat에 첨부하거나(문서 첨부 한도 10 MiB 이하) Librio 콘솔에서 올린다.
+- 녹음은 Chat에 첨부하거나(녹음 첨부 한도 512 MiB 이하) Librio 콘솔에서 올린다.
 - Plaud MCP는 녹음 찾기와 Plaud 기존 결과 조회에 쓴다. Plaud 녹음을 Librio로 자동 전달하는 경로는 현재 없다.
 - 과거 회의 검색은 Librio의 검색 도구를, 요청 시 장기 기억은 `personal-records` skill과 Agent Memory MCP를 같은 Agent에 연결한다.
 

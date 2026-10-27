@@ -57,7 +57,7 @@ explicit empty array disables mapping. The mapping keeps the URL out of model co
 It does not create a Studio file ID, and no current tool accepts `source_ref` as input.
 
 To transcribe a Plaud recording with Librio, the user attaches the audio file to the
-Chat (within the document attachment limit of 10 MiB) or uploads it in the Librio
+Chat (recording attachments up to 512 MiB) or uploads it in the Librio
 console. Do not promise scheduled Plaud-to-Librio collection. `FetchUrl` and document
 `File` remain unsuitable for audio transcription.
 

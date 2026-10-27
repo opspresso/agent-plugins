@@ -44,8 +44,8 @@ Agent Forge are independent services. Studio connects to each only through MCP:
 - A tool parameter annotated with `org.opspresso.agent.file-reference` takes a
   Studio file ID. Studio converts it at dispatch to a short-lived verified
   reference that the service downloads. A recording attached in Chat becomes a
-  Chat file whose ID is passed to Librio `recording_import`. Chat attachments are
-  limited to 10 MiB; larger recordings are uploaded in the Librio console.
+  Chat file whose ID is passed to Librio `recording_import`. Recording
+  attachments are limited to 512 MiB; larger recordings are uploaded in the Librio console.
 - Never resubmit uncertain work. Inspect the original request with
   `audio_request_status`, `run_lookup_request`, `workspace_lookup_request` or
   `repository_lookup_request`.

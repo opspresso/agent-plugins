@@ -48,7 +48,7 @@ Studio keeps no copy of them.
 `recording_import.source` declares the `org.opspresso.agent.file-reference`
 annotation. The model passes a Studio file ID; Studio replaces it at dispatch
 with a short-lived verified reference (`url`, `checksum`, `sizeBytes`,
-`expiresAt`). Chat attachments are limited to 10 MiB; larger recordings are
+`expiresAt`). Recording attachments are limited to 512 MiB; larger recordings are
 uploaded in the Librio console. Plaud's mapped `source_ref` is not a Studio file
 ID, and no current tool accepts it.
 

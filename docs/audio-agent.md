@@ -17,7 +17,7 @@ Studio의 한 Agent가 Agent Librio MCP로 녹음 처리를 위임한다. Librio
 
 ## 입력 경로
 
-- Chat에 첨부한 녹음(문서 첨부 한도 10 MiB 이하)은 파일 ID로 `recording_import`에 전달된다.
+- Chat에 첨부한 녹음(녹음 첨부 한도 512 MiB 이하)은 파일 ID로 `recording_import`에 전달된다.
 - 더 큰 녹음은 Librio 콘솔에서 올린다. Agent는 `audio_list`로 녹음을 찾아 작업을 제출한다.
 - Plaud MCP의 `source_ref`를 받는 도구는 현재 없다. Plaud 녹음의 자동 수집·처리는 지원하지 않는다.
 

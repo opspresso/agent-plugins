@@ -9,7 +9,7 @@ Studio의 Plaud `get_file` 매핑은 임시 다운로드 URL을 숨기고 `sourc
 따라서 Plaud 녹음을 Chat에서 바로 Librio로 가져올 수 없다.
 
 - `source_ref`, Plaud 녹음 ID, `presigned_url`을 `recording_import`의 `source`로 보내지 않는다.
-- 사용자가 녹음 파일을 Chat에 첨부하면(문서 첨부 한도 10 MiB 이하) 그 파일 ID로 처리한다.
+- 사용자가 녹음 파일을 Chat에 첨부하면(녹음 첨부 한도 512 MiB 이하) 그 파일 ID로 처리한다.
 - 더 큰 녹음은 사용자가 Librio 콘솔에서 올린다. 그 뒤 `audio_list`로 `recordingId`를 찾아 작업을 제출한다.
 - 정기 실행에서 Plaud 녹음을 자동으로 가져와 처리한다고 약속하지 않는다.
 

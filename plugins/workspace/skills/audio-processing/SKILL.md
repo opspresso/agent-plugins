@@ -32,7 +32,7 @@ Studio에는 오디오 설정이나 작업 기록의 사본이 없다.
   짧은 시간만 유효한 검증된 파일 참조로 바꾼다. 파일 URL·bytes·base64를 직접 만들지 않는다.
 - **이미 Librio에 있는 녹음**: `audio_list`의 `recordings`에서 `recordingId`를 확인하고 바로 작업을 제출한다.
 - **Plaud 녹음**: [Plaud 조회](references/plaud.md)를 읽는다. Plaud의 `source_ref`는 Librio에 전달할 수 없다.
-- **문서 첨부 한도(10 MiB)를 넘는 녹음**: Chat에 첨부할 수 없다. Librio 콘솔에서 올리도록 안내한다.
+- **녹음 첨부 한도(512 MiB)를 넘는 녹음**: Chat에 첨부할 수 없다. Librio 콘솔에서 올리도록 안내한다.
 - **완료된 작업의 전사문·회의록 요청**: `audio_output_read`로 읽는다. 원음을 다시 전사하지 않는다.
 - **회의록만 다시 만드는 요청**(형식·중점·모델 변경): 같은 녹음에 `postprocess` 작업을 제출한다. 원음을 다시 처리하지 않는다.
 - **결정·사실을 장기 기억에 남기는 요청**: 연결된 `personal-records` skill을 읽는다.
