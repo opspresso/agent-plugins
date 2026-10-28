@@ -97,8 +97,8 @@ environments:
 
 ## Node.js 예시
 
-이 예시의 `/health`는 DB 연결이나 migration 결과를 확인하지 않는다. PostgreSQL을 쓰고 기동 시 migration을 실행하는 앱은
-migration이 실패하면 `/health`가 실패하도록 이 핸들러를 바꾼다.
+PostgreSQL을 쓰는 앱의 예시다. 기동 시 migration을 실행하고, `/health`는 migration 성공과 DB 연결을 매번 확인한다.
+`DATABASE_URL`은 리소스 이름이 `main`일 때의 Variable이다. 의존성은 `pg`다.
 
 ```dockerfile
 FROM node:24-alpine AS build
@@ -117,11 +117,33 @@ CMD ["node", "server.js"]
 ```
 
 ```js
-// server.js: PORT와 /health
+// server.js: PORT, 기동 시 migration, DB를 확인하는 /health
 import http from "node:http";
-const server = http.createServer((req, res) => {
-  if (req.url === "/health") { res.writeHead(200, { "content-type": "application/json" }); return res.end('{"ok":true}'); }
+import pg from "pg";
+
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
+let migrated = false;
+async function migrate() {
+  await pool.query("CREATE TABLE IF NOT EXISTS todo (id serial PRIMARY KEY, title text NOT NULL)");
+  migrated = true;
+}
+migrate().catch((error) => console.error("migration failed:", error.message));
+
+const server = http.createServer(async (req, res) => {
+  if (req.url === "/health") {
+    try {
+      if (!migrated) throw new Error("migration not complete");
+      await pool.query("SELECT 1");
+      res.writeHead(200, { "content-type": "application/json" });
+      return res.end('{"ok":true}');
+    } catch {
+      res.writeHead(503, { "content-type": "application/json" });
+      return res.end('{"ok":false}');
+    }
+  }
   res.writeHead(404); res.end();
 });
 server.listen(Number(process.env.PORT ?? 8080));
 ```
+
+리소스가 없는 앱은 `/health`에서 DB 확인을 뺀다.

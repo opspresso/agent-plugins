@@ -25,15 +25,23 @@ metadata:
 
 ## 2. 저장소와 코드
 
-1. 새 저장소는 연결된 `project-generator` 절차로 Forge `repository_create`를 실행한다. 공개 범위는 사용자 요청을 따른다.
-2. 코드를 구현한다. 배포에 필요한 조건은 다음과 같다. 세부 규칙과 예시는 [application.yaml과 배포 조건](references/application-yaml.md)을 읽는다.
+1. 새 저장소는 연결된 `project-generator` 절차로 Forge `repository_create`를 실행하고 `private: false`로 만든다.
+   Delivery의 checkout은 인증 없이 clone하므로 비공개 저장소는 `checkout_failed`로 실패한다. 사용자가 비공개를 요구하면
+   Delivery로 배포할 수 없다고 먼저 알리고 결정을 받는다. 기존 비공개 저장소를 임의로 공개로 바꾸지 않는다.
+2. 앱이 DB·버킷을 쓰면 코드를 쓰기 전에 `dev` 리소스를 만든다. `project_ensure`(`repository`)로 Project를 만들고
+   `resource_create`(`environment: dev`, `class`, `name`, `idempotencyKey`)를 호출한 뒤 `resource_get`으로 `ready`를 확인한다.
+   접속 정보는 Agent Delivery가 SSM SecureString에 저장한다. 값은 Chat·코드·로그에 쓰지 않고 Variable 이름만 쓴다.
+   나중에 `application.yaml`이 같은 이름·class로 선언하면 `project_apply`가 이 리소스를 그대로 쓴다.
+3. 코드를 구현한다. 배포에 필요한 조건은 다음과 같다. 세부 규칙과 예시는 [application.yaml과 배포 조건](references/application-yaml.md)을 읽는다.
    - 저장소 루트의 `application.yaml`(`spec.owner`에 Project 소유자의 Studio subject)
    - `Dockerfile`: linux/arm64에서 빌드되고, `PORT` 환경 변수의 포트에서 HTTP를 받는다.
-   - health 경로(기본 `/health`): 의존 리소스가 준비되면 2xx를 반환한다.
+   - health 경로(기본 `/health`): 리소스를 선언한 앱은 매 요청에서 각 리소스에 실제로 연결하고(PostgreSQL은 `SELECT 1`)
+     기동 시 migration이 성공했을 때만 2xx를 반환한다. Delivery의 verify는 이 경로만 확인하므로 고정 응답은 DB 장애를 숨긴다.
    - 테스트 명령: 외부 리소스 없이 끝나야 한다. Delivery의 test 단계에는 Agent Delivery Variable이 없다.
-3. Forge Run의 checks(test·lint·build)로 확인한다. `dev` 리소스가 있으면 Forge가 Run에 그 값을 넣으므로 실제 DB로도 확인할 수 있다.
-4. Git `review`·`commit`·`push`·`pull-request`로 PR을 만든다. `pull-request`는 승인을 만들지 않는다.
-5. PR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approvalUrl`을 반환한다.
+4. Forge Run의 checks(test·lint·build)로 확인한다. `dev` 리소스가 `ready`이면 Forge가 Run의 명령 환경에 그 Variable을
+   넣으므로 migration과 DB 연동을 실제 DB로 확인한다. 이 확인은 Forge에서만 가능하다. Delivery의 test 단계에는 DB가 없다.
+5. Git `review`·`commit`·`push`·`pull-request`로 PR을 만든다. `pull-request`는 승인을 만들지 않는다.
+6. PR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approvalUrl`을 반환한다.
    그 링크를 사용자에게 주고, 병합 Run이 `succeeded`인지 확인한 뒤 다음 단계로 간다. 승인 없이 다른 경로로 병합하지 않는다.
 
 ## 3. 선언 적용과 리소스

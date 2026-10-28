@@ -42,7 +42,7 @@ CLI·명령행 도구를 만든다는 뜻과 command Runtime에서 이미 작성
 3. 제공된 조회 도구로 같은 이름의 저장소를 확인한다.
    404는 비공개 저장소 접근 거절일 수도 있다. 다른 이름·fork·공개 전환으로 우회하지 않는다.
 4. Forge `repository_create`에 `accountId`, `profileId`, `profileRevision`, `repository: "owner/name"`,
-   선택 `description`, `private`, `requestKey`를 보낸다. 공개 범위는 사용자 요청을 따르고 정해지지 않았으면 `private: true`다.
+   선택 `description`, `private`, `requestKey`를 보낸다. 공개 범위는 사용자 요청을 따르고 정해지지 않았으면 `private: true`다. 단, Agent Delivery로 배포할 앱은 `app-delivery` 절차에 따라 `private: false`다.
    `status:"created"`이면 Forge가 초기 commit을 만들고 저장소를 사용자 연결로 등록한다. 반환된 실제 `defaultBranch`를 사용한다.
    `failed`는 GitHub 거절이다. `unknown`이거나 응답을 잃었으면 생성을 반복하지 않는다. `repository_lookup_request`·
    `repository_get`으로 영수증을 읽고, `requiresUserDecision`이면 사용자가 대상을 확인해 Forge 콘솔에서 직접 등록하도록 안내한다.
