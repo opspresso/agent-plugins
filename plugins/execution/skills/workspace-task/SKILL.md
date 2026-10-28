@@ -49,7 +49,7 @@ Forge URL·조직·사용자 신원·provider credential·Git token은 서버 �
    profile은 Runtime·모델·저장소 규칙·검사·배포 workflow를 정한다. 선택이 없으면 Forge 콘솔 설정에서 선택하도록 안내한다.
    사용자가 Runtime을 직접 지정하면 `model_channels`로 허용 채널을 확인하고 명시적 입력으로 만든다.
 2. **기존 Workspace 재사용**: 같은 작업의 후속 요청은 `workspace_list`·`workspace_get`으로 찾은 Workspace에서 이어간다.
-   `run_submit`은 `active` Workspace에만 접수된다. `suspended`이면 `workspace_resume`을 요청하고 `workspace_get`으로 `active`를 확인한다.
+   `suspended` Workspace에도 `run_submit`을 바로 보낸다. Forge가 다시 시작하고 checkpoint를 복원한 뒤 실행하므로 `workspace_resume`을 먼저 부르지 않는다.
    `closed`는 다시 열 수 없다. Workspace당 실행은 한 번에 하나다.
 3. **새 Workspace**: 재사용할 공간이 없을 때만 `workspace_create`에 `title`과 profile을 보낸다.
    `title`은 사용자 언어의 짧은 작업 목적이다. 셸 스크립트를 제목으로 복사하지 않는다.
