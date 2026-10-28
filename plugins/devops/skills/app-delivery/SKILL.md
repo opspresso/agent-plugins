@@ -53,9 +53,11 @@ metadata:
 2. Studio가 Delivery를 따라가다 끝나면 결과를 Chat에 전달하고 대화를 이어 준다. 같은 Delivery를 기다리며
    `delivery_get`을 반복 호출하지 않는다. 사용자가 진행 상황을 물으면 한 번 조회해 단계(`step`)를 알린다.
 3. 결과를 확인한다.
-   - `succeeded`: `url`과 health 경로, 배포한 `revision`(짧은 SHA)을 알린다.
+   - `succeeded`: Delivery의 verify 단계가 새 rollout을 확인하고 `url`의 health 경로가 2xx를 반환한 것까지 검증했다는 뜻이다.
+     `url`, health 경로, 배포한 `revision`(짧은 SHA)을 알린다. HTTP 요청 도구가 없어도 health를 미검증으로 보고하지 않는다.
    - `failed`: `step`과 `errorCode`를 확인하고 `delivery_logs`(`deliveryId`, `step`)로 원인을 읽는다.
-     코드 문제는 2단계로 고친 뒤 새 Delivery를 시작한다. `application_changed`이면 Delivery에 쓴 ref의 `application.yaml`을
+     코드 문제는 2단계로 고친 뒤 새 Delivery를 시작한다. `delivery_unavailable`은 플랫폼 문제다. 코드나 선언을 바꾸지 말고
+     Delivery ID와 단계를 사용자에게 알린다. `application_changed`이면 Delivery에 쓴 ref의 `application.yaml`을
      읽어 그 내용을 3단계로 적용하거나, 적용한 선언과 같은 파일을 가진 ref로 다시 시작한다. 다른 ref의 파일을 적용하지 않는다.
      같은 실패를 원인 확인 없이 다시 시작하지 않는다.
    - `rejected`: 소유자가 거절했거나 승인이 만료됐다. 다시 시작할지 사용자에게 확인한다.
