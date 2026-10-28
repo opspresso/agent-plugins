@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "devops",
   "version": "1.4.0",
-  "description": "Deliver apps from repository to running service with Agent Broker, investigate service incidents and change Git-managed desired state using the target environment’s observability and deployment tools. Bundles GitHub and the in-cluster Argo CD, CloudWatch, Grafana and Kubernetes MCP services deployed by argocd-env-apps.",
+  "description": "Deliver apps from repository to running service with Agent Delivery, investigate service incidents and change Git-managed desired state using the target environment’s observability and deployment tools. Bundles GitHub and the in-cluster Argo CD, CloudWatch, Grafana and Kubernetes MCP services deployed by argocd-env-apps.",
   "author": { "name": "opspresso" },
   "repository": "https://github.com/opspresso/agent-plugins",
   "license": "MIT",

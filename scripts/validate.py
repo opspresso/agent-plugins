@@ -51,7 +51,7 @@ STUDIO_EXTENSION_FIELDS = {"icon", "mcpSourceOutputs"}
 # sync drops any other name, so an unlisted name fails here first. Repository
 # policy: every plugin, skill and MCP server declares one.
 CATALOG_ICONS = frozenset("""
-address-book agent-forge agent-librio agent-memory alert-triangle api
+address-book agent-forge agent-knowledge agent-memory alert-triangle api
 app-window apps archive bell bolt book book-2 books box braces brain brand-argo
 brand-aws brand-docker brand-figma brand-github brand-gitlab brand-gmail
 brand-google brand-google-calendar brand-google-docs brand-google-drive

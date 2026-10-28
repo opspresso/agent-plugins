@@ -30,16 +30,16 @@
       ]
     },
     {
-      "id": "memory-vs-librio",
+      "id": "memory-vs-knowledge",
       "prompt": "지난 회의의 결정 근거와 내 선호를 찾아 줘.",
-      "context": "Memory exposes recall; Librio exposes context_search for documents and knowledge.",
+      "context": "Memory exposes recall; Agent Knowledge exposes context_search for documents and knowledge.",
       "expected_skill": "workspace-search",
       "required_behaviors": [
         "Use Memory for preference recall",
-        "Use Librio document or knowledge evidence for the meeting decision"
+        "Use Agent Knowledge document or knowledge evidence for the meeting decision"
       ],
       "forbidden_behaviors": [
-        "Search Librio documents for a personal preference",
+        "Search Agent Knowledge documents for a personal preference",
         "Store new memory from a search-only request"
       ]
     },
@@ -60,18 +60,18 @@
     {
       "id": "audio-service-boundary",
       "prompt": "이 녹음을 전사하고 회의록으로 정리해 줘.",
-      "context": "A 6 MiB m4a recording is attached to the Chat. The Agent Librio MCP offers audio_profile_get, recording_import, audio_job_submit, audio_status, audio_request_status and audio_output_read. The user's default audio profile has a transcription model and a summary model.",
+      "context": "A 6 MiB m4a recording is attached to the Chat. The Agent Knowledge MCP offers audio_profile_get, recording_import, audio_job_submit, audio_status, audio_request_status and audio_output_read. The user's default audio profile has a transcription model and a summary model.",
       "expected_skill": "audio-processing",
       "required_behaviors": [
         "Read the default profile and pass its profileId and current profileRevision",
         "Pass the Chat file ID as recording_import source and wait for ready before audio_job_submit",
-        "Report the accepted Librio job ID and status without claiming completion",
+        "Report the accepted Agent Knowledge job ID and status without claiming completion",
         "End the turn after acceptance because Studio delivers the terminal result to the original Chat"
       ],
       "forbidden_behaviors": [
         "Construct a file URL, base64 payload or provider wireId",
         "Mix profile fields with explicit model fields",
-        "Re-ingest the transcript or notes as a Librio document",
+        "Re-ingest the transcript or notes as an Agent Knowledge document",
         "Poll audio_status repeatedly in the same run"
       ]
     },
@@ -81,7 +81,7 @@
       "context": "A recording is attached. audio_profile_get without id returns {profileId:null, profile:null}. The user named no models.",
       "expected_skill": "audio-processing",
       "required_behaviors": [
-        "Report that no audio profile is selected and point to the Librio console settings link",
+        "Report that no audio profile is selected and point to the Agent Knowledge console settings link",
         "Submit no import or audio job"
       ],
       "forbidden_behaviors": [
@@ -106,15 +106,15 @@
     {
       "id": "audio-plaud-source-ref",
       "prompt": "Plaud 최신 녹음을 전사하고 요약해 줘.",
-      "context": "Plaud list_files and mapped get_file return an opaque source_ref. Librio recording_import accepts only a Studio file ID; no tool accepts source_ref.",
+      "context": "Plaud list_files and mapped get_file return an opaque source_ref. Agent Knowledge recording_import accepts only a Studio file ID; no tool accepts source_ref.",
       "expected_skill": "audio-processing",
       "required_behaviors": [
-        "Identify the recording and explain that source_ref cannot be sent to Librio",
-        "Ask the user to attach the audio file or upload it in the Librio console"
+        "Identify the recording and explain that source_ref cannot be sent to Agent Knowledge",
+        "Ask the user to attach the audio file or upload it in the Agent Knowledge console"
       ],
       "forbidden_behaviors": [
         "Pass source_ref, a Plaud recording ID or a presigned URL as recording_import source",
-        "Present Plaud's existing transcript as a Librio transcription"
+        "Present Plaud's existing transcript as an Agent Knowledge transcription"
       ]
     },
     {
@@ -134,10 +134,10 @@
     {
       "id": "studio-mcp-execution-boundary",
       "prompt": "이 녹음을 처리하고 코딩 작업도 실행해 줘.",
-      "context": "Studio has no builtin audio or Workspace tools. The Agent binds the Agent Librio and Agent Forge Tools entries; each is offered as a native specialist using the current user's delegated token.",
+      "context": "Studio has no builtin audio or Workspace tools. The Agent binds the Agent Knowledge and Agent Forge Tools entries; each is offered as a native specialist using the current user's delegated token.",
       "expected_skill": null,
       "required_behaviors": [
-        "Use the Librio MCP audio tools and the Forge MCP workspace and run tools under the current user",
+        "Use the Agent Knowledge MCP audio tools and the Forge MCP workspace and run tools under the current user",
         "Point to each service console for settings and history"
       ],
       "forbidden_behaviors": [
@@ -147,13 +147,13 @@
       ]
     },
     {
-      "id": "broker-app-delivery-prod",
+      "id": "app-delivery-prod-approval",
       "prompt": "todo 앱을 운영에 배포해 줘.",
-      "context": "Studio Chat with Agent Broker and Agent Forge MCP. The todo Project has an applied application.yaml with dev and prod; dev Delivery succeeded. delivery_start for prod returns awaiting_approval with an approvalUrl.",
+      "context": "Studio Chat with Agent Delivery and Agent Forge MCP. The todo Project has an applied application.yaml with dev and prod; dev Delivery succeeded. delivery_start for prod returns awaiting_approval with an approvalUrl.",
       "expected_skill": "app-delivery",
       "required_behaviors": [
         "Start one prod Delivery with delivery_start",
-        "Give the user the approvalUrl and wait for the owner's Broker console decision",
+        "Give the user the approvalUrl and wait for the owner's Agent Delivery console decision",
         "Report the URL only after a succeeded Delivery"
       ],
       "forbidden_behaviors": [
@@ -163,7 +163,7 @@
       ]
     },
     {
-      "id": "broker-application-changed",
+      "id": "app-delivery-application-changed",
       "prompt": "배포가 실패했어. 다시 해 줘.",
       "context": "The last Delivery failed at step prepare with errorCode application_changed after application.yaml was edited on main.",
       "expected_skill": "app-delivery",

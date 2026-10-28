@@ -1,6 +1,6 @@
 # application.yaml과 배포 조건
 
-저장소 루트의 `application.yaml`이 앱 하나를 선언한다. Agent Broker가 검증하고, Delivery가 이 선언대로 빌드·배포한다.
+저장소 루트의 `application.yaml`이 앱 하나를 선언한다. Agent Delivery가 검증하고, Delivery가 이 선언대로 빌드·배포한다.
 
 ## 예시
 
@@ -8,7 +8,7 @@
 apiVersion: agent.opspresso.com/v1
 kind: Application
 spec:
-  name: todo                  # Broker Project slug
+  name: todo                  # Agent Delivery Project slug
   repository: nalworks/todo   # owner/repo
   owner: 3f2c9d1e-…          # Studio subject of the Project owner
   description: Todo API
@@ -57,7 +57,7 @@ environments:
 | `maxReplicas` | 아니요 | `replicas`~10. 크면 CPU 70% 기준 자동 확장 | `replicas` |
 | `cpu`, `memory` | 아니요 | `50m`~`1`, `64Mi`~`2Gi`. memory는 limit도 된다 | `100m`, `256Mi` |
 | `resources` | 아니요 | `{name, class}`. class는 `postgres`·`bucket`. 이름이 `main`이면 Variable에 접두어가 없다 | |
-| `secrets` | 아니요 | 사용자가 Broker 콘솔에서 입력할 Variable 이름 | |
+| `secrets` | 아니요 | 사용자가 Agent Delivery 콘솔에서 입력할 Variable 이름 | |
 | `env` | 아니요 | 비밀이 아닌 환경 변수. 값 1 KiB 이하 | |
 
 - 알 수 없는 필드는 거부된다.
@@ -67,7 +67,7 @@ environments:
 
 ## 소유자
 
-`spec.owner`는 Project 소유자의 Studio subject다. Broker는 이 값이 다르면 `application_owner_mismatch`로 거부하고,
+`spec.owner`는 Project 소유자의 Studio subject다. Agent Delivery는 이 값이 다르면 `application_owner_mismatch`로 거부하고,
 메시지에 기대한 값을 알려 준다. 값은 다음 순서로 정한다.
 
 1. Project가 있으면 `project_get`의 `owner.subject`를 쓴다.
@@ -91,7 +91,7 @@ environments:
 - 이미지는 linux/arm64로 빌드된다. arm64를 지원하지 않는 base image나 바이너리를 쓰지 않는다.
 - `PORT`에서 HTTP를 받는다. TLS는 플랫폼이 처리한다.
 - 컨테이너는 privilege escalation 없이, 모든 capability를 뺀 상태로 실행된다. 1024 미만 포트를 쓰지 않는다.
-- 외부 연결은 HTTPS(443)와 Broker PostgreSQL만 허용된다. 다른 포트의 외부 API는 쓸 수 없다.
+- 외부 연결은 HTTPS(443)와 Agent Delivery PostgreSQL만 허용된다. 다른 포트의 외부 API는 쓸 수 없다.
 - 기동 후 3분 안에 health 경로가 2xx를 반환해야 한다. DB migration은 기동 시 실행하되 실패하면 health가 실패하게 한다.
 - 로그는 stdout·stderr로 쓴다. 비밀 값을 로그에 쓰지 않는다.
 
