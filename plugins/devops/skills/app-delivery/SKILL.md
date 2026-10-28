@@ -27,7 +27,7 @@ metadata:
 
 1. 새 저장소는 연결된 `project-generator` 절차로 Forge `repository_create`를 실행한다. 공개 범위는 사용자 요청을 따른다.
 2. 코드를 구현한다. 배포에 필요한 조건은 다음과 같다. 세부 규칙과 예시는 [application.yaml과 배포 조건](references/application-yaml.md)을 읽는다.
-   - 저장소 루트의 `application.yaml`
+   - 저장소 루트의 `application.yaml`(`spec.owner`에 Project 소유자의 Studio subject)
    - `Dockerfile`: linux/arm64에서 빌드되고, `PORT` 환경 변수의 포트에서 HTTP를 받는다.
    - health 경로(기본 `/health`): 의존 리소스가 준비되면 2xx를 반환한다.
    - 테스트 명령: 외부 리소스 없이 끝나야 한다. Delivery의 test 단계에는 Broker Variable이 없다.
