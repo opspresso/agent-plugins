@@ -10,6 +10,7 @@ kind: Application
 spec:
   name: todo                  # Broker Project slug
   repository: nalworks/todo   # owner/repo
+  owner: 3f2c9d1e-…          # Studio subject of the Project owner
   description: Todo API
 runtime:
   port: 8080
@@ -44,6 +45,7 @@ environments:
 | --- | --- | --- | --- |
 | `spec.name` | 예 | slug. `-dev`·`-prod`로 끝날 수 없다 | |
 | `spec.repository` | 예 | `owner/repo`. Project의 저장소와 같아야 한다 | |
+| `spec.owner` | 예 | Project 소유자의 Studio subject. 아래 [소유자](#소유자)를 따른다 | |
 | `spec.description` | 아니요 | 200자 이하 | |
 | `runtime.port` | 예 | 1024~65535. 플랫폼이 `PORT`로도 넘긴다 | |
 | `runtime.health` | 아니요 | `/`로 시작하는 경로 | `/health` |
@@ -62,6 +64,18 @@ environments:
 - `env`·`secrets` 이름은 `^[A-Z][A-Z0-9_]{0,63}$`이다. `PORT`와 리소스 Variable 이름은 쓸 수 없다.
 - `dev`의 `env`·`secrets`는 Forge Sandbox 예약 이름(`OPENAI_`·`ANTHROPIC_`·`AWS_`·`GIT_`로 시작하는 이름 등)을 쓸 수 없다.
   예: dev는 `APP_OPENAI_API_KEY`, prod는 `OPENAI_API_KEY`.
+
+## 소유자
+
+`spec.owner`는 Project 소유자의 Studio subject다. Broker는 이 값이 다르면 `application_owner_mismatch`로 거부하고,
+메시지에 기대한 값을 알려 준다. 값은 다음 순서로 정한다.
+
+1. Project가 있으면 `project_get`의 `owner.subject`를 쓴다.
+2. 새 Project면 처음 `project_apply`의 `application_owner_mismatch` 메시지가 알려 주는 요청자의 subject를 쓴다.
+   그 값으로 파일을 고쳐 commit한 뒤 다시 적용한다.
+
+이 값 덕분에 저장소에 쓸 수 있는 사람만 그 저장소를 자기 Project로 배포할 수 있다. 다른 사람의 값으로 바꾸지 않는다.
+`project_owned_elsewhere`이면 다른 사용자가 Project를 소유한 것이다. Studio 관리자에게 소유자 이전을 요청하라고 안내한다.
 
 ## 리소스 Variable
 
