@@ -20,15 +20,15 @@ contracts before changing a plugin's tool instructions or connection settings.
 | `agent-studio` | Plugin sync, current Agent bindings, builtin tools, attachment extraction, artifact delivery, MCP file references and service result delivery to Chat | A component must be offered through saved bindings or enabled dynamic discovery; describe only inputs and results the run can access |
 | `agent-models` | Model families, provider offerings, capabilities and pricing | A catalog, not an MCP server; use the available model `id`, not its provider `wireId`, in Agent settings |
 | `agent-memory` | Long-term memories and short-term task handoffs | Bind the exact service URL, current caller and `recall`/`remember`/`handoff_*` scopes |
-| `agent-librio` | Documents, RAG, knowledge graph, recordings, transcription, meeting notes, audio profiles and job history | Bind its Tools entry; audio runs through Librio MCP tools with the user's audio profile |
+| `agent-knowledge` | Documents, RAG, knowledge graph, recordings, transcription, meeting notes, audio profiles and job history | Bind its Tools entry; audio runs through Agent Knowledge MCP tools with the user's audio profile |
 | `agent-forge` | Workspaces, Sandbox execution, native sessions, checkpoints, Workspace profiles, Git connections, protected-action approvals and run history | Bind its Tools entry; coding work runs through Forge MCP tools with the user's Workspace profile |
 
 ### Service-owned tools
 
-Studio has no builtin audio or Workspace tools. Agent Memory, Agent Librio and
+Studio has no builtin audio or Workspace tools. Agent Memory, Agent Knowledge and
 Agent Forge are independent services. Studio connects to each only through MCP:
 
-- Deployment settings (`MEMORY_*`, `LIBRIO_*`, `FORGE_*`) create one Tools entry
+- Deployment settings (`MEMORY_*`, `KNOWLEDGE_*`, `FORGE_*`) create one Tools entry
   per service. Plugin sync does not own these entries.
 - Each MCP connection is offered to the Agent as one native specialist. Every
   request carries a short-lived token delegated from the current Studio user.
@@ -38,14 +38,14 @@ Agent Forge are independent services. Studio connects to each only through MCP:
   `org.opspresso.agent.tool-management`.
 - When a service accepts long-running work (`audio_job_submit`, `run_submit`,
   `repository_create` and their retries), Studio records the keyed submission and
-  delivers the terminal result to the original Chat once. Librio transcript and
+  delivers the terminal result to the original Chat once. Agent Knowledge transcript and
   meeting-note outputs arrive as Chat files. An authenticated schedule tick
   (`/api/triggers/scan`) drives delivery.
 - A tool parameter annotated with `org.opspresso.agent.file-reference` takes a
   Studio file ID. Studio converts it at dispatch to a short-lived verified
   reference that the service downloads. A recording attached in Chat becomes a
-  Chat file whose ID is passed to Librio `recording_import`. Recording
-  attachments are limited to 512 MiB; larger recordings are uploaded in the Librio console.
+  Chat file whose ID is passed to Agent Knowledge `recording_import`. Recording
+  attachments are limited to 512 MiB; larger recordings are uploaded in the Agent Knowledge console.
 - Never resubmit uncertain work. Inspect the original request with
   `audio_request_status`, `run_lookup_request`, `workspace_lookup_request` or
   `repository_lookup_request`.
@@ -64,7 +64,7 @@ source and scope. `remember` writes scoped memory and can supersede observed ver
 `handoff_create/list/get/update/close` preserve progress with TTL and version checks;
 Forge retains actual native sessions and file checkpoints.
 
-Librio's `context_search` combines document and graph evidence;
+Agent Knowledge's `context_search` combines document and graph evidence;
 `document_search`, `knowledge_search` and `knowledge_neighborhood` narrow that
 search. `document_ingest` uses a stable idempotency key and
 `document_ingest_status` distinguishes accepted work from a ready document.
@@ -73,7 +73,7 @@ Automatic pre-run recall requires `memoryRecall` and an explicit Memory server
 binding permitting `recall`; dynamic discovery alone does not enable it. IDs from
 either service are not Studio Artifact IDs. Use the
 [Memory connection notes](integrations/agent-memory.md) and
-[Librio connection notes](integrations/agent-librio.md). Current caller delegation
+[Agent Knowledge connection notes](integrations/agent-knowledge.md). Current caller delegation
 uses signed, audience-bound identity and explicit local bindings, never
 `X-User-Email` or matching UUIDs.
 
@@ -147,12 +147,12 @@ access still needs to be verified after account connection.
 
 Plaud finds recordings and returns Plaud's existing transcripts and notes. The
 plugin's `get_file` mapping hides the download URL behind an opaque `source_ref`,
-but no current Studio or Librio tool accepts `source_ref`. To transcribe a Plaud
-recording with Librio, the user attaches the audio file in Chat or uploads it in
-the Librio console; the `audio-processing` skill then runs `recording_import` →
-`audio_job_submit`. Librio publishes transcripts and meeting notes as search
+but no current Studio or Agent Knowledge tool accepts `source_ref`. To transcribe a Plaud
+recording with Agent Knowledge, the user attaches the audio file in Chat or uploads it in
+the Agent Knowledge console; the `audio-processing` skill then runs `recording_import` →
+`audio_job_submit`. Agent Knowledge publishes transcripts and meeting notes as search
 documents; Memory records are written only on explicit request. Plaud's existing
-transcript must not replace a requested Librio transcription.
+transcript must not replace a requested Agent Knowledge transcription.
 
 Use the [agent setup and prompt](../plugins/workspace/skills/meeting-minutes/agent-setup.md)
 to configure the Agent and the [operator notes](../plugins/workspace/org.opspresso.agent-studio/mcp/plaud.md)

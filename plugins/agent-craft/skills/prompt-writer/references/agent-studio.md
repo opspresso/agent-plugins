@@ -11,7 +11,7 @@ Agent Memory의 `remember`·`recall`·`revise`·`forget` 계약이다. 배포된
 **동작 규칙**에는 필요한 항목을 넣는다.
 
 ```
-- 이전 결정·선호는 Agent Memory의 recall로 찾는다. 조직 문서와 Graph는 Agent Librio의 context_search로 찾는다.
+- 이전 결정·선호는 Agent Memory의 recall로 찾는다. 조직 문서와 Graph는 Agent Knowledge의 context_search로 찾는다.
 - recall은 Memory만 검색한다. 결과에는 기억 ID·버전과 본문·출처·scope가 함께 있다.
   검색 결과가 없다는 것을 자료가 전혀 없다는 뜻으로 해석하지 않는다.
 - 다음 작업에도 유효한 사실은 저장 권한과 공유 범위를 확인하고 remember로 저장한다.
@@ -30,13 +30,13 @@ Agent Memory의 `remember`·`recall`·`revise`·`forget` 계약이다. 배포된
 - 기억의 출처·유효 기간을 확인한다. 파일·설정·이름은 현재 상태와 대조한다.
 ```
 
-Agent Memory와 Agent Librio는 설치 측에서 서로 다른 MCP로 등록한다. 실제 런에 제공되지 않으면 기억
-조회·저장을 약속하지 않고 현재 대화의 자료로 진행한다. Librio의 `document_search`는 처리된
+Agent Memory와 Agent Knowledge는 설치 측에서 서로 다른 MCP로 등록한다. 실제 런에 제공되지 않으면 기억
+조회·저장을 약속하지 않고 현재 대화의 자료로 진행한다. Agent Knowledge의 `document_search`는 처리된
 문서 chunk, `knowledge_search`·`knowledge_neighborhood`는 그래프 근거를 찾는다.
-Librio의 문서 수집 도구가 제공되면 `document_ingest`로 개인·팀·조직 scope의 텍스트를 저장하고
+Agent Knowledge의 문서 수집 도구가 제공되면 `document_ingest`로 개인·팀·조직 scope의 텍스트를 저장하고
 `document_ingest_status`로 ready를 확인한다. 수집에는 idempotencyKey가 필수이며 접수와
-처리 완료를 구분한다. 문서 수집 도구가 제공되지 않으면 Librio 관리 화면이나 API를 사용한다.
-기억 본문 수정은 Memory의 `revise` 도구나 관리 화면, Graph 작성은 Librio의 관리 화면이나 API에서 수행한다.
+처리 완료를 구분한다. 문서 수집 도구가 제공되지 않으면 Agent Knowledge 관리 화면이나 API를 사용한다.
+기억 본문 수정은 Memory의 `revise` 도구나 관리 화면, Graph 작성은 Agent Knowledge의 관리 화면이나 API에서 수행한다.
 검색 결과의 문서 ID는 호스트 앱의 `File` artifact ID가 아니다.
 
 `recall`의 text에는 ID와 version이 있지만 항목당 1,200자·전체 4,000자로 잘린다.
@@ -47,7 +47,7 @@ Librio의 문서 수집 도구가 제공되면 `document_ingest`로 개인·팀�
 허용 도구에 `recall`을 포함한다. 요청별 동적 발견만으로는 실행 전 자동 recall이 되지 않는다.
 
 Studio는 정확히 설정된 service URL에 현재 caller의 짧은 signed delegation을 전달한다.
-Memory/Librio는 issuer·subject의 명시적 로컬 사용자 binding과 현재 멤버십을 검사한다.
+Memory/Agent Knowledge는 issuer·subject의 명시적 로컬 사용자 binding과 현재 멤버십을 검사한다.
 `X-User-Email`·display email·같은 UUID는 사용자 권한의 근거가 아니다. 모델이 email·tenant·owner
 인자를 만들어 권한을 바꾸지 않으며 자격 증명은 설치 측에서 관리한다.
 사용자 scope는 인증 사용자, team scope는 확인된 teamId를 쓰고 조직 전체 공유를 기본값으로 삼지 않는다.

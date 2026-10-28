@@ -3,7 +3,7 @@
 Register the installation's exact MCP URL (normally `/api/mcp`) separately from
 Plugin sync. Agent Memory owns long-term memories and short-term task handoffs.
 Documents, RAG passages, source-grounded knowledge and recordings belong to
-[Agent Librio](agent-librio.md).
+[Agent Knowledge](agent-knowledge.md).
 
 ## Identity and access
 
@@ -57,5 +57,5 @@ permissions. A denied personal write must not be retried as an organization writ
 Console description example:
 
 ```text
-현재 인증된 사용자에게 허용된 장기 기억과 단기 작업 인수인계를 조회·관리합니다. 결정·선호·경험은 recall/remember로, 진행 중 작업은 handoff 도구로 다룹니다. 문서·RAG·지식 그래프 검색은 Agent Librio에서 수행합니다.
+현재 인증된 사용자에게 허용된 장기 기억과 단기 작업 인수인계를 조회·관리합니다. 결정·선호·경험은 recall/remember로, 진행 중 작업은 handoff 도구로 다룹니다. 문서·RAG·지식 그래프 검색은 Agent Knowledge에서 수행합니다.
 ```

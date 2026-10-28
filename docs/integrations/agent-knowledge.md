@@ -1,10 +1,10 @@
-# Agent Librio connection
+# Agent Knowledge connection
 
-Agent Librio owns source documents, document processing, RAG passages,
+Agent Knowledge owns source documents, document processing, RAG passages,
 source-grounded knowledge, recordings, transcripts and meeting summaries. It is
 separate from Agent Memory's durable preferences and short-term task handoffs.
 
-Studio's deployment settings (`LIBRIO_URL`, `LIBRIO_OIDC_CLIENT_ID`) create one
+Studio's deployment settings (`KNOWLEDGE_URL`, `KNOWLEDGE_OIDC_CLIENT_ID`) create one
 Tools entry for the service's `/api/mcp` endpoint. Plugin sync does not own it.
 Studio issues a delegated user token for that exact URL on every MCP request;
 the service validates the issuer/subject binding and current membership. Email headers and matching service names do not delegate identity.
@@ -23,15 +23,15 @@ Keep credentials, provider endpoints and connection IDs in installation settings
 | `knowledge_object_types`, `knowledge_objects`, `knowledge_object` | Read ontology object types, list objects of a type, and read one object (`knowledge:read`) |
 | `knowledge_object_update` | Change editable properties of one object; send the state version that was read (`knowledge:write`) |
 
-Long-term memories come from Memory's `recall`, not Librio. Select the discovered
+Long-term memories come from Memory's `recall`, not Agent Knowledge. Select the discovered
 server by its purpose and trusted connection, not the bare tool name. A source document ID,
 recording ID or graph node ID is not a Studio file ID.
 
 ## Audio tools
 
-Studio connects to Librio only through this MCP server. Each MCP connection is
+Studio connects to Agent Knowledge only through this MCP server. Each MCP connection is
 offered to the Agent as one native specialist, and every call carries a
-short-lived token delegated from the current Studio user. Librio owns audio
+short-lived token delegated from the current Studio user. Agent Knowledge owns audio
 settings (named profiles), recordings, processing jobs, outputs and history.
 Studio keeps no copy of them.
 
@@ -49,7 +49,7 @@ Studio keeps no copy of them.
 annotation. The model passes a Studio file ID; Studio replaces it at dispatch
 with a short-lived verified reference (`url`, `checksum`, `sizeBytes`,
 `expiresAt`). Recording attachments are limited to 512 MiB; larger recordings are
-uploaded in the Librio console. Plaud's mapped `source_ref` is not a Studio file
+uploaded in the Agent Knowledge console. Plaud's mapped `source_ref` is not a Studio file
 ID, and no current tool accepts it.
 
 Submission and retry responses carry a work reference in
@@ -64,7 +64,7 @@ When the deployment sets `AUTH_BASE_URL`, MCP initialize advertises
 Studio's Tools detail page shows those links. Job responses also include a
 console-relative `historyHref`.
 
-Librio publishes each transcript and meeting note as the caller's search document.
+Agent Knowledge publishes each transcript and meeting note as the caller's search document.
 Do not ingest them again as documents. Save a decision or fact to Memory only on
 explicit request, through the `personal-records` skill and the Memory MCP.
-See [Librio audio contract](https://github.com/opspresso/agent-librio/blob/main/docs/AUDIO.md).
+See [Agent Knowledge audio contract](https://github.com/opspresso/agent-knowledge/blob/main/docs/AUDIO.md).

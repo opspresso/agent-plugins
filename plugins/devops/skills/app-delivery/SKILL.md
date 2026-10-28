@@ -1,8 +1,8 @@
 ---
 name: app-delivery
 description: >
-  앱 하나를 저장소 생성·개발부터 리소스·빌드·테스트·배포·서비스 확인까지 Agent Broker와 Agent Forge로 진행할 때 쓴다.
-  application.yaml로 앱을 선언하고 Broker project_apply·delivery_start로 dev·prod에 배포한 뒤 URL을 확인한다.
+  앱 하나를 저장소 생성·개발부터 리소스·빌드·테스트·배포·서비스 확인까지 Agent Delivery와 Agent Forge로 진행할 때 쓴다.
+  application.yaml로 앱을 선언하고 Agent Delivery project_apply·delivery_start로 dev·prod에 배포한 뒤 URL을 확인한다.
   코드 변경만 필요하면 implement-feature, 기존 GitOps 설정 변경은 gitops-change를 쓴다.
 metadata:
   org.opspresso.agent-studio.icon: rocket
@@ -13,7 +13,7 @@ metadata:
 사용자가 요청한 앱을 실행 중인 서비스로 만든다. 저장소·코드·`application.yaml`·리소스·Delivery·응답하는 URL이
 모두 확인될 때 완료다. PR이나 이미지 push만으로 완료라고 하지 않는다.
 
-필요한 연결: Agent Broker MCP(`project_apply`, `delivery_start` 등)와 Agent Forge MCP(Workspace·Git).
+필요한 연결: Agent Delivery MCP(`project_apply`, `delivery_start` 등)와 Agent Forge MCP(Workspace·Git).
 둘 중 하나가 없으면 할 수 있는 단계까지만 진행하고, 없는 연결과 남은 단계를 알린다.
 
 ## 1. 요구사항과 이름
@@ -30,7 +30,7 @@ metadata:
    - 저장소 루트의 `application.yaml`(`spec.owner`에 Project 소유자의 Studio subject)
    - `Dockerfile`: linux/arm64에서 빌드되고, `PORT` 환경 변수의 포트에서 HTTP를 받는다.
    - health 경로(기본 `/health`): 의존 리소스가 준비되면 2xx를 반환한다.
-   - 테스트 명령: 외부 리소스 없이 끝나야 한다. Delivery의 test 단계에는 Broker Variable이 없다.
+   - 테스트 명령: 외부 리소스 없이 끝나야 한다. Delivery의 test 단계에는 Agent Delivery Variable이 없다.
 3. Forge Run의 checks(test·lint·build)로 확인한다. `dev` 리소스가 있으면 Forge가 Run에 그 값을 넣으므로 실제 DB로도 확인할 수 있다.
 4. Git `review`·`commit`·`push`·`pull-request`로 PR을 만든다. `pull-request`는 승인을 만들지 않는다.
 5. PR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approvalUrl`을 반환한다.
@@ -49,7 +49,7 @@ metadata:
 
 1. `delivery_start`(`project`, `environment`, 선택 `ref`)를 호출한다. 기본 ref는 `main`이다.
    - `dev`는 바로 실행된다.
-   - `prod`는 `awaiting_approval`과 `approvalUrl`을 반환한다. 링크를 사용자에게 주고 소유자가 Broker 콘솔에서 승인하게 한다.
+   - `prod`는 `awaiting_approval`과 `approvalUrl`을 반환한다. 링크를 사용자에게 주고 소유자가 Agent Delivery 콘솔에서 승인하게 한다.
 2. Studio가 Delivery를 따라가다 끝나면 결과를 Chat에 전달하고 대화를 이어 준다. 같은 Delivery를 기다리며
    `delivery_get`을 반복 호출하지 않는다. 사용자가 진행 상황을 물으면 한 번 조회해 단계(`step`)를 알린다.
 3. 결과를 확인한다.
@@ -70,7 +70,7 @@ metadata:
 - 설정(복제 수·자원·환경 변수)은 `application.yaml`을 고치는 PR → 병합 → `project_apply` → Delivery 순서로 바꾼다.
   GitOps 저장소의 배포 값 파일을 직접 고치지 않는다.
 - 장애 조사는 `incident-triage`를 쓴다. 앱 namespace는 `app-<slug>-<env>`, Deployment 이름은 `app`이다.
-- 리소스·Project 삭제는 Broker 콘솔에서 소유자만 한다. MCP로 삭제를 시도하지 않는다.
+- 리소스·Project 삭제는 Agent Delivery 콘솔에서 소유자만 한다. MCP로 삭제를 시도하지 않는다.
 
 ## 보고
 

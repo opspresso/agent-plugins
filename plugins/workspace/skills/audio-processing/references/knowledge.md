@@ -1,6 +1,6 @@
-# Librio 도구
+# Agent Knowledge 도구
 
-연결된 Agent Librio MCP의 현재 schema가 기준이다. 도구는 호출자 권한(`audio:read`, 쓰기는 `audio:write`)이 있을 때만 목록에 나온다.
+연결된 Agent Knowledge MCP의 현재 schema가 기준이다. 도구는 호출자 권한(`audio:read`, 쓰기는 `audio:write`)이 있을 때만 목록에 나온다.
 선택 항목은 필요할 때만 넣는다. 빈 문자열, `"none"`, 임의 날짜·모델·보존 기간을 채워 넣지 않는다.
 조직·사용자 신원, 서비스 URL, credential은 서버가 정한다. 인수로 만들지 않는다.
 
@@ -30,7 +30,7 @@
 
 응답 `{profileId, profile}`에서 `profile.id`와 `profile.revision`을 사용한다. 둘 다 `null`이면 선택이 없다.
 `profileId`만 있고 `profile`이 `null`이면 선택한 profile에 더 이상 접근할 수 없다.
-두 경우 모두 접수하지 않고 Librio 콘솔에서 설정을 선택하도록 안내한다.
+두 경우 모두 접수하지 않고 Agent Knowledge 콘솔에서 설정을 선택하도록 안내한다.
 `profile.settings`에는 `transcriptionModelId`, 선택 `summary`(회의록 모델), `language`, `retention`, `maxActive`, `maxPerOccurrence`가 있다.
 
 ## Chat 파일을 가져온다
@@ -90,7 +90,7 @@
 | --- | --- |
 | profile revision 불일치(409) | `audio_profile_get`으로 현재 revision을 다시 읽는다. 응답 유실 뒤라면 먼저 `audio_request_status`로 원래 요청을 확인한다 |
 | 활성·발생당 한도 초과(409) | 새 작업은 없다. 남은 녹음을 미접수로 보고한다 |
-| `blocked`(`effect_uncertain`) | 모델 호출 결과가 불확실하다. 재시도하지 않고 상태를 보고한다. 관리자가 Librio 콘솔에서 확정한다 |
+| `blocked`(`effect_uncertain`) | 모델 호출 결과가 불확실하다. 재시도하지 않고 상태를 보고한다. 관리자가 Agent Knowledge 콘솔에서 확정한다 |
 | `failed` | 원인을 보고한다. 사용자가 요청하면 `audio_job_retry`로 재시도한다 |
 | 권한 거절(403)·인증 오류 | 연결과 권한 문제를 보고한다. 다른 credential이나 범위로 바꾸지 않는다 |
 
