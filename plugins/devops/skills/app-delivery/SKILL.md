@@ -30,6 +30,7 @@ metadata:
    Delivery로 배포할 수 없다고 먼저 알리고 결정을 받는다. 기존 비공개 저장소를 임의로 공개로 바꾸지 않는다.
 2. 앱이 DB·버킷을 쓰면 코드를 쓰기 전에 `dev` 리소스를 만든다. `project_ensure`(`repository`)로 Project를 만들고
    `resource_create`(`environment: dev`, `class`, `name`, `idempotencyKey`)를 호출한 뒤 `resource_get`으로 `ready`를 확인한다.
+   기본 `name`은 Project slug다. 이 리소스의 Variable에는 접두어가 없다(`DATABASE_URL`). `main`은 다른 이름처럼 `MAIN_` 접두어가 붙는다.
    접속 정보는 Agent Delivery가 SSM SecureString에 저장한다. 값은 Chat·코드·로그에 쓰지 않고 Variable 이름만 쓴다.
    나중에 `application.yaml`이 같은 이름·class로 선언하면 `project_apply`가 이 리소스를 그대로 쓴다.
 3. 코드를 구현한다. 배포에 필요한 조건은 다음과 같다. 세부 규칙과 예시는 [application.yaml과 배포 조건](references/application-yaml.md)을 읽는다.
