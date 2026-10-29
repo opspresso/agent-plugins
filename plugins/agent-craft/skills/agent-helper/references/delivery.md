@@ -27,7 +27,7 @@
 | `project_list`, `project_get`, `resource_catalog`, `resource_get` | Project·리소스 상태, 템플릿, Variable 이름 | 읽기 전용. 값은 반환하지 않는다 |
 | `project_status` | 환경마다 현재 Release·주소·진행 중 Deployment·승인 링크·리소스 상태 | 읽기 전용. 대화창에 환경 표로 그려질 수 있다 |
 | `release_list`, `release_get` | Release와 환경별 Deployment 이력 | 읽기 전용 |
-| `deployment_list`, `deployment_get`, `deployment_logs` | 배포 목록·상태·단계 로그(마지막 64 KiB) | 읽기 전용. 승인 대기면 `approvalUrl`이 있다. 로그는 실행 중이거나 실패한 단계에만 있다 |
+| `deployment_list`, `deployment_get`, `deployment_logs` | 배포 목록·상태·단계 로그(마지막 64 KiB) | 읽기 전용. 승인 대기면 `approvalUrl`이 있다. 로그는 workflow 실행 중과 끝난 뒤 하루 동안 있다 |
 | `deployment_lookup_request` | 응답 유실 복구 | 같은 `idempotencyKey`로 조회한다 |
 | `project_ensure`, `project_apply` | Project 생성, `application.yaml` 적용과 선언된 리소스 생성 | `project_apply`는 값이 없는 secret마다 입력 링크를 돌려준다 |
 | `resource_create` | 템플릿과 `parameters`로 리소스 생성 | 접수형. `pending → ready | failed` |
@@ -72,6 +72,6 @@ Studio 관리자도 불가), 소유권 이전·private checkout 허용(Studio �
 | `application_changed` | 커밋된 파일로 `project_apply`를 다시 하고 다시 배포한다 |
 | `checkout_failed` | 대개 private 저장소의 checkout이 허용되지 않았다. Studio 관리자 확인이 필요하다 |
 | `test_failed`, `build_failed`, `deploy_failed`, `verify_failed` | `deployment_logs(deploymentId, step)`로 원인을 읽는다. verify는 health 경로가 2xx를 돌려줘야 한다 |
-| `deployment_not_started` (409), `logs_not_kept`·`logs_not_found` (404) | 그 단계에 읽을 출력이 없다. workflow 전에 실패했거나(`application_changed` 등), 성공해서 Pod가 지워졌거나, 실패 후 하루가 지났다. 다시 호출하지 말고 `deployment_get`의 `errorCode`와 메시지로 판단한다 |
+| `deployment_not_started` (409), `logs_not_found` (404) | 그 단계에 읽을 출력이 없다. workflow 전에 실패했거나(`application_changed` 등) workflow가 끝난 지 하루가 지났다. 다시 호출하지 말고 `deployment_get`의 `errorCode`와 메시지로 판단한다 |
 | `delivery_unavailable` (502), `provider_unavailable` (503) | 운영 문제다. 다시 시도해도 같은 결과이므로 반복하지 않는다 |
 | 리소스 `failed` | 같은 이름으로 `resource_create`를 다시 하거나 콘솔에서 재시도한다 |
