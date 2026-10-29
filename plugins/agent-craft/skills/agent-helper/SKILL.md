@@ -119,7 +119,7 @@ Studio에 서비스 데이터의 사본이 없으므로 서비스의 현재 상�
 
 - 서비스 도구를 직접 쓰거나, 실행에 있으면 서비스 이름의 위임 도구로 그 서비스만 쓰는 specialist에게 맡긴다.
 - **조회**(기억 검색, 문서 상태, Workspace·Run 상태, 배포 상태와 로그)는 바로 수행하고 결과를 요약한다.
-- **설정·작업 시작**(Workspace profile 선택, 문서 수집, 오디오 작업, Run, `project_apply`, `delivery_start`)은
+- **설정·작업 시작**(Workspace profile 선택, 문서 수집, 오디오 작업, Run, `project_apply`, `deploy`·`promote`·`rollback`)은
   결과와 영향을 설명하고 승인 카드로 진행한다.
 - **긴 개발·배포 작업**은 연결된 `workspace-task`·`app-delivery`·`audio-processing` Skill이 있으면 그 절차를 따른다.
   반복해서 쓸 작업이면 전용 Agent를 만들어 주는 편이 낫다고 제안할 수 있다.

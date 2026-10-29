@@ -14,10 +14,10 @@ Forge가 코드를, Delivery가 리소스와 배포를 소유한다. 실제 진�
 | 3. merge | 사용자 | `run_submit`의 Git `merge`는 보호된 작업이다. 소유자가 Run 제한 시간 안에 Forge `/git?approval=<id>`에서 승인한다 | `git_approval_get` |
 | 4. 리소스 | Helper/Agent | main의 `application.yaml`로 `project_apply` | 결과의 리소스 상태와 secret 링크 |
 | 5. secret | 사용자 | Delivery secret 링크에서 값 입력 | `project_get`에서 `environment_not_ready`가 사라짐 |
-| 6. dev 배포 | Helper/Agent | `delivery_start(environment="dev")` | 결과가 Chat으로 돌아온다. `https://<slug>-dev.<domain>` |
-| 7. prod 배포 | Helper/Agent → 사용자 | `delivery_start(environment="prod")` 후 소유자가 24시간 안에 `approvalUrl`에서 승인 | `delivery_get` |
+| 6. dev 배포 | Helper/Agent | `deploy(environment="dev", ref="main")`로 Release를 build해 배포 | 결과가 Chat으로 돌아온다. `https://<slug>-dev.<domain>` |
+| 7. prod 배포 | Helper/Agent → 사용자 | `promote(from="dev")`로 dev에서 성공한 Release를 prod에 배포. 소유자가 24시간 안에 `approvalUrl`에서 승인 | `deployment_get`, `project_status` |
 
-설정 변경은 PR → merge → `project_apply` → 새 Delivery 순서다. 리소스·Project 삭제는 Delivery 콘솔에서 사용자가 한다.
+설정 변경은 PR → merge → `project_apply` → 다시 배포 순서다. 리소스·Project 삭제는 Delivery 콘솔에서 사용자가 한다.
 
 ## 녹음에서 회의록까지
 

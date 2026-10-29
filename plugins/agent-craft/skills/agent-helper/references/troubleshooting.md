@@ -8,7 +8,7 @@
 1. **증상과 위치.** 어느 서비스·페이지·Agent·Chat에서, 어떤 오류 문구와 함께 일어났는지 확인한다.
    화면 자료가 있으면 먼저 읽는다. 오류 코드와 메시지는 그대로 인용한다.
 2. **근거 읽기.** Agent 실행 문제는 Trace(`/agents/<name>/traces`), 설정은 `StudioRead`, 서비스 작업은 해당 서비스의
-   조회 도구(`run_get`·`delivery_get`·`delivery_logs`·`audio_status`·`document_ingest_status`)를 읽는다.
+   조회 도구(`run_get`·`project_status`·`deployment_get`·`deployment_logs`·`audio_status`·`document_ingest_status`)를 읽는다.
 3. **분류.** 설정 누락, 권한·연결 누락, 사용자 작업 대기(승인·secret·OAuth), 한도, 운영 장애 중 무엇인지 정한다.
 4. **조치.** 설정 문제는 승인 후 변경하고, 대기 작업은 콘솔 페이지를 열어 주고, 운영 장애는 관리자에게 전달할 정보를 정리한다.
 5. **확인.** 고친 뒤 같은 요청을 다시 시도하게 하거나 상태를 다시 읽는다. 확인하지 못했으면 미확인으로 보고한다.
@@ -39,7 +39,7 @@
 | `reauthorization_required` (403) | Forge | 이전 위임으로 접수된 Run은 계속할 수 없다. 새 Run을 제출한다 |
 | GitHub 관련 403 | Forge | [forge](forge.md#오류) — `/git`에서 연결·저장소 등록 |
 | Git merge 승인 대기·만료 | Forge | [forge](forge.md#오류) — 승인은 Run 제한 시간과 함께 만료된다 |
-| 배포 실패 | Delivery | `delivery_get`의 `errorCode`와 `delivery_logs`. [delivery](delivery.md#오류) |
+| 배포 실패 | Delivery | `deployment_get`의 `errorCode`와 `deployment_logs`. [delivery](delivery.md#오류) |
 | `environment_not_ready` | Delivery | secret 입력 링크와 리소스 `ready` 확인 |
 | 문서 처리 멈춤·실패 | Knowledge | [knowledge](knowledge.md#오류) |
 | 녹음 작업 결과 불명 | Knowledge | `audio_request_status`로 영수증 확인. 다시 제출하지 않는다 |
@@ -48,7 +48,7 @@
 ## 응답이 유실됐거나 결과가 불확실할 때
 
 - 같은 요청을 새로 보내지 않는다. 같은 키로 조회한다: `run_lookup_request`·`workspace_lookup_request`·`repository_lookup_request`(Forge),
-  `delivery_lookup_request`(Delivery), `audio_request_status`·`recording_delete_status`(Knowledge), `remember`·`handoff_create`의 같은 `idempotencyKey`(Memory).
+  `deployment_lookup_request`(Delivery), `audio_request_status`·`recording_delete_status`(Knowledge), `remember`·`handoff_create`의 같은 `idempotencyKey`(Memory).
 - Studio 변경 도구가 실패하거나 시간 초과되면 `StudioRead`로 저장 상태를 먼저 확인한다.
 - Forge `interrupted` Run은 자동으로 다시 실행하지 않는다. 결과를 확인하고 사용자에게 다음 행동을 묻는다.
 
