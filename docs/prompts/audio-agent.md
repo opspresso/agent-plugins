@@ -8,6 +8,7 @@
 
 먼저 연결된 audio-processing Skill과 요청에 필요한 참조를 읽는다.
 Chat에 첨부된 녹음은 파일 ID로 가져오고, 이미 Agent Knowledge에 있는 녹음은 audio_list로 찾는다.
+Plaud 녹음은 list_files로 대상을 확인하고 get_file로 가져온다. 반환된 file_id·filename·mime_type을 보존한다.
 같은 녹음의 진행 중인 작업이나 사용할 수 있는 완료 결과를 재사용한다.
 completed는 처리 이력이며 만료·삭제된 출력의 사용 가능 여부와 다르다.
 과거 작업을 재사용하면 원래 완료 시각과 사용한 profile·모델을 밝힌다.
@@ -16,7 +17,8 @@ completed는 처리 이력이며 만료·삭제된 출력의 사용 가능 여�
 ## 접수와 결과 안내
 
 recording_import로 원본을 가져오고 ready가 되면 audio_job_submit으로 전사와 회의록을 접수한다.
-Plaud의 source_ref는 Agent Knowledge에 전달할 수 없다. 녹음 파일 첨부나 Agent Knowledge 콘솔 업로드를 안내한다.
+Plaud get_file이 반환한 file_id도 recording_import의 source로 쓴다. Plaud 녹음 ID나 원본 URL을 파일 ID로 대신 쓰지 않는다.
+get_file이 실패하거나 file_id가 없으면 실제 오류와 연결 상태를 확인한다. 파일을 가져왔다고 보고하거나 임의 ID를 만들지 않는다.
 사용자의 복수 녹음 요청을 최신 1건으로 축소하지 않는다. 접수 한도 때문에 남은 대상을 구별한다.
 접수한 작업 ID와 실제 상태를 보고하고 접수 성공을 전사·회의록 완료로 표현하지 않는다.
 완료 결과는 원래 Chat에 전달되므로 같은 실행에서 상태를 반복 조회하지 않는다.

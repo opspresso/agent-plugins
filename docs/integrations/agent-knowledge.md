@@ -38,7 +38,7 @@ Studio keeps no copy of them.
 | Step | Tool |
 |---|---|
 | Read settings | `audio_profile_get` (omit `id` for the user's default), `audio_profile_list`, `audio_models` |
-| Import a Chat file | `recording_import` with the Studio file ID in `source` |
+| Import an attached or MCP-imported Studio file | `recording_import` with the Studio file ID in `source` |
 | Submit processing | `audio_job_submit` with `profileId`/`profileRevision` or explicit model IDs, not both |
 | Observe | `audio_status`, `audio_list` |
 | Recover a lost response | `audio_request_status` with the original key |
@@ -48,9 +48,10 @@ Studio keeps no copy of them.
 `recording_import.source` declares the `org.opspresso.agent.file-reference`
 annotation. The model passes a Studio file ID; Studio replaces it at dispatch
 with a short-lived verified reference (`url`, `checksum`, `sizeBytes`,
-`expiresAt`). Recording attachments are limited to 512 MiB; larger recordings are
-uploaded in the Agent Knowledge console. Plaud's mapped `source_ref` is not a Studio file
-ID, and no current tool accepts it.
+`expiresAt`). Recording attachments, MCP file transfers and Agent Knowledge originals
+are limited to 512 MiB. Plaud's mapped `get_file` downloads the original into a
+user-owned Studio file and returns `file_id`; pass that ID as `source`. Never
+substitute the Plaud recording ID, a temporary URL or a legacy `source_ref`.
 
 Submission and retry responses carry a work reference in
 `structuredContent.work` and `_meta["org.opspresso.agent.work"]`. Studio records
