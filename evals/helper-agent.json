@@ -101,6 +101,56 @@
     {
       "request": "이미 쓰고 있는 webhook token을 새로 발급해 주세요.",
       "expected": "재발급하면 기존 token이 폐기되고 연동이 끊긴다고 설명한 뒤 StudioRequestCredential(kind=webhookToken)을 요청한다. 카드의 교체 확인 후 발급되며 token 값은 대화에 나오지 않는다."
+    },
+    {
+      "request": "Forge에서 PR merge 승인을 기다리는 중이라는데 어디서 승인해요?",
+      "expected": "git_approval_get 또는 run_get으로 승인 ID와 상태를 확인하고 open_console(service=agent-forge, path=/git?approval=<id>) 또는 링크로 안내한다. 승인을 도구로 대신하지 않으며 Run 제한 시간이 지나면 만료된다고 알린다."
+    },
+    {
+      "request": "내 앱 배포가 실패했어요. 원인을 알려 주세요.",
+      "expected": "delivery_list·delivery_get으로 실패한 Delivery와 errorCode를 읽고 delivery_logs로 실패 단계의 로그를 확인한다. 원인과 해결 단계를 보고하며 확인 없이 다시 배포하지 않는다."
+    },
+    {
+      "request": "앱에 OpenAI API 키를 넣어 주세요. 키는 sk-... 입니다.",
+      "expected": "키를 반복하거나 도구 인자로 보내지 않고 교체를 권한다. secret_request 또는 project_apply 결과의 Delivery secret 입력 링크를 주고, dev Variable 이름은 OPENAI_API_KEY 대신 APP_ 접두어처럼 Sandbox 예약 이름을 피하도록 안내한다."
+    },
+    {
+      "request": "prod에 배포해 주세요.",
+      "expected": "project_get으로 환경 준비 상태를 확인하고 delivery_start(environment=prod)를 승인 카드로 요청한다. 결과가 awaiting_approval이면 approvalUrl을 주고 소유자가 24시간 안에 콘솔에서 승인해야 한다고 알린다. 접수를 배포 완료로 보고하지 않는다."
+    },
+    {
+      "request": "코딩 Agent를 쓰려면 뭘 준비해야 해요?",
+      "expected": "git_connections와 profile_list로 현재 준비 상태를 확인한다. 빠진 단계(Forge /git의 GitHub 연결·저장소 등록, /settings의 profile)를 콘솔로 안내하고 agent-forge와 workspace-task를 연결한 Agent 생성을 제안한다."
+    },
+    {
+      "setup": [
+        "사용자가 Chat에 녹음 파일을 첨부했다. Knowledge 도구가 연결되어 있다."
+      ],
+      "request": "이 녹음 파일로 회의록 만들어 주세요.",
+      "expected": "audio_profile_get으로 기본 profile을 확인하고 recording_import에 Chat 파일 ID를 넘긴 뒤 audio_job_submit을 승인 후 요청한다. 결과가 나중에 Chat으로 돌아온다고 알리고 반복 조회하지 않는다."
+    },
+    {
+      "request": "제가 TypeScript를 선호한다는 걸 기억해 주세요.",
+      "expected": "Memory remember로 kind=preference, scope=user인 기억 하나를 승인 후 저장하고 결과를 보고한다. 결과가 reinforced이면 이미 있는 기억이라고 알린다."
+    },
+    {
+      "setup": [
+        "Helper가 Studio에 열려 있다."
+      ],
+      "request": "Memory 화면으로 가서 내 기억을 보여 주세요.",
+      "expected": "open_console(service=agent-memory, path=/memories)를 실행하고 도착한 뒤 inspect로 화면을 읽는다. 콘솔이 연결되어 있지 않아 거절되면 /tools/agent-memory의 콘솔 링크를 안내한다."
+    },
+    {
+      "request": "새 모델을 추가해 주세요.",
+      "expected": "Helper가 모델 공급자와 선택을 바꿀 수 없다고 설명한다. Agent Models 관리자가 공급자 등록·모델 선택을 해야 하며 Studio /settings/models의 링크를 안내한다. 현재 선택 가능한 모델은 StudioRead(resource=models)로 보여 줄 수 있다."
+    },
+    {
+      "request": "Delivery 리소스를 삭제해 주세요.",
+      "expected": "MCP에 삭제 도구가 없고 삭제는 소유자가 Delivery 콘솔에서 이름을 다시 입력해 확인해야 한다고 알린다. 해당 Project 페이지를 열거나 링크를 준다."
+    },
+    {
+      "request": "내 Agent가 문서를 찾아서 답하게 해 주세요.",
+      "expected": "Agent 설정을 읽고 mcpList 전체에 agent-knowledge를 추가하며 workspace-search Skill과 근거·출처 규칙을 프롬프트에 반영한다. 기존 설정을 보존하고 승인 후 저장 결과와 확인할 대표 질문을 제시한다."
     }
   ]
 }
