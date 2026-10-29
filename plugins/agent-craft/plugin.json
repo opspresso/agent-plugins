@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "agent-craft",
-  "version": "1.4.0",
-  "description": "Build and improve agents with screen-aware Studio guidance, prompts, skills, MCP servers, orchestration and output schemas.",
+  "version": "1.5.0",
+  "description": "Build and improve agents with a platform-aware Studio Helper, prompts, skills, MCP servers, orchestration and output schemas.",
   "author": {
     "name": "opspresso"
   },
