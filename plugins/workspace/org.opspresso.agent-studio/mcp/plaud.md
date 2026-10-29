@@ -59,6 +59,10 @@ no source-reference lifecycle or automatic URL refresh.
 
 Deploy Studio with `mcpFileOutputs` support before syncing workspace plugin 1.3.0
 or later. Plugin sync updates the declaration and skills; it does not upgrade Studio.
+The Studio object store must keep `source-files/` private. Imports are refused when
+`ARTIFACT_ACCESS_MODE=public`. Imported originals are readable only by the requesting
+user, including when the Agent belongs to someone else, and follow Studio's default
+Artifact retention period.
 Verify a real `get_file` call returns `file_id` after sync. A missing file ID or a
 download error is a failed import; do not invent an ID or pass the raw URL through
 another tool.
