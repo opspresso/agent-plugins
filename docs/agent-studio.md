@@ -45,7 +45,8 @@ Agent Forge are independent services. Studio connects to each only through MCP:
   Studio file ID. Studio converts it at dispatch to a short-lived verified
   reference that the service downloads. A recording attached in Chat becomes a
   Chat file whose ID is passed to Agent Knowledge `recording_import`. Recording
-  attachments are limited to 512 MiB; larger recordings are uploaded in the Agent Knowledge console.
+  attachments and Agent Knowledge originals are limited to 512 MiB. Mapped MCP file outputs
+  also become Studio files and use the same transfer contract.
 - Never resubmit uncertain work. Inspect the original request with
   `audio_request_status`, `run_lookup_request`, `workspace_lookup_request` or
   `repository_lookup_request`.
@@ -146,11 +147,17 @@ Public metadata supports PKCE and dynamic registration; authenticated recording
 access still needs to be verified after account connection.
 
 Plaud finds recordings and returns Plaud's existing transcripts and notes. The
-plugin's `get_file` mapping hides the download URL behind an opaque `source_ref`,
-but no current Studio or Agent Knowledge tool accepts `source_ref`. To transcribe a Plaud
-recording with Agent Knowledge, the user attaches the audio file in Chat or uploads it in
-the Agent Knowledge console; the `audio-processing` skill then runs `recording_import` →
-`audio_job_submit`. Agent Knowledge publishes transcripts and meeting notes as search
+workspace plugin declares `get_file` under
+`extensions.org.opspresso.agent-studio.mcpFileOutputs.plaud`. Studio downloads the
+original into a user-owned file and returns `file_id`, `filename`, `mime_type`,
+`size_bytes`, `source` and `external_id`; the temporary URL stays outside model context.
+The `audio-processing` skill passes `file_id` to `recording_import.source` and
+runs `audio_job_submit` once the recording is ready. A download failure must not
+produce a fabricated file ID or a processing submission.
+
+Deploy Studio with `mcpFileOutputs` support before syncing workspace plugin 1.3.0
+or later, then verify `get_file` returns a usable `file_id`. The transfer limit is
+512 MiB. Agent Knowledge publishes transcripts and meeting notes as search
 documents; Memory records are written only on explicit request. Plaud's existing
 transcript must not replace a requested Agent Knowledge transcription.
 

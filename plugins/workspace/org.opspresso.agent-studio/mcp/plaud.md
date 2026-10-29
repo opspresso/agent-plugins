@@ -1,10 +1,10 @@
 ---
 description: >
   Find Plaud recordings by name or date through the connected account and read Plaud's
-  existing transcripts and notes as provider output. In the host app, mapped get_file
-  returns an opaque source_ref instead of the download URL; no current Studio or Agent Knowledge
-  tool accepts source_ref, so Plaud audio cannot be sent to Agent Knowledge transcription from Chat.
-  This server does not transcribe audio.
+  existing transcripts and notes as provider output. In Studio, mapped get_file downloads
+  the original into a user-owned file and returns file_id, filename and mime_type.
+  Pass file_id to Agent Knowledge recording_import, then submit transcription and meeting notes
+  with audio_job_submit when the recording is ready. This server does not transcribe audio.
 icon: brand-plaud
 ---
 
@@ -33,8 +33,8 @@ The documented tools include `list_files`, `get_file`, `get_transcript` and
 recording names with `query` and dates with `date_from`/`date_to`; its pagination
 is ignored when filters are set. Recording duration is in milliseconds.
 `get_file` supplies a `presigned_url` valid for 24 hours and may also include
-existing transcripts and notes. Obtain a fresh URL from the same recording ID
-when it expires. Treat the URL as temporary access to private audio, not as a
+existing transcripts and notes. Studio consumes the URL server-side when importing
+the mapped file. Treat the URL as temporary access to private audio, not as a
 permanent citation or an artifact ID.
 
 ## Transcription and meeting minutes
@@ -48,18 +48,32 @@ only through the Agent Knowledge MCP tools: `recording_import` takes a Studio fi
 which Studio converts to a short-lived verified file reference, and
 `audio_job_submit` starts processing. See the `audio-processing` skill.
 
-The workspace plugin declares the default `get_file` projection in plugin.json under
-`extensions.org.opspresso.agent-studio.mcpSourceOutputs.plaud`. The host app applies it
-when the Agent binding has no explicit override: `presigned_url` is kept server-side and
-an opaque `source_ref` is returned to the model. The declared `refreshArgument: file_id`
-refreshes the URL from the same recording. Agent binding overrides take priority; an
-explicit empty array disables mapping. The mapping keeps the URL out of model context.
-It does not create a Studio file ID, and no current tool accepts `source_ref` as input.
+The workspace plugin declares `get_file` in plugin.json under
+`extensions.org.opspresso.agent-studio.mcpFileOutputs.plaud`. Each mapping contains
+`tool`, `urlPath`, `idPath`, optional `namePath`, and `mimeType`. Studio applies it
+to the raw MCP result, downloads the original through its URL and byte-limit checks,
+and stores a user-owned Studio file. The model receives only
+`file_id`, `filename`, `mime_type`, `size_bytes`, `source` and `external_id`.
+The download URL and original bytes stay outside model context. This mapping has
+no source-reference lifecycle or automatic URL refresh.
 
-To transcribe a Plaud recording with Agent Knowledge, the user attaches the audio file to the
-Chat (recording attachments up to 512 MiB) or uploads it in the Agent Knowledge
-console. Do not promise scheduled Plaud-to-Agent Knowledge collection. `FetchUrl` and document
-`File` remain unsuitable for audio transcription.
+Deploy Studio with `mcpFileOutputs` support before syncing workspace plugin 1.3.0
+or later. Plugin sync updates the declaration and skills; it does not upgrade Studio.
+The Studio object store must keep `source-files/` private. Imports are refused when
+`ARTIFACT_ACCESS_MODE=public`. Imported originals are readable only by the requesting
+user, including when the Agent belongs to someone else, and follow Studio's default
+Artifact retention period.
+Verify a real `get_file` call returns `file_id` after sync. A missing file ID or a
+download error is a failed import; do not invent an ID or pass the raw URL through
+another tool.
+
+For a requested Agent Knowledge transcription, use `list_files` to identify the
+recording, call `get_file`, and pass the returned `file_id` to
+`recording_import.source`. Reuse the returned filename and MIME type. Submit the
+processing job only after the recording is ready. Users do not need to download
+and attach the same audio manually. Reuse an existing returned file ID instead of
+downloading the same original again in the run. The transfer and Agent Knowledge
+original limits are both 512 MiB. `FetchUrl` and document `File` do not transcribe audio.
 
 The hosted Plaud MCP processes requests in the US, and recordings must already
 be cloud-synced. Agent Knowledge transcription keeps the transcription stage internal; it does not

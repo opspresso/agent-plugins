@@ -14,7 +14,7 @@
 | 원본 가져오기 | `recording_import` | `title`, `filename`, `mimeType`, `scope`, `profileId`+`profileRevision` 또는 `retention`, `idempotencyKey`, `source` |
 | 작업 제출 | `audio_job_submit` | `recordingId`, `task`, `processingRevision`, `profileId`+`profileRevision` 또는 명시 모델, `idempotencyKey` |
 | 상태 | `audio_status` | `resource:"recording"\|"job"`, `id` |
-| 목록 | `audio_list` | `resource:"recordings"\|"jobs"`, 선택 `recordingId`, `mine`, `limit`, `offset` |
+| 목록 | `audio_list` | `resource:"recordings"\|"jobs"`, 선택 `recordingId`, `limit`, `offset`; `mine`은 `jobs`에만 사용 |
 | 접수 확인 | `audio_request_status` | `operation:"recording.reserve"\|"audio.submit"\|"audio.retry"`, `idempotencyKey` |
 | 결과 읽기 | `audio_output_read` | 작업 `id`, `kind:"transcript"\|"summary"`, 선택 `cursor`, `limit` |
 | 취소·재시도·삭제 | `audio_job_cancel`, `audio_job_retry`, `audio_job_delete` | `id`, `expectedRevision`(재시도는 `idempotencyKey`도 필요) |
@@ -33,14 +33,14 @@
 두 경우 모두 접수하지 않고 Agent Knowledge 콘솔에서 설정을 선택하도록 안내한다.
 `profile.settings`에는 `transcriptionModelId`, 선택 `summary`(회의록 모델), `language`, `retention`, `maxActive`, `maxPerOccurrence`가 있다.
 
-## Chat 파일을 가져온다
+## Studio 파일을 가져온다
 
 ```json
-{"tool":"recording_import","arguments":{"title":"<녹음 제목>","filename":"<파일 이름>","mimeType":"audio/mpeg","scope":"user","profileId":"<profile.id>","profileRevision":3,"idempotencyKey":"<이 파일의 고정 키>","source":"<Chat 파일 ID>"}}
+{"tool":"recording_import","arguments":{"title":"<녹음 제목>","filename":"<파일 이름>","mimeType":"audio/mpeg","scope":"user","profileId":"<profile.id>","profileRevision":3,"idempotencyKey":"<이 파일의 고정 키>","source":"<Studio 파일 ID>"}}
 ```
 
-- `source`에는 Chat 첨부 또는 Studio 파일 ID만 넣는다. Studio가 호출 직전에 `{url, checksum, sizeBytes, expiresAt}` 참조로 바꾼다.
-- 파일 이름과 MIME은 첨부의 실제 값을 쓴다. 지원 형식은 MP3, WAV, FLAC, Ogg, MP4/M4A, QuickTime Audio이며 최대 512 MiB, 6시간이다.
+- `source`에는 Chat 첨부 파일 ID 또는 MCP `get_file`이 반환한 `file_id`를 넣는다. Studio가 호출 직전에 `{url, checksum, sizeBytes, expiresAt}` 참조로 바꾼다.
+- 파일 이름과 MIME은 첨부 또는 MCP 응답의 실제 값을 쓴다. 지원 형식은 MP3, WAV, FLAC, Ogg, MP4/M4A, QuickTime Audio이며 최대 512 MiB, 6시간이다.
 - `scope`는 사용자가 팀·조직 공유를 요청하지 않으면 `user`다. `team`은 `teamId`가 필요하다.
 - `profileId`·`profileRevision`과 `retention` 중 하나만 보낸다.
 - 같은 파일의 재전송에는 같은 `idempotencyKey`와 입력을 유지한다. 같은 키에 다른 입력을 보내면 충돌이다.

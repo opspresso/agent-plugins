@@ -5,7 +5,7 @@ description: >
   녹음 처리 요청, 기존 오디오 작업의 상태·결과 확인, 회의록 재생성에 사용한다.
 compatibility: >
   연결된 Agent Knowledge MCP의 audio 도구(recording_import, audio_job_submit, audio_status 등)가 필요하다.
-  오디오 설정(profile)·실행·이력은 Agent Knowledge가 소유한다. Studio는 Chat 파일 전달과 완료 결과의 Chat 전달만 맡는다.
+  오디오 설정(profile)·실행·이력은 Agent Knowledge가 소유한다. Studio는 첨부·MCP 파일 전달과 완료 결과의 Chat 전달을 맡는다.
 metadata:
   org.opspresso.agent-studio.icon: headphones
 ---
@@ -31,8 +31,8 @@ Studio에는 오디오 설정이나 작업 기록의 사본이 없다.
 - **Chat에 첨부한 녹음**: 첨부 파일 ID를 `recording_import`의 `source`로 넘긴다. Studio가 호출 직전에 ID를
   짧은 시간만 유효한 검증된 파일 참조로 바꾼다. 파일 URL·bytes·base64를 직접 만들지 않는다.
 - **이미 Agent Knowledge에 있는 녹음**: `audio_list`의 `recordings`에서 `recordingId`를 확인하고 바로 작업을 제출한다.
-- **Plaud 녹음**: [Plaud 조회](references/plaud.md)를 읽는다. Plaud의 `source_ref`는 Agent Knowledge에 전달할 수 없다.
-- **녹음 첨부 한도(512 MiB)를 넘는 녹음**: Chat에 첨부할 수 없다. Agent Knowledge 콘솔에서 올리도록 안내한다.
+- **Plaud 녹음**: [Plaud 조회](references/plaud.md)를 읽는다. `get_file`이 반환한 `file_id`를 `recording_import`의 `source`로 넘긴다.
+- **512 MiB를 넘는 녹음**: 파일 전송·Agent Knowledge 원본 한도를 초과한다. 한도 이내로 나눈 녹음을 제공하도록 안내한다.
 - **완료된 작업의 전사문·회의록 요청**: `audio_output_read`로 읽는다. 원음을 다시 전사하지 않는다.
 - **회의록만 다시 만드는 요청**(형식·중점·모델 변경): 같은 녹음에 `postprocess` 작업을 제출한다. 원음을 다시 처리하지 않는다.
 - **결정·사실을 장기 기억에 남기는 요청**: 연결된 `personal-records` skill을 읽는다.
@@ -49,7 +49,7 @@ Studio에는 오디오 설정이나 작업 기록의 사본이 없다.
 2. **기존 작업 확인**: `audio_list`(`resource:"jobs"`, 필요하면 `recordingId`, `mine:true`)로 같은 녹음의 작업을 찾는다.
    진행 중인 작업은 다시 제출하지 않는다. 완료된 작업은 필요한 출력이 `available`일 때 재사용한다.
    제목만으로 같은 녹음이라고 단정하지 않는다.
-3. **원본 가져오기**(Chat 파일만): `recording_import`를 호출한다. 응답의 `recording.status`가 `ready`일 때만 다음 단계로 간다.
+3. **원본 가져오기**(첨부 또는 MCP에서 가져온 Studio 파일): `recording_import`를 호출한다. 응답의 `recording.status`가 `ready`일 때만 다음 단계로 간다.
    `uploading`이면 `audio_status`(`resource:"recording"`)로 확인한다. `failed`는 원인을 보고한다.
 4. **작업 제출**: `audio_job_submit`에 `recordingId`, `task:"process"`, 새 `processingRevision`, profile의 `profileId`·`profileRevision`을 보낸다.
    profile과 명시 모델(`transcriptionModelId`·`summary`·`language`)을 섞지 않는다.

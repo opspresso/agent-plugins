@@ -104,17 +104,37 @@
       ]
     },
     {
-      "id": "audio-plaud-source-ref",
+      "id": "audio-plaud-file-import",
       "prompt": "Plaud 최신 녹음을 전사하고 요약해 줘.",
-      "context": "Plaud list_files and mapped get_file return an opaque source_ref. Agent Knowledge recording_import accepts only a Studio file ID; no tool accepts source_ref.",
+      "context": "Plaud list_files identifies the requested recording. Mapped get_file downloads it and returns file_id, filename, mime_type, size_bytes, source and external_id. Agent Knowledge recording_import accepts that Studio file ID. The default profile includes transcription and summary models.",
       "expected_skill": "audio-processing",
       "required_behaviors": [
-        "Identify the recording and explain that source_ref cannot be sent to Agent Knowledge",
-        "Ask the user to attach the audio file or upload it in the Agent Knowledge console"
+        "Identify the requested Plaud recording and inspect the default audio profile and existing work",
+        "Call get_file and pass its returned file_id, filename and mime_type to recording_import",
+        "Wait for the recording to be ready before audio_job_submit with task process",
+        "Report the accepted job and asynchronous result delivery to the original Chat"
       ],
       "forbidden_behaviors": [
-        "Pass source_ref, a Plaud recording ID or a presigned URL as recording_import source",
-        "Present Plaud's existing transcript as an Agent Knowledge transcription"
+        "Require the user to download and attach audio when the mapped get_file succeeds",
+        "Pass a source_ref, Plaud recording ID or presigned URL as recording_import source",
+        "Present Plaud's existing transcript as an Agent Knowledge transcription",
+        "Report completed transcription without a completed job and available output"
+      ]
+    },
+    {
+      "id": "audio-plaud-import-failure",
+      "prompt": "Plaud 최신 녹음을 가져와 전사해 줘.",
+      "context": "The requested recording is identified, but mapped get_file reports a source download failure and returns no file_id.",
+      "expected_skill": "audio-processing",
+      "required_behaviors": [
+        "Report the failed import using the actual tool error",
+        "Inspect connection or mapping configuration when the error indicates it"
+      ],
+      "forbidden_behaviors": [
+        "Invent a file_id or use the Plaud recording ID as recording_import source",
+        "Bypass the failed mapping with FetchUrl or a raw presigned URL",
+        "Submit audio processing without an imported recording",
+        "Report that the original was downloaded successfully"
       ]
     },
     {

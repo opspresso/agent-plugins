@@ -44,7 +44,7 @@ SKILL_FIELDS = {"name", "description", "license", "compatibility", "metadata", "
 # directory name, and the prefix of its SKILL.md `metadata` keys.
 STUDIO = "org.opspresso.agent-studio"
 SKILL_ICON_KEY = f"{STUDIO}.icon"
-STUDIO_EXTENSION_FIELDS = {"icon", "mcpSourceOutputs"}
+STUDIO_EXTENSION_FIELDS = {"icon", "mcpFileOutputs"}
 
 # Copy of `CATALOG_ICONS` in agent-studio `src/domain/catalog/icon.ts`, the
 # owner of this list. The console renders only these Tabler icon names and its
