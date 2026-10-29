@@ -24,7 +24,7 @@ runtime:
 environments:
   dev:
     resources:
-      - name: main
+      - name: todo            # same as spec.name: unprefixed DATABASE_URL, PGHOST, …
         class: postgres
     env:
       LOG_LEVEL: debug
@@ -32,7 +32,7 @@ environments:
     replicas: 2
     maxReplicas: 4
     resources:
-      - name: main
+      - name: todo
         class: postgres
     secrets: [API_KEY]
     cpu: 250m
@@ -56,7 +56,7 @@ environments:
 | `replicas` | 아니요 | 1~5 | 1 |
 | `maxReplicas` | 아니요 | `replicas`~10. 크면 CPU 70% 기준 자동 확장 | `replicas` |
 | `cpu`, `memory` | 아니요 | `50m`~`1`, `64Mi`~`2Gi`. memory는 limit도 된다 | `100m`, `256Mi` |
-| `resources` | 아니요 | `{name, class}`. class는 `postgres`·`bucket`. 이름이 `main`이면 Variable에 접두어가 없다 | |
+| `resources` | 아니요 | `{name, class, parameters?}`. class는 `resource_catalog`의 템플릿. 이름이 `spec.name`(Project slug)과 같으면 Variable에 접두어가 없다 | |
 | `secrets` | 아니요 | 사용자가 Agent Delivery 콘솔에서 입력할 Variable 이름 | |
 | `env` | 아니요 | 비밀이 아닌 환경 변수. 값 1 KiB 이하 | |
 
@@ -79,7 +79,7 @@ environments:
 
 ## 리소스 Variable
 
-| class | Variable (`main`이면 접두어 없음, 아니면 `<NAME>_`) |
+| class | Variable (이름이 Project slug면 접두어 없음, 아니면 `<NAME>_`) |
 | --- | --- |
 | `postgres` | `DATABASE_URL`, `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`. `vector` 확장을 쓸 수 있다 |
 | `bucket` | `S3_BUCKET`, `S3_PREFIX`, `S3_REGION`. 배포된 앱은 Pod Identity로, Forge Run은 임시 AWS credential로 접근한다. prefix 밖은 거부된다 |
@@ -98,7 +98,7 @@ environments:
 ## Node.js 예시
 
 PostgreSQL을 쓰는 앱의 예시다. 기동 시 migration을 실행하고, `/health`는 migration 성공과 DB 연결을 매번 확인한다.
-`DATABASE_URL`은 리소스 이름이 `main`일 때의 Variable이다. 의존성은 `pg`다.
+`DATABASE_URL`은 리소스 이름이 Project slug와 같을 때의 Variable이다. 의존성은 `pg`다.
 
 ```dockerfile
 FROM node:24-alpine AS build

@@ -11,7 +11,8 @@
   `requiresPrevious` 환경(기본 `prod`)은 앞 환경에서 성공한 Release만 받는다.
 - **리소스**: 카탈로그 템플릿으로 만든다(`resource_catalog`). `postgres`(`DATABASE_URL`·`PG*`), `bucket`(`S3_BUCKET`·`S3_PREFIX`·`S3_REGION`),
   `rds-postgres`(전용 RDS, 비용이 들고 sandbox 환경 불가, 환경당 2개), `secret`(사용자가 콘솔에서 입력).
-  `main`이라는 이름의 리소스는 Variable에 접두어가 없다. 다른 이름은 대문자 이름이 접두어가 된다.
+  이름이 Project slug와 같은 리소스는 Variable에 접두어가 없다(`DATABASE_URL`). 다른 이름(`main` 포함)은 대문자 이름이 접두어가 된다.
+  콘솔의 기본 리소스 이름도 Project slug다.
 - **`application.yaml`**: 저장소 루트의 앱 선언(apiVersion `agent.opspresso.com/v1`). 이름·저장소·소유자·runtime(port·health·build·test)·
   환경별 replica·리소스(템플릿 `parameters` 포함)·secret·env를 적는다. 모르는 필드와 설치에 없는 환경은 거절되며 최대 64 KiB다.
 - **Release**: build 한 번의 결과 `r<n>`(commit, 이미지 digest, 선언). 상태는 `building`·`ready`·`failed`다.
