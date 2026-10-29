@@ -108,7 +108,7 @@
     },
     {
       "request": "내 앱 배포가 실패했어요. 원인을 알려 주세요.",
-      "expected": "delivery_list·delivery_get으로 실패한 Delivery와 errorCode를 읽고 delivery_logs로 실패 단계의 로그를 확인한다. 원인과 해결 단계를 보고하며 확인 없이 다시 배포하지 않는다."
+      "expected": "project_status·deployment_get으로 실패한 Deployment와 errorCode를 읽고 deployment_logs로 실패 단계의 로그를 확인한다. 원인과 해결 단계를 보고하며 확인 없이 다시 배포하지 않는다."
     },
     {
       "request": "앱에 OpenAI API 키를 넣어 주세요. 키는 sk-... 입니다.",
@@ -116,7 +116,7 @@
     },
     {
       "request": "prod에 배포해 주세요.",
-      "expected": "project_get으로 환경 준비 상태를 확인하고 delivery_start(environment=prod)를 승인 카드로 요청한다. 결과가 awaiting_approval이면 approvalUrl을 주고 소유자가 24시간 안에 콘솔에서 승인해야 한다고 알린다. 접수를 배포 완료로 보고하지 않는다."
+      "expected": "project_status로 dev의 현재 Release와 prod 준비 상태를 확인하고 promote(from=dev)를 승인 카드로 요청한다. 결과가 awaiting_approval이면 approvalUrl을 주고 소유자가 24시간 안에 콘솔에서 승인해야 한다고 알린다. 접수를 배포 완료로 보고하지 않는다."
     },
     {
       "request": "코딩 Agent를 쓰려면 뭘 준비해야 해요?",

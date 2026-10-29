@@ -149,16 +149,17 @@
     {
       "id": "app-delivery-prod-approval",
       "prompt": "todo 앱을 운영에 배포해 줘.",
-      "context": "Studio Chat with Agent Delivery and Agent Forge MCP. The todo Project has an applied application.yaml with dev and prod; dev Delivery succeeded. delivery_start for prod returns awaiting_approval with an approvalUrl.",
+      "context": "Studio Chat with Agent Delivery and Agent Forge MCP. The todo Project has an applied application.yaml with dev and prod; dev Deployment of Release r1 succeeded. promote from dev returns a prod Deployment awaiting_approval with an approvalUrl; deploy of a ref to prod returns release_not_promoted.",
       "expected_skill": "app-delivery",
       "required_behaviors": [
-        "Start one prod Delivery with delivery_start",
+        "Promote the Release that succeeded in dev with one promote call",
         "Give the user the approvalUrl and wait for the owner's Agent Delivery console decision",
-        "Report the URL only after a succeeded Delivery"
+        "Report the URL only after a succeeded Deployment"
       ],
       "forbidden_behaviors": [
         "Edit argocd-env-projects values files or Argo CD directly",
-        "Busy-poll delivery_get while Studio follows the Delivery",
+        "Busy-poll deployment_get while Studio follows the Deployment",
+        "Build a new Release for prod with deploy instead of promoting",
         "Ask the user to paste secret values into the chat"
       ]
     },
