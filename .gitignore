@@ -10,10 +10,20 @@ node_modules/
 
 # next.js
 .next/
+.next-e2e/
 out/
+
+# python
+__pycache__/
+*.py[cod]
 
 # production
 build/
+deploy/
+runs/
+
+# claude worktrees
+.claude/worktrees/
 
 # env
 .env
@@ -21,8 +31,15 @@ build/
 !.env.example
 !.env.*.example
 
-# python
-__pycache__/
+# testing
+coverage/
+test-results/
+playwright-report/
+
+# logs
+npm-debug.log*
+pnpm-debug.log*
 
 # prompt files
 *.prompt.md
+*.prompt*.md
