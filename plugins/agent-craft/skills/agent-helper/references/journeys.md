@@ -45,7 +45,7 @@ Forge가 코드를, Runway가 리소스와 배포를 소유한다. 실제 진행
 1. Forge 처음 설정을 마친다. [forge](forge.md#처음-설정)
 2. Agent를 만든다: `mcpList`에 `agent-forge`, Skill `workspace-task`와 필요한 engineering Skill(`implement-feature`, `fix-issue`, `code-review` 등).
    긴 작업이 많으므로 `maxTurn`을 늘린다.
-3. 배포까지 하려면 `agent-delivery`와 `app-delivery`도 연결한다.
+3. 배포까지 하려면 `agent-runway`와 `app-delivery`도 연결한다.
 4. 첫 작업으로 작은 요청(README 수정 PR 등)을 보내 GitHub 연결과 profile을 확인하게 한다.
 
 ## 메신저 봇 Agent

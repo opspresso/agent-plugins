@@ -27,7 +27,7 @@ Studio에 서비스 데이터의 사본이 없으므로 서비스의 현재 상�
 | Agent Memory | 장기·단기 기억과 작업 handoff | Memory 도구, `agent-memory` 콘솔 | [memory](references/memory.md) |
 | Agent Knowledge | 문서·RAG·지식 그래프·ontology 객체·녹음·전사·회의록·오디오 profile | Knowledge 도구, `agent-knowledge` 콘솔 | [knowledge](references/knowledge.md) |
 | Agent Forge | Workspace·Sandbox·Run·Workspace profile·Git 연결·보호된 Git 작업 승인 | Forge 도구, `agent-forge` 콘솔 | [forge](references/forge.md) |
-| Agent Runway | Project·dev/prod 환경·DB·bucket·secret·`application.yaml`·빌드·배포·prod 승인 | Runway 도구, `agent-delivery` 콘솔 | [delivery](references/delivery.md) |
+| Agent Runway | Project·dev/prod 환경·DB·bucket·secret·`application.yaml`·빌드·배포·prod 승인 | Runway 도구, `agent-runway` 콘솔 | [delivery](references/delivery.md) |
 | Agent Models | 모델 공급자·승인된 모델 선택·라우팅·사용량 | MCP 도구와 Helper 패널 없음. `StudioRead(resource="models")`로 선택 가능한 모델만 읽는다 | [agent-settings](references/agent-settings.md#모델) |
 
 여러 서비스에 걸친 작업(앱 개발·배포, 녹음→회의록, 문서 Q&A Agent, 기억하는 Agent, 코딩 Agent 준비)은
@@ -83,7 +83,7 @@ Studio에 서비스 데이터의 사본이 없으므로 서비스의 현재 상�
 1. 화면 자료의 `service`가 있으면 Helper는 그 서비스 콘솔 안에 열려 있다. 그 콘솔의 페이지 지도 안에서만
    `navigate`한다. Studio 페이지는 Studio에서만 열리므로 링크를 준다.
 2. 다른 서비스 콘솔에서 작업하려면 `StudioScreen(operation="open_console", service, path)`를 쓴다.
-   service는 `agent-memory`·`agent-knowledge`·`agent-forge`·`agent-delivery`다. Agent Models 콘솔은 열 수 없다.
+   service는 `agent-memory`·`agent-knowledge`·`agent-forge`·`agent-runway`다. Agent Models 콘솔은 열 수 없다.
    경로를 모르면 `/`로 열고, 도착한 뒤 `inspect`로 그 콘솔의 페이지 지도를 읽는다. 배포에 연결되지 않은
    콘솔은 거절된다. 그때는 Studio의 `/tools/<service>`(예: `/tools/agent-forge`)에서 콘솔 링크를 안내한다.
 3. `inspect` 결과의 ref로만 조작한다. 이동하거나 stale ref 오류가 나면 다시 inspect한다. 추측으로 다른 대상을

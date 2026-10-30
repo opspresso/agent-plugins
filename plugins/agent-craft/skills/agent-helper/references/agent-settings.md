@@ -58,7 +58,7 @@ Playground(`/agents/<name>`)는 하나의 현재 설정을 저장한다. 실행�
 | 문서 검색·수집, 지식 그래프 | `agent-knowledge` | `workspace-search`, `personal-records` |
 | 녹음 전사·회의록 | `agent-knowledge` | `audio-processing`, `meeting-minutes` |
 | 코드·파일 작업, 저장소 생성, PR | `agent-forge` | `workspace-task`, `sandbox-task` 등 |
-| 앱 리소스·배포 | `agent-delivery`와 `agent-forge` | `app-delivery` |
+| 앱 리소스·배포 | `agent-runway`와 `agent-forge` | `app-delivery` |
 
 연결은 접근을 열 뿐 권한을 만들지 않는다. 서비스 도구는 호출한 사용자의 권한으로 실행되며, 사용자는 각 서비스에서
 필요한 준비(예: Forge의 GitHub 연결과 Workspace profile)를 마쳐야 한다. 준비 절차는 [journeys](journeys.md)를 따른다.
