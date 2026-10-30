@@ -39,8 +39,8 @@
 | `reauthorization_required` (403) | Forge | 이전 위임으로 접수된 Run은 계속할 수 없다. 새 Run을 제출한다 |
 | GitHub 관련 403 | Forge | [forge](forge.md#오류) — `/git`에서 연결·저장소 등록 |
 | Git merge 승인 대기·만료 | Forge | [forge](forge.md#오류) — 승인은 Run 제한 시간과 함께 만료된다 |
-| 배포 실패 | Delivery | `deployment_get`의 `errorCode`와 `deployment_logs`. [delivery](delivery.md#오류) |
-| `environment_not_ready` | Delivery | secret 입력 링크와 리소스 `ready` 확인 |
+| 배포 실패 | Runway | `deployment_get`의 `errorCode`와 `deployment_logs`. [delivery](delivery.md#오류) |
+| `environment_not_ready` | Runway | secret 입력 링크와 리소스 `ready` 확인 |
 | 문서 처리 멈춤·실패 | Knowledge | [knowledge](knowledge.md#오류) |
 | 녹음 작업 결과 불명 | Knowledge | `audio_request_status`로 영수증 확인. 다시 제출하지 않는다 |
 | 기억 검색이 안 맞음 | Memory | [memory](memory.md#오류) |
@@ -48,7 +48,7 @@
 ## 응답이 유실됐거나 결과가 불확실할 때
 
 - 같은 요청을 새로 보내지 않는다. 같은 키로 조회한다: `run_lookup_request`·`workspace_lookup_request`·`repository_lookup_request`(Forge),
-  `deployment_lookup_request`(Delivery), `audio_request_status`·`recording_delete_status`(Knowledge), `remember`·`handoff_create`의 같은 `idempotencyKey`(Memory).
+  `deployment_lookup_request`(Runway), `audio_request_status`·`recording_delete_status`(Knowledge), `remember`·`handoff_create`의 같은 `idempotencyKey`(Memory).
 - Studio 변경 도구가 실패하거나 시간 초과되면 `StudioRead`로 저장 상태를 먼저 확인한다.
 - Forge `interrupted` Run은 자동으로 다시 실행하지 않는다. 결과를 확인하고 사용자에게 다음 행동을 묻는다.
 

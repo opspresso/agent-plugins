@@ -97,7 +97,7 @@ bot token, signing secret, app password, MCP header 값, MCP OAuth 연결, 개�
 |---|---|
 | MCP header 값 | Agent 화면(`/agents/<name>`)의 MCP 서버 설정 |
 | MCP OAuth 연결, Slack·Telegram·Teams credential, 개인 API·webhook token | 연동 화면(`/agents/<name>/integrations`) |
-| Delivery 앱 secret | Delivery 콘솔. [delivery](delivery.md#secret) |
+| Runway 앱 secret | Runway 콘솔. [delivery](delivery.md#secret) |
 
 MCP OAuth 연결은 사용자·MCP 서버 단위이며 여러 Agent가 함께 쓴다. Agent 서비스(`agent-*` Tools)는 OAuth 연결 없이
 Studio 로그인으로 위임된다.

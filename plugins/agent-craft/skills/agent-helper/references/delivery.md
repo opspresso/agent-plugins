@@ -1,6 +1,6 @@
-# Agent Delivery
+# Agent Runway
 
-앱의 Project·환경·리소스·secret·`application.yaml`·배포를 다루거나 Delivery 콘솔을 안내할 때 읽는다.
+앱의 Project·환경·리소스·secret·`application.yaml`·배포를 다루거나 Runway 콘솔을 안내할 때 읽는다.
 앱을 처음부터 배포까지 진행하는 절차는 `app-delivery` Skill이 있으면 그것을 따른다. 실제 도구 schema가 이 문서보다 우선한다.
 
 ## 개념
