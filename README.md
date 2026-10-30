@@ -9,7 +9,8 @@ Everything is [MIT-licensed](LICENSE).
 This repository owns declarations, discovery metadata and task guidance. It does
 not run services or create credentials, permissions, Workspaces or Sandboxes.
 Studio orchestrates Agents; Forge executes Workspace tasks; Memory owns memories
-and handoffs; Agent Knowledge owns documents, RAG, knowledge and audio. See the
+and handoffs; Agent Knowledge owns documents, RAG, knowledge and audio; Agent Runway
+owns app resources and deployment. See the
 [service integration contract](docs/agent-studio.md).
 
 ## Start here
@@ -111,7 +112,7 @@ account connection, host app OAuth compatibility requirements and verification.
 Adding these declarations does not connect accounts or grant access to private
 content.
 
-The `devops` plugin declares these MCP services from the `argocd-env-apps` k3s
+The `devops` plugin declares these MCP services from the `argocd-env-apps`
 deployment in the `agent-mcps` namespace, with matching host app descriptions:
 
 - [Argo CD](plugins/devops/org.opspresso.agent-studio/mcp/argocd.md)
