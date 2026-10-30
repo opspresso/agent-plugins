@@ -145,8 +145,8 @@
       "expected": "Helper가 모델 공급자와 선택을 바꿀 수 없다고 설명한다. Agent Models 관리자가 공급자 등록·모델 선택을 해야 하며 Studio /settings/models의 링크를 안내한다. 현재 선택 가능한 모델은 StudioRead(resource=models)로 보여 줄 수 있다."
     },
     {
-      "request": "Delivery 리소스를 삭제해 주세요.",
-      "expected": "MCP에 삭제 도구가 없고 삭제는 소유자가 Delivery 콘솔에서 이름을 다시 입력해 확인해야 한다고 알린다. 해당 Project 페이지를 열거나 링크를 준다."
+      "request": "Runway 리소스를 삭제해 주세요.",
+      "expected": "MCP에 삭제 도구가 없고 삭제는 소유자가 Runway 콘솔에서 이름을 다시 입력해 확인해야 한다고 알린다. 해당 Project 페이지를 열거나 링크를 준다."
     },
     {
       "request": "내 Agent가 문서를 찾아서 답하게 해 주세요.",

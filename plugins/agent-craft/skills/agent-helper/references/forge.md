@@ -64,5 +64,5 @@ Forge 콘솔은 페이지마다 전체 문서를 새로 불러온다.
 | `work_authorization_invalid` | 다시 로그인하고 새 `requestKey`로 제출한다 |
 | `reauthorization_required` (403, Run `errorCode`) | 이전 위임으로 접수된 작업은 계속할 수 없다. 사용자가 새 Run을 제출한다 |
 | `model_gateway_unavailable` (503) | 운영 문제다. 무조건 다시 제출하지 않는다 |
-| `delivery_variables_invalid` | dev Variable 이름이 Sandbox 예약 이름(예: `OPENAI_*`)과 겹친다. Delivery에서 이름을 바꾼다 |
+| `delivery_variables_invalid` | dev Variable 이름이 Sandbox 예약 이름(예: `OPENAI_*`)과 겹친다. Runway에서 이름을 바꾼다 |
 | Run `succeeded`인데 `outputLoss=true` | 출력 일부가 영구 손실됐다. 결과 전체를 추정하지 않고 남은 검증 근거를 확인한다 |

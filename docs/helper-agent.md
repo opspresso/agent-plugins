@@ -1,6 +1,6 @@
 # Helper Agent profile
 
-Helper는 운영자가 관리하는 하나의 private Agent다. 사용자는 Agent Studio와 Agent 서비스 콘솔(Memory·Knowledge·Forge·Delivery)의
+Helper는 운영자가 관리하는 하나의 private Agent다. 사용자는 Agent Studio와 Agent 서비스 콘솔(Memory·Knowledge·Forge·Runway)의
 헤더 버튼으로 같은 Helper 패널을 연다. 대화·도구 호출·승인·비용·기록은 일반 Agent와 같은 실행 경로를 사용한다.
 
 ## 구성
@@ -37,7 +37,7 @@ Studio 도구 사용 규칙과 Studio 페이지 지도는 Studio가 실행마다
 해당 화면에 직접 입력한다.
 
 Helper 대화에서는 배포가 연결한 Agent 서비스의 Tools 항목이 자동으로 연결된다. 서비스가 읽기 전용으로 표시하지 않은 도구는
-승인 후 실행한다. Forge GitHub 연결·보호된 Git 작업 승인, Delivery secret 입력·삭제·prod 승인은 서비스 콘솔에서만 한다.
+승인 후 실행한다. Forge GitHub 연결·보호된 Git 작업 승인, Runway secret 입력·삭제·prod 승인은 서비스 콘솔에서만 한다.
 
 전용 Skill은 Studio에 직접 저장되며 이 저장소의 sync 대상이 아니다. 공유 Skill은 이 저장소에서 관리하고 이름에 `--`를 쓰지 않는다.
 이 저장소에 별도 MCP 서버나 credentials를 만들지 않는다.
