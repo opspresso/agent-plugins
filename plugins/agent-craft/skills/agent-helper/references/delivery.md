@@ -34,7 +34,7 @@
 | `deploy`, `promote`, `rollback` | ref를 첫 환경에 배포, 같은 Release를 다음 환경으로 승격, 직전 Release로 되돌리기 | 접수형. `idempotencyKey` 필수. 결과는 원래 Chat으로 돌아온다. `approval: owner` 환경은 소유자 승인 대기 |
 | `secret_request` | secret 입력 콘솔 링크 | 읽기 전용이라 승인 없이 실행된다. 링크만 돌려준다. 값은 묻지 않는다 |
 
-삭제 도구는 없다. Studio는 `delivery:delete`를 위임하지 않는다.
+삭제 도구는 없다. Studio는 `runway:delete`를 위임하지 않는다.
 
 ## Secret
 
@@ -42,7 +42,7 @@ secret 값은 대화로 받지 않는다. `project_apply` 결과의 링크나 `s
 입력 페이지는 `/projects/<slug>/secrets/new?environment=<env>&variable=<NAME>`이다.
 sandbox 환경(기본 `dev`) Variable에는 Sandbox 예약 이름을 쓰지 않는다. 예: `OPENAI_API_KEY` 대신 `APP_OPENAI_API_KEY`.
 
-## 콘솔 페이지 (`agent-delivery`)
+## 콘솔 페이지 (`agent-runway`)
 
 | 경로 | 용도 |
 |---|---|
