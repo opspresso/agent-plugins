@@ -34,7 +34,7 @@
 | 증상 | 서비스 | 확인과 해결 |
 |---|---|---|
 | 서비스 도구가 없음 | 전체 | 배포에 연결되지 않았거나 사용자가 쓸 수 없다. `/tools`에 항목이 있는지 확인한다. guest는 쓰기 도구를 쓸 수 없다 |
-| `403 Studio policy refused this request` | 전체 | guest·계정 없음·비용 한도 등 Studio 정책 거절이다. 재시도로 해결되지 않는다 |
+| `403 Studio policy refused this request` | 전체 | guest·계정 없음·비용 한도 등 Studio 정책 거절이다. 재시도로 해결되지 않는다. 비용 한도는 `StudioRead(resource="usage", name=...)`의 `limits`·`spend`로 확인한다 |
 | 401 (`Studio authorization required` 등) | 전체 | 다시 로그인하고 요청을 다시 시도한다 |
 | `reauthorization_required` (403) | Forge | 이전 위임으로 접수된 Run은 계속할 수 없다. 새 Run을 제출한다 |
 | GitHub 관련 403 | Forge | [forge](forge.md#오류) — `/git`에서 연결·저장소 등록 |
