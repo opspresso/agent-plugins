@@ -169,11 +169,11 @@
     {
       "id": "app-delivery-prod-approval",
       "prompt": "todo 앱을 운영에 배포해 줘.",
-      "context": "Studio Chat with Agent Delivery and Agent Forge MCP. The todo Project has an applied application.yaml with dev and prod; dev Deployment of Release r1 succeeded. promote from dev returns a prod Deployment awaiting_approval with an approvalUrl; deploy of a ref to prod returns release_not_promoted.",
+      "context": "Studio Chat with Agent Runway and Agent Forge MCP. The todo Project has an applied application.yaml with dev and prod; dev Deployment of Release r1 succeeded. promote from dev returns a prod Deployment awaiting_approval with an approvalUrl; deploy of a ref to prod returns release_not_promoted.",
       "expected_skill": "app-delivery",
       "required_behaviors": [
         "Promote the Release that succeeded in dev with one promote call",
-        "Give the user the approvalUrl and wait for the owner's Agent Delivery console decision",
+        "Give the user the approvalUrl and wait for the owner's Agent Runway console decision",
         "Report the URL only after a succeeded Deployment"
       ],
       "forbidden_behaviors": [
