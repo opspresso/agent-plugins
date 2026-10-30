@@ -9,7 +9,7 @@ Studio의 Agent·Skill·trigger·메신저 연동을 만들거나 고칠 때 읽
 |---|---|---|
 | Agent | 모델·프롬프트·Skill·MCP 도구·하위 Agent·정책·한도를 저장한 실행 단위. private은 소유자만, public은 조직 전체가 쓴다 | `/agents`, `/agents/<name>` |
 | Skill | 모델이 이름·설명으로 고른 뒤 본문을 읽는 작업 지침. 공유·Plugin·Agent 전용으로 나뉜다 | `/skills` |
-| Tools | MCP 서버 레지스트리. 연결된 Memory·Knowledge·Forge·Delivery가 각각 항목 하나(`agent-memory` 등)로 보인다 | `/tools`, `/tools/<name>` |
+| Tools | MCP 서버 레지스트리. 연결된 Memory·Knowledge·Forge·Runway가 각각 항목 하나(`agent-memory` 등)로 보인다 | `/tools`, `/tools/<name>` |
 | Plugin | Skill·MCP 정의의 원본 묶음. 관리자가 동기화한다 | `/plugins` |
 | Chat·Artifact | 개인 대화와 첨부·생성 파일 | `/chats`, `/artifacts` |
 

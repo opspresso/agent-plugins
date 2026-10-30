@@ -1,6 +1,6 @@
 # application.yaml과 배포 조건
 
-저장소 루트의 `application.yaml`이 앱 하나를 선언한다. Agent Runway가 검증하고, Delivery가 이 선언대로 빌드·배포한다.
+저장소 루트의 `application.yaml`이 앱 하나를 선언한다. Agent Runway가 검증하고, Runway가 이 선언대로 빌드·배포한다.
 
 ## 예시
 
