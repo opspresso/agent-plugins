@@ -23,6 +23,22 @@ metadata:
 3. 이름(slug)을 정한다. `^[a-z][a-z0-9-]{1,30}[a-z0-9]$`이고 `-dev`·`-prod`로 끝날 수 없다.
    저장소 이름과 같게 하면 추적이 쉽다. 주소는 `https://<slug>-dev.<앱 도메인>`(dev), `https://<slug>.<앱 도메인>`(prod)이다.
 
+## 기존 저장소 등록
+
+사용자가 기존 저장소를 프로젝트로 등록하자고 하면 등록·확인 절차를 사용자에게 넘기지 않고 이어서 진행한다.
+변경이 필요한 단계마다 `AskUser`로 한 번 묻고, 답을 받으면 다음 단계로 간다. 이미 끝난 단계는 묻지 않는다.
+
+1. Forge `git_connections`로 저장소 등록 여부와 연결 계정을 확인한다. 연결 계정이 없을 때만 Forge 콘솔 `/git`의 GitHub 연결을 안내한다.
+2. 등록되지 않았으면 `AskUser`로 묻는다. 예: "연결된 nalbam 계정으로 nalbam/sample-node를 등록할까요?"
+   동의하면 `repository_connect`(`accountId`, `repository`)를 호출한다.
+3. 기본 branch의 `application.yaml`, `Dockerfile`, health 경로를 확인한다. 사용자에게 파일을 만들라고 하지 않는다.
+4. `application.yaml`이 없으면 저장소에서 언어·포트·테스트 명령을 읽어 초안을 만들고 `AskUser`로 내용을 보여 주며 묻는다.
+   예: "application.yaml이 없습니다. 아래 내용으로 만들어 등록할까요?" 동의하면 [2. 저장소와 코드](#2-저장소와-코드)의 PR 절차로 추가한다.
+   `Dockerfile`이나 health 경로가 없으면 같은 질문에 함께 포함한다.
+5. 병합되면 [3. 선언 적용과 리소스](#3-선언-적용과-리소스)로 `project_apply`까지 진행한다. 배포는 사용자가 요청했을 때만 한다. 요청이 없으면 `AskUser`로 dev 배포 여부를 묻는다.
+
+저장소가 비공개이면 Runway의 checkout 제약을 2단계 질문에 함께 알린다. 거절하면 멈추고 현재 상태를 알린다.
+
 ## 2. 저장소와 코드
 
 1. 새 저장소는 연결된 `project-generator` 절차로 Forge `repository_create`를 실행하고 `private: false`로 만든다.
