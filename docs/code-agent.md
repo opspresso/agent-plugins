@@ -11,7 +11,7 @@ Sandbox는 Forge 내부의 일시 실행 자원이다.
 2. Agent에 Agent Forge Tools 항목을 연결한다. Studio는 MCP 요청마다 현재 사용자에게 위임한 단기 token을 보낸다.
    실행 도구에는 Agent 실행이 가능한 사용자 등급이 필요하다.
 3. 사용자는 Forge 콘솔에서 Workspace profile(Runtime·중앙 모델·저장소 규칙·검사·배포 workflow)을 만들고 기본 profile을 선택한다.
-4. 사용자는 Forge 콘솔의 Git 설정에서 GitHub 계정을 연결하고 사용할 `owner/repository`를 등록한다.
+4. 사용자는 Forge 콘솔의 Git 설정에서 GitHub 계정을 연결한다. 기존 저장소는 콘솔에서 등록하거나, 사용자가 동의하면 Agent가 `repository_connect`로 등록한다.
    Studio Tools의 Forge 상세 화면에 설정·이력 링크가 있다.
 
 profile의 저장소 규칙 기본값은 `selected`(등록한 저장소만)이다. `owners`, `all`, `new`(새 이름의 저장소 생성 허용)도 있다.
