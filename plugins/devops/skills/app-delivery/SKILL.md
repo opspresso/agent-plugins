@@ -32,7 +32,8 @@ metadata:
 2. 등록되지 않았으면 `AskUser`로 묻는다. 예: "연결된 nalbam 계정으로 nalbam/sample-node를 등록할까요?"
    동의하면 `repository_connect`(`accountId`, `repository`)를 호출한다.
 3. 기본 branch의 `application.yaml`, `Dockerfile`, health 경로를 확인한다. 사용자에게 파일을 만들라고 하지 않는다.
-4. `application.yaml`이 없으면 저장소에서 언어·포트·테스트 명령을 읽어 초안을 만들고 `AskUser`로 내용을 보여 주며 묻는다.
+4. `application.yaml`이 없으면 먼저 `project_ensure`로 Project를 확인하고 `project_status`로 환경을 읽는다. 저장소에서 언어·포트·테스트 명령을 읽어 초안을 만들고 `AskUser`로 내용을 보여 주며 묻는다.
+   `spec.owner`에는 응답의 `owner.subject`를 그대로 쓴다. 자리표시자를 남기지 않는다. `environments`에는 설치의 환경을 모두 선언한다(보통 `dev`, `prod`). 사용자가 줄이라고 할 때만 뺀다.
    예: "application.yaml이 없습니다. 아래 내용으로 만들어 등록할까요?" 동의하면 [2. 저장소와 코드](#2-저장소와-코드)의 PR 절차로 추가한다.
    `Dockerfile`이나 health 경로가 없으면 같은 질문에 함께 포함한다.
 5. 병합되면 [3. 선언 적용과 리소스](#3-선언-적용과-리소스)로 `project_apply`까지 진행한다. 배포는 사용자가 요청했을 때만 한다. 요청이 없으면 `AskUser`로 dev 배포 여부를 묻는다.
