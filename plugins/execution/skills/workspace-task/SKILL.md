@@ -81,6 +81,9 @@ checks가 없다고 GitHub 검사가 없다고 하지 않는다. CI는 GitHub �
 
 코딩 요청은 사용자가 제한하지 않으면 새 작업 브랜치의 구현·검증·커밋·푸시·PR까지 포함한다.
 [Git 게시와 확인](references/git-actions.md)을 읽고 review → commit → push → pull-request 실행으로 추가 질문 없이 진행한다.
+Git 단계는 task에 넣지 않는다. native Runtime은 Git 메타데이터를 쓸 수 없으므로 task는 파일 작업과 검사까지만 맡긴다.
+task가 끝나면 부모가 같은 Workspace에서 `run_submit`(`input.kind="git"`)으로 각 단계를 낸다. task의 `succeeded`는 게시 완료가 아니다.
+task 결과에 커밋 실패가 있어도 멈추지 않는다. 변경이 작업 트리에 있으면 `review`부터 이어 가고, PR 링크를 확인한 뒤 완료를 보고한다.
 조회·진단만 요청한 작업이나 Git-free 파일 처리에는 이 게시 범위를 추가하지 않는다.
 보호 branch 게시·merge·tag·release·deploy는 별도 사용자 요청이 필요하고, Forge 콘솔에서 Workspace 소유자가 승인해야 실행된다.
 모델은 승인할 수 없다. 실패·거절·결과 불명인 게시를 자동으로 반복하지 않는다.

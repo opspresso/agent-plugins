@@ -58,7 +58,8 @@ metadata:
    - 테스트 명령: 외부 리소스 없이 끝나야 한다. Runway의 test 단계에는 Agent Runway Variable이 없다.
 4. Forge Run의 checks(test·lint·build)로 확인한다. `dev` 리소스가 `ready`이면 Forge가 Run의 명령 환경에 그 Variable을
    넣으므로 migration과 DB 연동을 실제 DB로 확인한다. 이 확인은 Forge에서만 가능하다. Runway의 test 단계에는 DB가 없다.
-5. Git `review`·`commit`·`push`·`pull-request`로 PR을 만든다. `pull-request`는 승인을 만들지 않는다.
+5. task가 끝나면 부모가 `run_submit`의 Git `review`·`commit`·`push`·`pull-request` Run으로 PR을 만든다. 이 단계를 task에 넣지 않는다. native Runtime은 커밋할 수 없다.
+   `pull-request`는 승인을 만들지 않는다.
 6. PR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approvalUrl`을 반환한다.
    그 링크를 사용자에게 주고, 병합 Run이 `succeeded`인지 확인한 뒤 다음 단계로 간다. 승인 없이 다른 경로로 병합하지 않는다.
 
