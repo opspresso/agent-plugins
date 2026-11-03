@@ -51,16 +51,19 @@ metadata:
    접속 정보는 Agent Runway가 SSM SecureString에 저장한다. 값은 Chat·코드·로그에 쓰지 않고 Variable 이름만 쓴다.
    나중에 `application.yaml`이 같은 이름·class로 선언하면 `project_apply`가 이 리소스를 그대로 쓴다.
 3. 코드를 구현한다. 배포에 필요한 조건은 다음과 같다. 세부 규칙과 예시는 [application.yaml과 배포 조건](references/application-yaml.md)을 읽는다.
-   - 저장소 루트의 `application.yaml`(`spec.owner`에 Project 소유자의 Studio subject)
+   - 저장소 루트의 `application.yaml`(`spec.owner`에 Project 소유자의 Studio subject).
+     부모가 `application_validate`로 통과한 전체 내용을 task에 그대로 넣고, runtime이 그 내용으로 파일을 쓰게 한다. runtime은 스키마를 모르므로 직접 짓게 하지 않는다.
    - `Dockerfile`: linux/arm64에서 빌드되고, `PORT` 환경 변수의 포트에서 HTTP를 받는다.
    - health 경로(기본 `/health`): 리소스를 선언한 앱은 매 요청에서 각 리소스에 실제로 연결하고(PostgreSQL은 `SELECT 1`)
      기동 시 migration이 성공했을 때만 2xx를 반환한다. Runway의 verify는 이 경로만 확인하므로 고정 응답은 DB 장애를 숨긴다.
    - 테스트 명령: 외부 리소스 없이 끝나야 한다. Runway의 test 단계에는 Agent Runway Variable이 없다.
 4. Forge Run의 checks(test·lint·build)로 확인한다. `dev` 리소스가 `ready`이면 Forge가 Run의 명령 환경에 그 Variable을
    넣으므로 migration과 DB 연동을 실제 DB로 확인한다. 이 확인은 Forge에서만 가능하다. Runway의 test 단계에는 DB가 없다.
-5. task가 끝나면 부모가 `run_submit`의 Git `review`·`commit`·`push`·`pull-request` Run으로 PR을 만든다. 이 단계를 task에 넣지 않는다. native Runtime은 커밋할 수 없다.
+5. task가 끝나면 부모가 `run_submit`의 Git `review` Run을 내고, diff의 `application.yaml` 전체를 `application_validate`로 다시 검사한다.
+   거부되면 커밋하지 않고 오류 필드를 고치는 task를 낸 뒤 `review`부터 다시 한다.
+6. 부모가 Git `commit`·`push`·`pull-request` Run으로 PR을 만든다. Git 단계를 task에 넣지 않는다. native Runtime은 커밋할 수 없다.
    `pull-request`는 승인을 만들지 않는다.
-6. PR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approvalUrl`을 반환한다.
+7. PR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approvalUrl`을 반환한다.
    그 링크를 사용자에게 주고, 병합 Run이 `succeeded`인지 확인한 뒤 다음 단계로 간다. 승인 없이 다른 경로로 병합하지 않는다.
 
 ## 3. 선언 적용과 리소스
