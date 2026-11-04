@@ -26,15 +26,21 @@ metadata:
 ## 기존 저장소 등록
 
 사용자가 기존 저장소를 프로젝트로 등록하자고 하면 등록·확인 절차를 사용자에게 넘기지 않고 이어서 진행한다.
-변경이 필요한 단계마다 `AskUser`로 한 번 묻고, 답을 받으면 다음 단계로 간다. 이미 끝난 단계는 묻지 않는다.
+요청이 이미 정한 단계(예: "프로젝트를 추가, dev 배포"의 등록·`application.yaml` 추가·`dev` 배포)는 그 요청을 동의로 보고 묻지 않는다.
+요청과 저장소로 정할 수 없는 결정만 `AskUser`로 한 번 묻는다. 이미 끝난 단계는 묻지 않는다.
 
 1. Forge `git_connections`로 저장소 등록 여부와 연결 계정을 확인한다. 연결 계정이 없을 때만 Forge 콘솔 `/git`의 GitHub 연결을 안내한다.
-2. 등록되지 않았으면 `AskUser`로 묻는다. 예: "연결된 nalbam 계정으로 nalbam/sample-node를 등록할까요?"
-   동의하면 `repository_connect`(`accountId`, `repository`)를 호출한다.
+2. 등록되지 않았으면 `repository_connect`(`accountId`, `repository`)를 호출한다. 사용자가 등록을 요청하지 않았을 때만
+   먼저 `AskUser`로 묻는다. 예: "연결된 nalbam 계정으로 nalbam/sample-node를 등록할까요?"
 3. 기본 branch의 `application.yaml`, `Dockerfile`, health 경로를 확인한다. 사용자에게 파일을 만들라고 하지 않는다.
-4. `application.yaml`이 없으면 먼저 `project_ensure`로 Project를 확인하고 `project_status`로 환경을 읽는다. 저장소에서 언어·포트·테스트 명령을 읽어 초안을 만들고 `AskUser`로 내용을 보여 주며 묻는다.
+4. `application.yaml`이 없으면 먼저 `project_ensure`로 Project를 확인하고 `project_status`로 환경을 읽는다. `slug`는 넘기지 않는다.
+   Agent Runway가 저장소 이름으로 정하고, 그 slug가 예약돼 있으면 다음 접미사(`-2`, `-3` …)를 고른다. 삭제된 Project의 slug도 영구히 예약된다.
+   저장소에서 언어·포트·테스트 명령과 앱이 기본 설정으로 연결하는 백엔드를 읽어 초안을 만든다.
+   코드가 읽는 Variable 이름에 맞게 리소스를 선언한다. Variable은 `<리소스 이름>_<class 키>`이므로, 예를 들어 `CACHE_VALKEY_URL`을 읽는 앱에는
+   `valkey` 리소스 `cache`를, slug 이름의 `postgres`(접두어 없는 `DATABASE_URL`)를 읽는 앱에는 그 리소스를 선언한다. 리소스를 피하려고 앱 기능을 끄는 선택지를 묻지 않는다.
+   사용자가 추가를 요청했으면 초안을 보여 주고 바로 진행하며, 요청하지 않았을 때만 `AskUser`로 묻는다.
    `spec.owner`에는 응답의 `owner.subject`를 그대로 쓴다. 자리표시자를 남기지 않는다. `environments`에는 설치의 환경을 모두 선언한다(보통 `dev`, `prod`). 사용자가 줄이라고 할 때만 뺀다.
-   예: "application.yaml이 없습니다. 아래 내용으로 만들어 등록할까요?" 동의하면 [2. 저장소와 코드](#2-저장소와-코드)의 PR 절차로 추가한다.
+   묻는 경우의 예: "application.yaml이 없습니다. 아래 내용으로 만들어 등록할까요?" 진행하면 [2. 저장소와 코드](#2-저장소와-코드)의 PR 절차로 추가한다.
    `Dockerfile`이나 health 경로가 없으면 같은 질문에 함께 포함한다.
 5. 병합되면 [3. 선언 적용과 리소스](#3-선언-적용과-리소스)로 `project_apply`까지 진행한다. 배포는 사용자가 요청했을 때만 한다. 요청이 없으면 `AskUser`로 dev 배포 여부를 묻는다.
 
@@ -107,7 +113,10 @@ metadata:
 - 설정(복제 수·자원·환경 변수)은 `application.yaml`을 고치는 PR → 병합 → `project_apply` → 배포·승격 순서로 바꾼다.
   GitOps 저장소의 배포 값 파일을 직접 고치지 않는다.
 - 장애 조사는 `incident-triage`를 쓴다. 앱 namespace는 `app-<slug>-<env>`, Deployment 이름은 `app`이다.
-- 리소스·Project 삭제는 Agent Runway 콘솔에서 소유자만 한다. MCP로 삭제를 시도하지 않는다.
+- Project 삭제를 요청받으면 `project_delete`(`project`, `confirmation`: slug)를 한 번 호출한다. Studio가 사람에게 승인을 받은 뒤 실행되고,
+  Agent Runway가 모든 환경의 서비스를 제거한 뒤 모든 리소스와 그 데이터, Project를 차례로 지운다. 되돌릴 수 없다.
+  결과의 진행 상태(남은 서비스·리소스)를 알리고, 사용자가 다시 물으면 `project_get`으로 한 번 확인한다.
+  서비스 하나만 내리면 `service_remove`, 리소스 하나만 지우면 `resource_delete`를 쓴다. 둘 다 승인 뒤 실행된다.
 
 ## 보고
 

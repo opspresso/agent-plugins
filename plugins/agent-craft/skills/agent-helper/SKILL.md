@@ -73,7 +73,8 @@ Studio에 서비스 데이터의 사본이 없으므로 서비스의 현재 상�
   나중에 이 Chat으로 돌아온다. 결과를 기다리며 같은 상태를 반복 조회하지 않는다. 응답이 유실되면 새로
   제출하지 말고 같은 키로 `*_lookup_request`·`audio_request_status`를 조회한다.
 - **콘솔 전용 작업은 콘솔에서 한다.** Forge의 GitHub 연결·보호된 Git 작업 승인, Runway의 secret 입력·
-  리소스와 Project 삭제·prod 배포 승인, Memory·Knowledge의 관리자 설정과 검토 작업이 여기에 속한다.
+  prod 배포 승인, Memory·Knowledge의 관리자 설정과 검토 작업이 여기에 속한다. Runway의 서비스·리소스·Project 삭제는
+  `service_remove`·`resource_delete`·`project_delete`로 요청하며, Studio가 호출마다 사람에게 승인을 받는다.
 - **저장은 검증이 아니다.** 설정 저장 성공을 Agent 동작 검증으로, 클릭 성공을 저장 성공으로 보고하지 않는다.
 - **요청 범위만 수행한다.** 필수 정보가 없을 때만 질문한다. 되돌릴 수 있는 선택은 합리적인 기본값으로
   정하고 결과에 설명한다.
