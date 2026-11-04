@@ -13,11 +13,13 @@ MCP 서버가 도구를 제공한다는 사실과 해당 Agent에 제공할 범�
 
 | 서버 | 이 프로필의 도구 |
 |---|---|
-| Kubernetes | `events_list`, `namespaces_list`, `nodes_log`, `nodes_stats_summary`, `nodes_top`, `pods_get`, `pods_list`, `pods_list_in_namespace`, `pods_log`, `pods_top`, `resources_get`, `resources_list` |
+| Kubernetes | `events_list`, `namespaces_list`, `nodes_top`, `pods_get`, `pods_list`, `pods_list_in_namespace`, `pods_log`, `pods_top`, `resources_get`, `resources_list` |
 | Argo CD | `list_applications`, `list_clusters`, `get_application`, `get_appproject`, `get_application_resource_tree`, `get_application_managed_resources`, `get_application_workload_logs`, `get_application_events`, `get_resource_events`, `get_resources`, `get_resource_actions` |
 | Grafana | `check_datasources_health`, `get_annotations`, `get_dashboard_by_uid`, `get_dashboard_panel_queries`, `get_dashboard_property`, `get_dashboard_summary`, `get_datasource`, `list_datasources`, `list_loki_label_names`, `list_loki_label_values`, `list_prometheus_label_names`, `list_prometheus_label_values`, `list_prometheus_metric_metadata`, `list_prometheus_metric_names`, `query_loki_logs`, `query_loki_patterns`, `query_loki_stats`, `query_prometheus`, `query_prometheus_histogram`, `search_dashboards`, `search_folders` |
 
-`resources_scale`, exec, apply, delete, Argo CD sync와 리소스 실행은 제외한다. Grafana의
+`nodes_log`와 `nodes_stats_summary`는 제외한다. 두 도구는 `nodes/proxy`로 kubelet을 읽는데,
+`nodes/proxy` 조회 권한은 kubelet API로 Pod 안의 명령 실행도 허용한다. 노드 사용량은 `nodes_top`과
+Grafana로 확인한다. `resources_scale`, exec, apply, delete, Argo CD sync와 리소스 실행도 제외한다. Grafana의
 `alerting_manage_rules`, `alerting_manage_routing`, `grafana_api_request`는 조회와 변경을
 함께 제공할 수 있으므로 쓰기가 켜진 공유 서버에서는 제외한다. 알림 본문과 metric으로
 조사하되 규칙 조회가 필요한데 제공되지 않으면 한계를 알린다. 해당 도구를 추가하려면
