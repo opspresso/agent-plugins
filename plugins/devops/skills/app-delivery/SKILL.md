@@ -37,7 +37,8 @@ metadata:
    Agent Runway가 저장소 이름으로 정하고, 그 slug가 예약돼 있으면 다음 접미사(`-2`, `-3` …)를 고른다. 삭제된 Project의 slug도 영구히 예약된다.
    저장소에서 언어·포트·테스트 명령과 앱이 기본 설정으로 연결하는 백엔드를 읽어 초안을 만든다.
    코드가 읽는 Variable 이름에 맞게 리소스를 선언한다. Variable은 `<리소스 이름>_<class 키>`이므로, 예를 들어 `CACHE_VALKEY_URL`을 읽는 앱에는
-   `valkey` 리소스 `cache`를, slug 이름의 `postgres`(접두어 없는 `DATABASE_URL`)를 읽는 앱에는 그 리소스를 선언한다. 리소스를 피하려고 앱 기능을 끄는 선택지를 묻지 않는다.
+   `valkey` 리소스 `cache`를, slug 이름의 `postgres`(접두어 없는 `DATABASE_URL`)를 읽는 앱에는 그 리소스를 선언한다.
+   선언한 모든 환경(`dev`, `prod`)에 같은 이름·class의 리소스를 선언한다. 리소스를 피하려고 어느 환경에서든 앱 기능을 끄는 값(예: `REDIS_ENABLED: "false"`)을 넣지 않고, 그런 선택지를 묻지도 않는다.
    사용자가 추가를 요청했으면 초안을 보여 주고 바로 진행하며, 요청하지 않았을 때만 `AskUser`로 묻는다.
    `spec.owner`에는 응답의 `owner.subject`를 그대로 쓴다. 자리표시자를 남기지 않는다. `environments`에는 설치의 환경을 모두 선언한다(보통 `dev`, `prod`). 사용자가 줄이라고 할 때만 뺀다.
    묻는 경우의 예: "application.yaml이 없습니다. 아래 내용으로 만들어 등록할까요?" 진행하면 [2. 저장소와 코드](#2-저장소와-코드)의 PR 절차로 추가한다.
@@ -70,7 +71,7 @@ metadata:
 6. 부모가 Git `commit`·`push`·`pull-request` Run으로 PR을 만든다. Git 단계를 task에 넣지 않는다. native Runtime은 커밋할 수 없다.
    `pull-request`는 승인을 만들지 않는다.
 7. PR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approvalUrl`을 반환한다.
-   그 링크를 사용자에게 주고, 병합 Run이 `succeeded`인지 확인한 뒤 다음 단계로 간다. 승인 없이 다른 경로로 병합하지 않는다.
+   그 링크를 답변에 그대로 넣어 사용자에게 준다(`WaitForServiceWork`로 턴을 끝낼 때도 그 메시지에 넣는다). 병합 Run이 `succeeded`인지 확인한 뒤 다음 단계로 간다. 승인 없이 다른 경로로 병합하지 않는다.
 
 ## 3. 선언 적용과 리소스
 
