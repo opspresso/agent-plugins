@@ -77,7 +77,9 @@ metadata:
 
 1. 배포할 revision(기본 병합된 main)의 `application.yaml` 내용을 그대로 `project_apply`에 넘긴다(`repository`, `application`).
    Runway는 그 revision의 파일 SHA-256이 적용한 내용과 같은지 확인하므로, 한 글자라도 다르면 `application_changed`로 실패한다.
-2. 결과의 리소스가 `ready`가 될 때까지 `project_status`로 확인한다. `failed`이면 원인을 보고한다.
+2. 배포를 요청받았으면 리소스가 `ready`가 되기를 기다리지 않고 바로 [4. 배포와 승격](#4-배포와-승격)의 `deploy`를 호출한다.
+   생성 중(`pending`)인 리소스는 Deployment가 `resources` 단계에서 기다리고, Studio가 그 Deployment를 끝까지 따라간다.
+   리소스가 `failed`이면 원인을 보고한다.
 3. `missingSecrets`가 있으면 각 `secret_request` 링크를 사용자에게 준다. 값은 Chat으로 받지 않는다.
    사용자가 입력했다고 하면 `project_get`으로 Variable 이름이 생겼는지 확인한다.
 4. `invalid_application`이면 오류의 필드를 고쳐 2단계의 PR로 다시 반영한다.
@@ -104,8 +106,10 @@ metadata:
      읽어 그 내용을 3단계로 적용하거나, 적용한 선언과 같은 파일을 가진 ref로 다시 배포한다. 다른 ref의 파일을 적용하지 않는다.
      같은 실패를 원인 확인 없이 다시 시작하지 않는다.
    - `rejected`: 소유자가 거절했거나 승인이 만료됐다. 다시 요청할지 사용자에게 확인한다.
-5. `environment_not_ready`이면 오류가 알려 준 리소스·secret을 3단계로 준비한다. `deployment_in_progress`이면 진행 중인
-   Deployment가 끝나기를 기다린다.
+5. `deployBlockers`의 `pending` 리소스는 배포를 막지 않는다. Deployment가 기다린다. `environment_not_ready`는 시간이 해결하지 못하는
+   문제(리소스 없음·`failed`·`deleting`, 값 없는 secret)이므로 오류가 알려 준 리소스·secret을 3단계로 준비한다.
+   `resource_failed`·`resource_timeout`은 기다리던 리소스가 실패했거나 2시간 안에 준비되지 않은 것이다. 그 리소스의 상태를 보고한다.
+   `deployment_in_progress`이면 진행 중인 Deployment가 끝나기를 기다린다.
 6. 배포한 Release에 문제가 있으면 `rollback`(`project`, `environment`, `idempotencyKey`)으로 그 환경의 직전 Release를 다시 배포한다.
 
 ## 5. 운영과 변경
