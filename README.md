@@ -267,6 +267,18 @@ Local inline Markdown links outside code blocks are checked for existing files
 and containment; skill links must remain in their own bundle. This is not a full
 Markdown parser or a remote-link availability check.
 
+Every name in `README.md`, `docs/` and plugin Markdown that starts with a Knowledge
+tool prefix (`context_`, `document_`, `knowledge_`, `recording_`, `audio_`) must be
+an Agent Knowledge MCP tool. The list is the committed snapshot
+[`scripts/knowledge-tools.json`](scripts/knowledge-tools.json), taken from the
+`registerTool` calls in `agent-knowledge` `src/`. CI cannot read that private
+repository, so refresh the snapshot when Knowledge adds, renames or removes a tool:
+
+```sh
+git -C ../agent-knowledge fetch origin main
+python3 scripts/update_knowledge_tools.py ../agent-knowledge   # reads origin/main, not the working tree
+```
+
 Node tests execute report sorting against numeric and locale fixtures and
 explainer navigation, keyboard and reset behavior. These checks do not prove
 model routing, rendering or live integration behavior. For workflow changes,

@@ -9,6 +9,7 @@ from tempfile import TemporaryDirectory
 from unittest import TestCase, main
 from unittest.mock import patch
 
+import update_knowledge_tools
 import validate
 
 
@@ -772,6 +773,69 @@ class ValidateMarkdownLinksTest(TestCase):
             validate.check_markdown_links(document, skill)
         self.assertEqual(1, len(validate.problems))
         self.assertIn("leaves its bundle", validate.problems[0])
+
+
+class ValidateKnowledgeToolsTest(TestCase):
+    def setUp(self) -> None:
+        validate.problems.clear()
+        validate.recommendations.clear()
+
+    def test_unknown_knowledge_tool_reference_fails_with_its_line(self) -> None:
+        tools = frozenset({"document_search", "audio_job_submit"})
+        with TemporaryDirectory() as temporary:
+            document = Path(temporary) / "SKILL.md"
+            document.write_text("Use `document_search`.\nThen call audio_job_submit and `document_lookup`.\n")
+            validate.check_knowledge_tools(document, tools)
+        self.assertEqual(1, len(validate.problems))
+        self.assertIn("line 2: 'document_lookup' is not an Agent Knowledge MCP tool", validate.problems[0])
+
+    def test_names_without_a_knowledge_prefix_are_ignored(self) -> None:
+        with TemporaryDirectory() as temporary:
+            document = Path(temporary) / "SKILL.md"
+            document.write_text("Forge `run_submit`, Memory `memory_capture`, documents:read, audio-processing.\n")
+            validate.check_knowledge_tools(document, frozenset({"document_search"}))
+        self.assertEqual([], validate.problems)
+
+    def test_snapshot_must_list_tools(self) -> None:
+        with TemporaryDirectory() as temporary:
+            snapshot = Path(temporary) / "knowledge-tools.json"
+            snapshot.write_text(json.dumps({"tools": []}))
+            self.assertIsNone(validate.load_knowledge_tools(snapshot))
+            self.assertIsNone(validate.load_knowledge_tools(Path(temporary) / "missing.json"))
+        self.assertEqual(2, len(validate.problems))
+
+    def test_main_rejects_an_unknown_tool_in_a_skill_reference(self) -> None:
+        with TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            skill = root / "plugins" / "sample" / "skills" / "sample"
+            (skill / "references").mkdir(parents=True)
+            (root / "plugins" / "sample" / "plugin.json").write_text(json.dumps(
+                {"$schema": validate.PLUGIN_SCHEMA, "name": "sample",
+                 "extensions": {validate.STUDIO: {"icon": "package"}}}))
+            (skill / "SKILL.md").write_text(
+                f"---\nname: sample\ndescription: Sample\nmetadata:\n  {validate.SKILL_ICON_KEY}: book\n---\nBody\n")
+            (skill / "references" / "tools.md").write_text("Call `knowledge_lookup`.\n")
+            with patch.object(validate, "__file__", str(root / "scripts" / "validate.py")):
+                with redirect_stdout(StringIO()):
+                    result = validate.main()
+        self.assertEqual(1, result)
+        self.assertEqual(1, len(validate.problems))
+        self.assertIn("'knowledge_lookup' is not an Agent Knowledge MCP tool", validate.problems[0])
+
+
+class UpdateKnowledgeToolsTest(TestCase):
+    def test_extract_resolves_constant_names_and_literals(self) -> None:
+        sources = {
+            update_knowledge_tools.NAMES_FILE: 'export const mcpToolNames = {\n  contextSearch: "context_search"\n} as const;',
+            "src/lib/mcp-server.ts": 'server.registerTool(\n    mcpToolNames.contextSearch, {});\nserver.registerTool("audio_status", {});',
+        }
+        self.assertEqual(["audio_status", "context_search"], update_knowledge_tools.extract(sources))
+
+    def test_extract_rejects_undefined_constants_and_empty_sources(self) -> None:
+        with self.assertRaisesRegex(ValueError, "mcpToolNames.missing"):
+            update_knowledge_tools.extract({"src/a.ts": "registerTool(mcpToolNames.missing, {})"})
+        with self.assertRaisesRegex(ValueError, "no registerTool"):
+            update_knowledge_tools.extract({"src/a.ts": "const x = 1;"})
 
 
 if __name__ == "__main__":

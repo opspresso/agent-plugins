@@ -88,6 +88,13 @@ INTERNAL_MCP_URLS = {
     for name in ("argocd", "cloudwatch", "grafana", "kubernetes")
 }
 
+# Agent Knowledge MCP tool names. The snapshot comes from agent-knowledge's
+# registerTool calls (scripts/update_knowledge_tools.py); every name in the
+# payload that uses a Knowledge tool prefix must be one of them, so a renamed or
+# removed tool fails here instead of leaving guidance the model cannot follow.
+KNOWLEDGE_TOOLS_SNAPSHOT = Path(__file__).resolve().parent / "knowledge-tools.json"
+KNOWLEDGE_TOOL_REFERENCE = re.compile(r"\b(?:context|document|knowledge|recording|audio)_[a-z0-9]+(?:_[a-z0-9]+)*\b")
+
 FRONTMATTER = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n?", re.S)
 KEY = re.compile(r"^([A-Za-z_-]+):\s*(.*)$")
 MAP_ENTRY = re.compile(r"^\s+([A-Za-z0-9_.-]+):\s*(\S.*)$")
@@ -476,6 +483,26 @@ def check_markdown_links(document: Path, boundary: Path) -> None:
                 fail(document, f"line {number}: linked file does not exist: {target!r}")
 
 
+def load_knowledge_tools(snapshot: Path) -> frozenset[str] | None:
+    try:
+        tools = json.loads(snapshot.read_text())["tools"]
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        fail(snapshot, f"cannot read the Knowledge tool snapshot: {error}")
+        return None
+    if not isinstance(tools, list) or not tools or not all(isinstance(tool, str) for tool in tools):
+        fail(snapshot, "tools must be a nonempty list of names")
+        return None
+    return frozenset(tools)
+
+
+def check_knowledge_tools(document: Path, tools: frozenset[str]) -> None:
+    """Names with a Knowledge tool prefix must be tools Agent Knowledge registers."""
+    for number, line in enumerate(document.read_text().splitlines(), 1):
+        for name in sorted(set(KNOWLEDGE_TOOL_REFERENCE.findall(line)) - tools):
+            fail(document, f"line {number}: {name!r} is not an Agent Knowledge MCP tool "
+                 f"(update {KNOWLEDGE_TOOLS_SNAPSHOT.name} with scripts/update_knowledge_tools.py if it is new)")
+
+
 def main() -> int:
     problems.clear()
     recommendations.clear()
@@ -530,6 +557,12 @@ def main() -> int:
     for plugin in readable_plugins:
         for document in sorted((plugin / "org.opspresso.agent-studio" / "mcp").glob("*.md")):
             check_markdown_links(document, root)
+    knowledge_tools = load_knowledge_tools(KNOWLEDGE_TOOLS_SNAPSHOT)
+    if knowledge_tools is not None:
+        payload = [path for plugin in readable_plugins for path in sorted(plugin.rglob("*.md"))]
+        for document in [root / "README.md", *sorted((root / "docs").rglob("*.md")), *payload]:
+            if document.is_file():
+                check_knowledge_tools(document, knowledge_tools)
 
     for problem in problems:
         print(f"  {problem}")
