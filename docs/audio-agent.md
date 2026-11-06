@@ -8,16 +8,16 @@ Studio의 한 Agent가 Agent Knowledge MCP로 녹음 처리를 위임한다. Age
 ## 설치 조건
 
 - Studio 배포의 Agent Knowledge 연결(`KNOWLEDGE_URL`, `KNOWLEDGE_OIDC_CLIENT_ID`)과 Agent에 연결한 Agent Knowledge 도구 항목.
-  Studio는 MCP 요청마다 현재 사용자에게 위임한 단기 token을 보낸다. 쓰기 도구에는 편집 가능한 사용자 등급이 필요하다.
+  Studio는 MCP 요청마다 현재 사용자에게 위임한 단기 토큰을 보낸다. 쓰기 도구에는 편집 가능한 사용자 등급이 필요하다.
 - Agent Knowledge의 원본 저장소, audio worker, 허용된 전사(**transcription**)·회의록(**summary**) 모델.
-  공급자 주소·credential·가격은 Agent Models와 Agent Knowledge 설치 설정이다.
+  공급자 주소·자격 증명·가격은 Agent Models와 Agent Knowledge 설치 설정이다.
 - 사용자별 오디오 처리 프로필. Agent Knowledge 콘솔에서 전사 모델·선택 회의록 모델과 지시문·언어·보존 기간·
   작업 수 한도를 저장하고 기본 프로필을 선택한다. Studio 도구의 Agent Knowledge 상세 화면에 설정·이력 링크가 있다.
 - Plaud 원본 가져오기에는 `mcpFileOutputs`를 지원하는 Studio 배포와 `workspace` Plugin 1.3.0 이상이 필요하다.
   Studio를 먼저 배포하고 Plugin을 동기화한다. Plaud MCP OAuth 연결과 실제 녹음 읽기도 확인한다.
   Studio 원본 저장소의 `source-files/`는 비공개여야 하며 `ARTIFACT_ACCESS_MODE=public`에서는 가져오기를 거절한다.
   가져온 원본은 요청한 사용자만 읽을 수 있고, Studio의 기본 파일 보존기간을 따른다.
-- 비동기 결과 전달에는 인증된 schedule tick(`/api/triggers/scan`)이 필요하다. tick이 없으면 결과가 Chat에 전달되지 않는다.
+- 비동기 결과 전달에는 인증된 스케줄 tick(`/api/triggers/scan`)이 필요하다. tick이 없으면 결과가 Chat에 전달되지 않는다.
 
 ## 입력 경로
 
@@ -36,6 +36,6 @@ Studio의 한 Agent가 Agent Knowledge MCP로 녹음 처리를 위임한다. Age
 4. Agent Knowledge 콘솔의 녹음 화면에 같은 작업과 사용한 오디오 처리 프로필·모델이 기록된다.
 5. Agent Knowledge 검색 도구로 해당 회의 내용을 찾을 수 있다.
 
-배포 health만으로 처리 성공을 판정하지 않는다. 계정 연결은 테스트·운영에서 각각 확인하며 token을 다른 설치로 복사하지 않는다.
+배포 health만으로 처리 성공을 판정하지 않는다. 계정 연결은 테스트·운영에서 각각 확인하며 토큰을 다른 설치로 복사하지 않는다.
 Studio는 전사문·회의록을 다시 수집하지 않는다. 사용자가 별도로 요청한 장기 선호·결정 기록은 Agent Memory에 저장한다.
 Plugin 설치만으로 서비스·계정·기록 권한이 생기지 않는다.

@@ -25,8 +25,8 @@ URL 읽기, 이미지, Slack 읽기는 설치 대상의 사용 범위에 맞게 
 
 ## Slack 호출
 
-Slack에서 Grafana 알림을 Kube SRE가 맡는다면 이 Agent의 Channel keywords에는 같은
-`[firing:`을 넣지 않는다. @mention·DM·기존 스레드 질문은 계속 받을 수 있다.
+Slack에서 Grafana 알림을 Kube SRE가 맡는다면 이 Agent의 채널 키워드에는 같은
+`[firing:`을 넣지 않는다. @멘션·DM·기존 스레드 질문은 계속 받을 수 있다.
 
 ## 검증
 

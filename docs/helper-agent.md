@@ -1,11 +1,11 @@
-# Helper Agent profile
+# Helper Agent 프로필
 
 Helper는 운영자가 관리하는 하나의 private Agent다. 사용자는 Agent Studio와 Agent 서비스 콘솔(Agent Memory·Agent Knowledge·Agent Forge·Agent Runway)의
 헤더 버튼으로 같은 Helper 패널을 연다. Chat·도구 호출·승인·비용·기록은 일반 Agent와 같은 실행 경로를 사용한다.
 
 ## 구성
 
-운영자가 Settings에서 기본 Helper를 만들면 Studio가 설치에 선택된 모델과 다음 Skill 중 사용 가능한 것을 연결한다.
+운영자가 설정의 서비스 탭에서 기본 Helper를 만들면 Studio가 설치에 선택된 모델과 다음 Skill 중 사용 가능한 것을 연결한다.
 
 | Skill | 역할 |
 |---|---|
@@ -18,7 +18,7 @@ Helper는 운영자가 관리하는 하나의 private Agent다. 사용자는 Age
 
 | 참고 파일 | 내용 |
 |---|---|
-| `references/agent-settings.md` | Studio 단위, 설정 선택, 서비스 연결, 모델, trigger·메신저, 비밀 값, 전용 Skill |
+| `references/agent-settings.md` | Studio 단위, 설정 선택, 서비스 연결, 모델, Trigger·메신저, 비밀 값, 전용 Skill |
 | `references/memory.md`, `knowledge.md`, `forge.md`, `delivery.md` | 서비스 개념, Helper가 쓸 수 있는 도구, 콘솔 페이지, 콘솔 전용 작업, 오류 |
 | `references/journeys.md` | 앱 개발·배포, 녹음→회의록, 문서 Q&A Agent, 기억하는 Agent, 코딩 Agent, 메신저 봇 |
 | `references/troubleshooting.md` | 진단 순서, 증상별 확인·해결, 응답 유실 복구, 관리자 전달 |
@@ -40,7 +40,7 @@ Helper Chat에서는 배포가 연결한 Agent 서비스의 도구 항목이 자
 승인 후 실행한다. Forge GitHub 연결·보호된 Git 작업 승인, Runway secret 입력·삭제·prod 승인은 서비스 콘솔에서만 한다.
 
 전용 Skill은 Studio에 직접 저장되며 이 저장소의 sync 대상이 아니다. 공유 Skill은 이 저장소에서 관리하고 이름에 `--`를 쓰지 않는다.
-이 저장소에 별도 MCP 서버나 credentials를 만들지 않는다.
+이 저장소에 별도 MCP 서버나 자격 증명을 만들지 않는다.
 
 구성원은 Helper 전용 Chat으로 사용한다. 일반 Agent 목록과 설정 조회는 private 소유권 규칙을 유지한다. Helper의 관리 도구와
 서비스 도구는 운영자 권한이 아니라 Chat 요청자의 권한으로 실행된다.

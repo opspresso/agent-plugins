@@ -27,15 +27,15 @@ Grafana로 확인한다. `resources_scale`, exec, apply, delete, Argo CD sync와
 
 GitHub는 [코딩 프로필](code-agent.md#github-mcp-프로필)의 `X-MCP-Readonly: true`와
 `X-MCP-Toolsets: context,repos,issues,pull_requests,actions`를 적용하고 실제 읽기 도구를
-다시 발견한다. 필요한 commit·파일·PR·Actions 조회만 선택한다. 자격 증명을 복사하거나
+다시 발견한다. 필요한 커밋·파일·PR·Actions 조회만 선택한다. 자격 증명을 복사하거나
 권한을 확장하지 않는다. 리소스 읽기는 여전히 민감한 정보를 포함할 수 있으므로 서버의
 RBAC와 Agent 공개 범위도 설치 대상에 맞춰 유지한다.
 
 ## Slack
 
 전용 Slack 앱을 연결하고 호스트 앱이 표시하는 Agent 이벤트 URL을 사용한다.
-Channel keywords에 `[firing:`을 설정하면 대소문자 구분 없이 Grafana의 `[FIRING:1]`
-제목을 감지한다. `[RESOLVED]`는 이 키워드와 일치하지 않는다. 일반 질문은 @mention,
+채널 키워드에 `[firing:`을 설정하면 대소문자 구분 없이 Grafana의 `[FIRING:1]`
+제목을 감지한다. `[RESOLVED]`는 이 키워드와 일치하지 않는다. 일반 질문은 @멘션,
 DM 또는 Agent가 응답한 스레드의 사람 후속 질문으로 받는다.
 
 키워드는 봇이 초대된 채널에 적용되며 특정 채널을 지정하는 설정은 아니다.
@@ -43,5 +43,5 @@ Slack 앱의 이벤트 구독과 채널 참여를 확인하고 테스트 채널�
 동일 키워드를 다른 범용 Agent에도 설정하면 각 Agent가 별도로 응답할 수 있다.
 
 검증은 합성 알림임을 명시한 메시지로 키워드 호출·실제 MCP 조회·원본 스레드 응답을
-확인한다. 이어서 같은 스레드의 질문과 @mention을 확인하고 운영 리소스에 변경이 없었는지
+확인한다. 이어서 같은 스레드의 질문과 @멘션을 확인하고 운영 리소스에 변경이 없었는지
 Trace로 검증한다. 테스트 메시지는 실제 장애나 복구의 증거로 사용하지 않는다.
