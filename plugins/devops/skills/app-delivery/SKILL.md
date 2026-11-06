@@ -37,8 +37,8 @@ metadata:
    Agent Runway가 저장소 이름으로 정하고, 그 slug가 예약돼 있으면 다음 접미사(`-2`, `-3` …)를 고른다. 삭제된 Project의 slug도 영구히 예약된다.
    저장소에서 언어·포트·테스트 명령과 앱이 기본 설정으로 연결하는 백엔드를 읽어 초안을 만든다.
    코드가 읽는 Variable 이름에 맞게 리소스를 선언한다. Variable은 `<리소스 이름>_<class 키>`이므로, 예를 들어 `CACHE_VALKEY_URL`을 읽는 앱에는
-   `valkey` 리소스 `cache`를, slug 이름의 `postgres`(접두어 없는 `DATABASE_URL`)를 읽는 앱에는 그 리소스를 선언한다.
-   선언한 모든 환경(`dev`, `prod`)에 같은 이름·class의 리소스를 선언한다. 리소스를 피하려고 어느 환경에서든 앱 기능을 끄는 값(예: `REDIS_ENABLED: "false"`)을 넣지 않고, 그런 선택지를 묻지도 않는다.
+   `valkey` 리소스 `cache`를, 접두어 없는 `DATABASE_URL`을 읽는 앱에는 slug 이름의 PostgreSQL 리소스(보통 `pool-postgres`)를 선언한다.
+   선언한 모든 환경(`dev`, `prod`)에 같은 이름·템플릿의 리소스를 선언한다. 리소스를 피하려고 어느 환경에서든 앱 기능을 끄는 값(예: `REDIS_ENABLED: "false"`)을 넣지 않고, 그런 선택지를 묻지도 않는다.
    사용자가 추가를 요청했으면 초안을 보여 주고 바로 진행하며, 요청하지 않았을 때만 `AskUser`로 묻는다.
    `spec.owner`에는 응답의 `owner.subject`를 그대로 쓴다. 자리표시자를 남기지 않는다. `environments`에는 설치의 환경을 모두 선언한다(보통 `dev`, `prod`). 사용자가 줄이라고 할 때만 뺀다.
    묻는 경우의 예: "application.yaml이 없습니다. 아래 내용으로 만들어 등록할까요?" 진행하면 [2. 저장소와 코드](#2-저장소와-코드)의 PR 절차로 추가한다.
@@ -53,10 +53,11 @@ metadata:
    Runway의 checkout은 인증 없이 clone하므로 비공개 저장소는 `checkout_failed`로 실패한다. 사용자가 비공개를 요구하면
    Runway로 배포할 수 없다고 먼저 알리고 결정을 받는다. 기존 비공개 저장소를 임의로 공개로 바꾸지 않는다.
 2. 앱이 DB·버킷을 쓰면 코드를 쓰기 전에 `dev` 리소스를 만든다. `project_ensure`(`repository`)로 Project를 만들고
-   `resource_create`(`environment: dev`, `class`, `name`, `idempotencyKey`)를 호출한 뒤 `resource_get`으로 `ready`를 확인한다.
+   `resource_create`(`environment: dev`, `template`, `name`, `idempotencyKey`)를 호출한 뒤 `resource_get`으로 `ready`를 확인한다.
+   `template`은 `resource_catalog`의 활성 템플릿에서 고른다. 앱 DB는 보통 공유 풀의 `pool-postgres`, 파일은 `bucket`이다.
    기본 `name`은 Project slug다. 이 리소스의 Variable에는 접두어가 없다(`DATABASE_URL`). `main`은 다른 이름처럼 `MAIN_` 접두어가 붙는다.
    접속 정보는 Agent Runway가 SSM SecureString에 저장한다. 값은 Chat·코드·로그에 쓰지 않고 Variable 이름만 쓴다.
-   나중에 `application.yaml`이 같은 이름·class로 선언하면 `project_apply`가 이 리소스를 그대로 쓴다.
+   나중에 `application.yaml`이 같은 이름·템플릿으로 선언하면 `project_apply`가 이 리소스를 그대로 쓴다.
 3. 코드를 구현한다. 배포에 필요한 조건은 다음과 같다. 세부 규칙과 예시는 [application.yaml과 배포 조건](references/application-yaml.md)을 읽는다.
    - 저장소 루트의 `application.yaml`(`spec.owner`에 Project 소유자의 Studio subject).
      부모가 `application_validate`로 통과한 전체 내용을 task에 그대로 넣고, runtime이 그 내용으로 파일을 쓰게 한다. runtime은 스키마를 모르므로 직접 짓게 하지 않는다.

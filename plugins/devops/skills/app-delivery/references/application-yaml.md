@@ -25,7 +25,7 @@ environments:
   dev:
     resources:
       - name: todo            # same as spec.name: unprefixed DATABASE_URL, PGHOST, …
-        class: postgres
+        template: pool-postgres
     env:
       LOG_LEVEL: debug
   prod:
@@ -33,7 +33,7 @@ environments:
     maxReplicas: 4
     resources:
       - name: todo
-        class: postgres
+        template: pool-postgres
     secrets: [API_KEY]
     cpu: 250m
     memory: 512Mi
@@ -56,7 +56,7 @@ environments:
 | `replicas` | 아니요 | 1~5 | 1 |
 | `maxReplicas` | 아니요 | `replicas`~10. 크면 CPU 70% 기준 자동 확장 | `replicas` |
 | `cpu`, `memory` | 아니요 | `50m`~`1`, `64Mi`~`2Gi`. memory는 limit도 된다 | `100m`, `256Mi` |
-| `resources` | 아니요 | `{name, class, parameters?}`. class는 `resource_catalog`의 템플릿. 이름이 `spec.name`(Project slug)과 같으면 Variable에 접두어가 없다 | |
+| `resources` | 아니요 | `{name, template, parameters?}`. `template`은 `resource_catalog`의 활성 템플릿 이름이다. 이전 `class` 필드도 템플릿 이름으로 받는다. `parameters`는 템플릿이 허용하는 값만 쓰고, 생략한 값은 리소스를 만들 때 템플릿 기본값을 받는다. 이름이 `spec.name`(Project slug)과 같으면 Variable에 접두어가 없다 | |
 | `secrets` | 아니요 | 사용자가 Agent Runway 콘솔에서 입력할 Variable 이름 | |
 | `env` | 아니요 | 비밀이 아닌 환경 변수. 값 1 KiB 이하 | |
 
@@ -79,9 +79,9 @@ environments:
 
 ## 리소스 Variable
 
-| class | Variable (이름이 Project slug면 접두어 없음, 아니면 `<NAME>_`) |
+| 템플릿의 종류(`class`) | Variable (이름이 Project slug면 접두어 없음, 아니면 `<NAME>_`) |
 | --- | --- |
-| `postgres` | `DATABASE_URL`, `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`. `vector` 확장을 쓸 수 있다 |
+| `pool-postgres`, `postgres` | `DATABASE_URL`, `PGHOST`, `PGPORT`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`. `vector` 확장을 쓸 수 있다 |
 | `bucket` | `S3_BUCKET`, `S3_PREFIX`, `S3_REGION`. 배포된 앱은 Pod Identity로, Forge Run은 임시 AWS credential로 접근한다. prefix 밖은 거부된다 |
 
 앱은 `S3_PREFIX` 아래에만 쓴다. AWS SDK의 기본 credential 체인을 쓰면 두 환경에서 같은 코드가 동작한다.

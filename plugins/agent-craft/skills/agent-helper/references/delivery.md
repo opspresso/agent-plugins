@@ -9,10 +9,13 @@
 - **환경**: 설치 설정이 정한 순서 있는 목록이다. 기본은 `dev`·`prod`이고 `staging` 같은 환경이 더 있을 수 있다. 실제 목록과 규칙은 `project_status`가 준다.
   sandbox 환경(기본 `dev`)의 값만 Forge Sandbox에 전달된다. `approval: owner` 환경은 Agent의 요청을 소유자가 콘솔에서 승인해야 하고,
   `requiresPrevious` 환경(기본 `prod`)은 앞 환경에서 성공한 Release만 받는다.
-- **리소스**: 카탈로그 템플릿으로 만든다(`resource_catalog`). `postgres`(`DATABASE_URL`·`PG*`), `bucket`(`S3_BUCKET`·`S3_PREFIX`·`S3_REGION`),
-  `rds-postgres`(전용 RDS, 비용이 들고 sandbox 환경 불가, 환경당 2개), `secret`(사용자가 콘솔에서 입력).
+- **리소스**: 운영자가 관리하는 **리소스 템플릿**으로 만든다. `resource_catalog`가 지금 쓸 수 있는 템플릿(`template` 이름, 종류, 좁힌 `parameters`,
+  연결 키, sandbox 허용, 환경당 한도, `available`)을 준다. 템플릿 이름을 짐작하지 않고 이 목록에서 고른다. 기본 템플릿은 종류 이름과 같다.
+  `pool-postgres`(공유 풀의 database, `DATABASE_URL`·`PG*`), `bucket`(공유 S3 prefix, `S3_BUCKET`·`S3_PREFIX`·`S3_REGION`),
+  `postgres`·`valkey`(환경 namespace의 전용 서버), `rds-postgres`·`s3-bucket`·`dynamodb`(전용 AWS, 비용이 들고 sandbox 환경 불가)다.
+  `secret`은 템플릿이 아니라 사용자가 콘솔에서 입력하는 값이다.
   이름이 Project slug와 같은 리소스는 Variable에 접두어가 없다(`DATABASE_URL`). 다른 이름(`main` 포함)은 대문자 이름이 접두어가 된다.
-  콘솔의 기본 리소스 이름도 Project slug다.
+  콘솔은 템플릿의 역할 이름(`db`·`cache`·`files`·`table`)을 기본 이름으로 제안한다.
 - **`application.yaml`**: 저장소 루트의 앱 선언(apiVersion `agent.opspresso.com/v1`). 이름·저장소·소유자·runtime(port·health·build·test)·
   환경별 replica·리소스(템플릿 `parameters` 포함)·secret·env를 적는다. 모르는 필드와 설치에 없는 환경은 거절되며 최대 64 KiB다.
 - **Release**: build 한 번의 결과 `r<n>`(commit, 이미지 digest, 선언). 상태는 `building`·`ready`·`failed`다.
@@ -30,7 +33,7 @@
 | `deployment_list`, `deployment_get`, `deployment_logs` | 배포 목록·상태·단계 로그(마지막 64 KiB) | 읽기 전용. 승인 대기면 `approvalUrl`이 있다. 로그는 workflow 실행 중과 끝난 뒤 하루 동안 있다 |
 | `deployment_lookup_request` | 응답 유실 복구 | 같은 `idempotencyKey`로 조회한다 |
 | `project_ensure`, `project_apply` | Project 생성, `application.yaml` 적용과 선언된 리소스 생성 | `project_apply`는 값이 없는 secret마다 입력 링크를 돌려준다 |
-| `resource_create` | 템플릿과 `parameters`로 리소스 생성 | 접수형. `pending → ready | failed` |
+| `resource_create` | 템플릿(`template`)과 `parameters`로 리소스 생성 | 접수형. `pending → ready | failed`. 이전 `class` 필드도 템플릿 이름으로 받는다 |
 | `deploy`, `promote`, `rollback` | ref를 첫 환경에 배포, 같은 Release를 다음 환경으로 승격, 직전 Release로 되돌리기 | 접수형. `idempotencyKey` 필수. 결과는 원래 Chat으로 돌아온다. `approval: owner` 환경은 소유자 승인 대기 |
 | `secret_request` | secret 입력 콘솔 링크 | 읽기 전용이라 승인 없이 실행된다. 링크만 돌려준다. 값은 묻지 않는다 |
 
@@ -67,6 +70,7 @@ Studio 관리자도 불가), 소유권 이전·private checkout 허용(Studio �
 | `release_not_promoted` (409) | `requiresPrevious` 환경에 앞 환경에서 성공하지 않은 Release를 배포하려 했다. 앞 환경에 `deploy`한 뒤 `promote`한다 |
 | `no_rollback_target`, `no_next_environment` (409) | 되돌릴 Release나 승격할 다음 환경이 없다. `project_status`로 확인한다 |
 | `invalid_parameters` (400), `template_limit_reached` (409) | 템플릿 parameter가 틀렸거나 환경당 개수를 넘었다. `resource_catalog`를 본다 |
+| `unknown_template` (400), `template_disabled` (409) | 템플릿이 없거나 운영자가 비활성화했다. `resource_catalog`에서 활성 템플릿을 다시 고른다 |
 | `quota_exceeded` (409) | Project·리소스 수 한도. 기본은 소유자당 Project 20개, 환경당 리소스 20개이며 설치마다 다르다. 정확한 한도는 오류 메시지에 있다 |
 | `approval_expired` | 승인이 24시간을 넘었다. 다시 요청한다 |
 | `application_changed` | 커밋된 파일로 `project_apply`를 다시 하고 다시 배포한다 |
