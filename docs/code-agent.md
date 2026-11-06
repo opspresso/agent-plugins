@@ -8,14 +8,14 @@ Sandbox는 Forge 내부의 일시 실행 자원이다.
 ## 실행 환경 설정
 
 1. 설치 측에서 Studio의 Forge 연결(`FORGE_URL`, `FORGE_OIDC_CLIENT_ID`, `FORGE_ORGANIZATION_ID`)과 Forge worker·Sandbox·모델 gateway를 설정한다.
-2. Agent에 Agent Forge 도구 항목을 연결한다. Studio는 MCP 요청마다 현재 사용자에게 위임한 단기 token을 보낸다.
+2. Agent에 Agent Forge 도구 항목을 연결한다. Studio는 MCP 요청마다 현재 사용자에게 위임한 단기 토큰을 보낸다.
    실행 도구에는 Agent 실행이 가능한 사용자 등급이 필요하다.
 3. 사용자는 Forge 콘솔에서 Workspace 프로필(Runtime·중앙 모델·저장소 규칙·검사·배포 workflow)을 만들고 기본 프로필을 선택한다.
 4. 사용자는 Forge 콘솔의 Git 설정에서 GitHub 계정을 연결한다. 기존 저장소는 콘솔에서 등록하거나, 사용자가 동의하면 Agent가 `repository_connect`로 등록한다.
    Studio 도구의 Forge 상세 화면에 설정·이력 링크가 있다.
 
 프로필의 저장소 규칙 기본값은 `selected`(등록한 저장소만)이다. `owners`, `all`, `new`(새 이름의 저장소 생성 허용)도 있다.
-규칙은 Git 권한을 넓히지 않는다. 보호 branch 게시·merge·tag·release·deploy는 Forge 콘솔에서 Workspace 소유자가 승인한다.
+규칙은 Git 권한을 넓히지 않는다. 보호 브랜치 게시·merge·tag·릴리스·배포는 Forge 콘솔에서 Workspace 소유자가 승인한다.
 
 ## 설명과 시스템 프롬프트
 
@@ -23,11 +23,11 @@ Sandbox는 Forge 내부의 일시 실행 자원이다.
 
 > Workspace와 Sandbox에서 코드·파일·데이터 작업을 수행하는 공용 Agent다.
 > PR 리뷰, Issue 수정, 기능 구현, 리팩토링, 의존성 업그레이드, CI 실패 조사, 보안 수정과 프로젝트 생성을 지원한다.
-> 구현·수정 작업은 검증과 작업 브랜치 PR까지 제공한다. 병합·태그·릴리즈·배포는 요청된 범위에서 조율한다.
+> 구현·수정 작업은 검증과 작업 브랜치 PR까지 제공한다. merge·tag·릴리스·배포는 요청된 범위에서 조율한다.
 
 시스템 프롬프트는 [workspace-agent.md](prompts/workspace-agent.md)를 그대로 사용한다.
-코딩 요청의 기본 완료 범위는 새 작업 브랜치의 구현·검증·커밋·푸시·PR이다.
-main 반영·태그·릴리즈·배포는 별도 사용자 요청과 확인을 따른다. 조회·리뷰나 게시 제한 요청은 그 범위를 지킨다.
+코딩 요청의 기본 완료 범위는 새 작업 브랜치의 구현·검증·커밋·push·PR이다.
+main 반영·tag·릴리스·배포는 별도 사용자 요청과 확인을 따른다. 조회·리뷰나 게시 제한 요청은 그 범위를 지킨다.
 작업별 상세 지침과 Git 예제는 연결 Skill에서 읽는다. 시스템 프롬프트에 특정 계정·저장소·Issue를 넣지 않는다.
 
 ## Skill 바인딩
@@ -59,7 +59,7 @@ Forge가 Git 게시·배포를 담당하는 기본 프로필에는 `X-MCP-Readon
 
 GitHub는 원격 증거와 요청된 협업을 담당한다. Workspace 파일의 Git 게시와 역할이 겹치는
 create_repository, create_branch, push_files, create_pull_request, merge_pull_request는 이 프로필에서 제외한다.
-Issue·PR 읽기, 파일·commit·release 읽기와 검색을 연결하고 CI 조사에는 Actions의
+Issue·PR 읽기, 파일·커밋·릴리스 읽기와 검색을 연결하고 CI 조사에는 Actions의
 actions_list, actions_get, get_job_logs 읽기 도구를 연결한다. workflow 실행/재실행 도구는 조사에 필요하지 않다.
 새 저장소 생성에는 Forge `repository_create`를 사용하고 계정·저장소 조회를 위해 get_me와 조회 도구를
 연결한다. 생성 전에 프로필의 저장소 규칙이 그 이름을 허용하는지 확인하고, 생성 결과의 실제
@@ -90,7 +90,7 @@ actions_list, actions_get, get_job_logs 읽기 도구를 연결한다. workflow 
 
 ## GitHub Webhook
 
-Agent Settings의 Webhook URL을 GitHub Payload URL로 사용하고 Content type은 application/json으로
+Agent의 연동 탭에 있는 Webhook URL을 GitHub Payload URL로 사용하고 Content type은 application/json으로
 설정한다. Agent가 발급한 시크릿을 GitHub Secret에 넣으면 서명으로 인증하므로 커스텀 헤더가 필요 없다.
 202는 접수 결과이며 실제 응답은 Trigger 이력에서 확인한다. Webhook은 machine actor로 실행되며
 개인 사용자의 Forge 실행 권한이나 Git 승인 권한을 자동으로 얻지 않는다.
