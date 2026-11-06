@@ -2,7 +2,7 @@
 
 [saju-agent.md](prompts/saju-agent.md)의 시스템 프롬프트를 사용하고 `saju-analysis` Skill을
 명시적으로 연결한다. 계산·대조 자료는 Skill 도구로 `calculation.md`와 `tables.md`를 읽는다.
-사주 agent의 시스템 프롬프트는 설치된 Agent의 현재 설정이며 plugin sync가 가져오는 항목이 아니다.
+사주 Agent의 시스템 프롬프트는 설치된 Agent의 현재 설정이며 Plugin sync가 가져오는 항목이 아니다.
 
 기본 출력은 사주를 처음 접하는 사람을 위한 한국어 존댓말이다. 생활 의미를 먼저 설명하고
 간지·전문 근거는 한글과 뜻으로 덧붙인다. 계산표에도 같은 규칙을 적용한다. 한자 원문은
@@ -10,7 +10,7 @@
 
 ## 변경 적용
 
-Skill 변경은 저장소에 반영한 뒤 해당 plugin을 sync해야 설치된 내용에 적용된다. 시스템
+Skill 변경은 저장소에 반영한 뒤 해당 Plugin을 sync해야 설치된 내용에 적용된다. 시스템
 프롬프트는 Agent의 Playground에서 별도로 저장한다. 기존 답변은 바뀌지 않으므로 새 실행으로
 검증한다. 비교 검증은 과거 풀이가 남지 않은 Playground나 새 Chat에서 한다.
 
