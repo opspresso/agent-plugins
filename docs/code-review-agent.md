@@ -23,7 +23,7 @@ Content type은 `application/json`으로 지정하고 Pull requests 이벤트를
 
 ## 리뷰 실행과 게시
 
-호스트 앱이 서명·저장소·PR·HEAD를 검증하고 리뷰 Agent를 백그라운드 작업으로 실행한다. Workspace는 만들지 않는다.
+호스트 앱이 서명·저장소·PR·HEAD를 검증하고 리뷰 Agent를 백그라운드 작업으로 실행한다. 작업 공간은 만들지 않는다.
 Agent는 Skill과 해당 PR에 고정된 `ReviewSource`로 PR의 파일·patch·검사 결과를 읽는다. 코드나 테스트는 실행하지 않는다.
 호스트가 head SHA에 고정한 COMMENT 리뷰 하나를 게시하고, 본문에 코드를 실행하지 않았다고 적는다.
 Agent가 게시 위치나 다른 저장소를 고르지 않으며 소스 수정·Git 게시·PR 승인·merge·배포를 실행하지 않는다.

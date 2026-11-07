@@ -18,7 +18,7 @@
 먼저 회상하려면 `memoryRecall`과 `recall`을 허용하는 Agent Memory MCP 바인딩이 함께 필요하다.
 기억을 읽을 수 있다는 사실은 임의의 지속 저장 허가가 아니다.
 
-URL 읽기, 이미지, Slack 읽기는 설치 대상의 사용 범위에 맞게 켠다. Workspace와 오디오는
+URL 읽기, 이미지, Slack 읽기는 설치 대상의 사용 범위에 맞게 켠다. 작업 공간과 오디오는
 각 전용 Agent와 Forge·Agent Knowledge의 설정·Worker·접근 정책이 필요하므로 범용 Agent에 기능 이름만 추가해서
 사용 가능하다고 가정하지 않는다. 파일 생성·편집은 호스트 앱의 builtin과 파일 저장소를
 사용한다.
