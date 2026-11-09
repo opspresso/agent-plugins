@@ -7,7 +7,7 @@ icon: brand-argo
 # argocd
 
 Bundled endpoint: `http://mcp-argocd.agent-mcps.svc.cluster.local/mcp`.
-The `argocd-env-apps` k3s deployment exposes this service inside the cluster.
+The `argocd-env-apps` deployment exposes this service inside the cluster.
 See [in-cluster MCP setup](../../../../docs/agent-studio.md#in-cluster-mcp-services)
 for network access, plugin sync and agent bindings.
 
