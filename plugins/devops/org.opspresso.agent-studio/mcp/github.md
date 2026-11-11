@@ -63,13 +63,18 @@ Do not broaden account scopes merely to make an optional capability appear.
 that also posts user-requested reviews/comments can keep a selected write subset;
 avoid binding overlapping repository writers or automation delegation by default.
 Project generation in a Workspace does not itself create a GitHub repository.
-For requested repository creation, use **Forge `repository_create`** with the
-GitHub account from `git_connections`, a Workspace profile whose repository rules
-allow the name, and the requested visibility. Forge initializes the first commit
-and registers a confirmed repository with the user's Forge connection. GitHub MCP
-creation does not register the repository with Forge. Never make a repository
-public to fix access. Use the returned default branch for the Git `prepare` action.
-A repository allowlist is not proof of existence, and 404 can mean inaccessible.
+For requested repository creation, use **Forge `repository_create`** with `origin`
+`https://github.com`, a Workspace profile whose repository rules allow the name,
+and the requested visibility. Forge creates it with the GitHub account that the
+user connected in Agent Studio (Profile → Git accounts). `git_connections` returns
+each Git host's connection `status` and `connectUrl`; when GitHub is not connected,
+give the user that `connectUrl`. Forge initializes the first commit. Forge keeps no
+repository list, so no repository is registered: pass the created receipt's
+`result.origin` and `result.repository` to the Git `prepare` action, with
+`result.defaultBranch` as `baseBranch`. A repository created with GitHub MCP tools
+has no Forge creation receipt; a profile with `repositoryMode` `new` allows it only
+when it is in the profile's `repositories`. Never make a repository public to fix
+access. A repository allowlist is not proof of existence, and 404 can mean inaccessible.
 Repository creation, issue closure, workflow reruns, review submission and alert
 dismissal each require the user's corresponding request and actual offered tools.
 
@@ -82,7 +87,7 @@ secret in the Secret field. GitHub sends `X-Hub-Signature-256`, not a custom
 A signed ping checks the connection without running an agent, and GitHub delivery
 IDs deduplicate redeliveries. Check the trigger history after the HTTP 202 response.
 
-The webhook does not grant a user identity, Forge Git connection or protected
+The webhook does not grant a user identity, a Git host connection or protected
 publication approval. Use the capabilities actually offered to the run.
 
 ## Skill bindings

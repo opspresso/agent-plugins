@@ -67,11 +67,11 @@ metadata:
 요청이 이미 정한 작업(예: "프로젝트를 추가, dev 배포"의 등록·`application.yaml` 추가·`dev` 배포)는 그 요청을 동의로 보고 묻지 않는다.
 요청과 저장소로 정할 수 없는 결정만 `AskUser`로 한 번 묻는다. 이미 끝난 작업은 묻지 않는다.
 
-1. Forge `git_connections`로 저장소 등록 여부와 연결 계정을 확인한다. 연결 계정이 없을 때만 Forge 콘솔 `/git`의 GitHub 연결을 안내한다.
-2. 등록되지 않았으면 `repository_connect`(`accountId`, `repository`)를 호출한다. 사용자가 등록을 요청하지 않았을 때만
-   먼저 `AskUser`로 묻는다. 예: "연결된 nalbam 계정으로 nalbam/sample-node를 등록할까요?"
-3. 기본 branch의 `application.yaml`, `Dockerfile`, health 경로를 확인한다. 사용자에게 파일을 만들라고 하지 않는다.
-4. `application.yaml`이 없으면 [pipeline 선택](#pipeline-선택)으로 pipeline을 정하고 `project_ensure`(`repository`, `default`가 아니면 `pipeline`)로
+1. Forge `git_connections`로 저장소가 있는 Git 호스트의 연결 상태를 확인한다. 그 host의 `status`가 `connected`가 아닐 때만
+   host의 `connectUrl`을 사용자에게 주고, 사용자가 Agent Studio에서 연결한 뒤 이어간다.
+   저장소를 Forge에 등록하는 단계는 없다. Forge Git `prepare`에는 그 host의 `origin`과 저장소 경로(`repository`)를 보낸다.
+2. 기본 branch의 `application.yaml`, `Dockerfile`, health 경로를 확인한다. 사용자에게 파일을 만들라고 하지 않는다.
+3. `application.yaml`이 없으면 [pipeline 선택](#pipeline-선택)으로 pipeline을 정하고 `project_ensure`(`repository`, `default`가 아니면 `pipeline`)로
    Project를 확인한 뒤 `project_status`로 pipeline과 단계를 읽는다. `slug`는 넘기지 않는다.
    Agent Runway가 저장소 이름으로 정하고, 그 slug가 예약돼 있으면 다음 접미사(`-2`, `-3` …)를 고른다. 삭제된 Project의 slug도 영구히 예약된다.
    저장소에서 언어·포트·테스트 명령과 앱이 기본 설정으로 연결하는 백엔드를 읽어 `application.yaml` 초안과 리소스 계획을 만든다.
@@ -84,10 +84,10 @@ metadata:
    사용자가 추가를 요청했으면 초안과 리소스 계획을 보여 주고 바로 진행하며, 요청하지 않았을 때만 `AskUser`로 묻는다.
    묻는 경우의 예: "application.yaml이 없습니다. 아래 내용으로 만들어 등록할까요?" 진행하면 [2. 저장소와 코드](#2-저장소와-코드)의 PR 절차로 추가한다.
    `Dockerfile`이나 health 경로가 없으면 같은 질문에 함께 포함한다.
-5. 병합되면 [3. 선언 적용과 리소스](#3-선언-적용과-리소스)로 `project_apply`와 `resource_create`까지 진행한다.
+4. 병합되면 [3. 선언 적용과 리소스](#3-선언-적용과-리소스)로 `project_apply`와 `resource_create`까지 진행한다.
    배포는 사용자가 요청했을 때만 한다. 요청이 없으면 `AskUser`로 첫 단계 배포 여부를 묻는다.
 
-저장소가 비공개이면 [비공개 저장소](#비공개-저장소)의 조건을 위 2번의 질문에 함께 알린다. 거절하면 멈추고 현재 상태를 알린다.
+저장소가 비공개이면 [비공개 저장소](#비공개-저장소)의 조건을 이 절차의 `AskUser` 질문에 함께 알린다. 거절하면 멈추고 현재 상태를 알린다.
 
 ### 비공개 저장소
 
