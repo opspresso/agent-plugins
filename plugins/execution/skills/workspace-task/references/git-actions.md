@@ -8,7 +8,7 @@ Forge의 Git 실행 계약이다. Git 단계마다 `run_submit`에 `input.kind="
 
 | 요청 | `action` | 필수 입력 | 승인 |
 |---|---|---|---|
-| 저장소 준비 | `prepare` | `origin`, `repository`, `baseBranch`, `branch`(`agent/`로 시작), 선택 `sourceRevision` | 없음 |
+| 저장소 준비 | `prepare` | `origin`, `repository`, `branch`(`agent/`로 시작), 선택 `baseBranch`·`sourceRevision` | 없음 |
 | 변경 검토 | `review` | 없음 | 없음 |
 | 커밋 | `commit` | `fingerprint`, `message` | 없음 |
 | 작업 브랜치 푸시 | `push` | `headSha` | 없음 |
@@ -22,10 +22,15 @@ Forge의 Git 실행 계약이다. Git 단계마다 `run_submit`에 `input.kind="
 `origin`은 `git_connections`의 host `origin`(예: `https://github.com`)이고, `repository`는 그 host 안의 저장소 경로다
 (GitHub는 `owner/repo`, GitLab은 `group/project`). 앞에 `<host>/`가 붙은 Agent Runway의 저장소 식별자도 그대로 받는다.
 저장소를 먼저 등록하지 않는다. `repository_create`로 만든 저장소는
-영수증의 `result.origin`·`result.repository`를 그대로 쓰고 `result.defaultBranch`를 `baseBranch`로 쓴다.
+영수증의 `result.origin`·`result.repository`를 그대로 쓴다.
+
+`baseBranch`는 작업을 시작하고 PR이 대상으로 삼는 브랜치다. 사용자가 브랜치를 지정했을 때만 보낸다.
+생략하면 저장소의 기본 브랜치에서 시작한다(`repository_create`로 만든 저장소는 `result.defaultBranch`).
+결과의 `gitResult.baseBranch`와 Workspace의 `repository.baseBranch`가 실제로 쓴 브랜치다.
+같은 `requestKey`로 `baseBranch`를 생략한 요청과 지정한 요청은 서로 다른 요청이다.
 
 ```json
-{"tool":"run_submit","arguments":{"workspaceId":"<id>","input":{"kind":"git","action":"prepare","origin":"https://github.com","repository":"<owner>/<repo>","baseBranch":"<기준 브랜치>","branch":"agent/<작업 이름>"},"profileId":"<profile id>","profileRevision":3,"requestKey":"<고정 키>"}}
+{"tool":"run_submit","arguments":{"workspaceId":"<id>","input":{"kind":"git","action":"prepare","origin":"https://github.com","repository":"<owner>/<repo>","branch":"agent/<작업 이름>"},"profileId":"<profile id>","profileRevision":3,"requestKey":"<고정 키>"}}
 ```
 
 `headSha`·`fingerprint`는 `run_result.gitResult`에서 받은 실제 값이다. 값을 추측하거나 다른 실행의 값을 섞지 않는다.
@@ -37,7 +42,7 @@ Forge의 Git 실행 계약이다. Git 단계마다 `run_submit`에 `input.kind="
 - 현재 HEAD와 다른 값은 `git_review_changed`(409)로 거절된다. `review`를 다시 실행한 뒤 그 값으로 다시 제출한다.
 
 GitLab 저장소에서는 `pull-request`가 merge request를 만들거나 갱신하고(`pullRequestNumber`는 그 IID다) `merge`가 그것을 병합한다.
-`release`와 `deploy`는 GitHub 저장소만 지원한다.
+`release`와 `deploy`는 GitHub 저장소만 지원한다. GitLab 저장소의 Workspace에서는 접수할 때 `git_action_unsupported`(409)로 거절된다.
 
 ## 작업 브랜치 게시
 
@@ -59,6 +64,10 @@ PR 설명 형식이 필요하고 `pr-description`이 연결됐으면 해당 Skil
 - 보호 작업은 사용자가 그 동작을 요청한 경우에만 제출한다. PR 생성이 main 병합·태그·릴리즈·배포 요청을 포함하지 않는다.
 - 제출하면 Run은 `queued`에서 승인을 기다린다. 응답의 `approvalUrl`을 링크로 전달하고 Forge 콘솔에서 Workspace 소유자가 승인해야 한다고 알린다.
   MCP에는 승인 결정 도구가 없다. `git_approval_get`은 승인 상태를 읽기만 한다.
+- `publish-protected`·`merge`·`tag`의 승인 화면은 Workspace 브랜치가 커밋한 변경을 보여 준다. `prepare` 기준 커밋(`baseSha`)부터 승인할 `headSha`까지의 diff다.
+  `merge`의 승인 화면에는 Git 호스트의 PR을 여는 링크도 있다. `release`·`deploy`의 승인 화면에는 diff가 없다.
+  커밋하지 않은 변경은 어떤 보호 작업도 게시하지 않으며 승인 화면에도 나오지 않는다.
+- 보호 작업이 `sandbox_outdated`(409)로 거절되면 Git `review`를 한 번 실행하고, 그 결과의 `headSha`·`fingerprint`로 다시 제출한다.
 - 보호 작업의 Run은 요청한 `timeoutMs`와 관계없이 제한 시간이 1시간이다. 승인 기한은 접수 후 50분이다.
   기한이 지나면 승인할 수 없고 Forge가 Run을 취소한다. 거절·만료·취소는 효과를 막는다.
 - Studio Chat에서 제출한 보호 작업의 terminal 결과는 원래 Chat에 전달된다. 승인 여부를 반복 조회하지 않는다.
@@ -67,6 +76,9 @@ PR 설명 형식이 필요하고 `pr-description`이 연결됐으면 해당 Skil
 ## 병합·태그·릴리즈·배포
 
 - `merge`는 main 대상 PR의 현재 HEAD와 CI를 확인한 뒤 GitHub head SHA 조건으로 병합한다. 사용자가 PR 병합을 요청했으면 `publish-protected`로 대체하지 않는다.
+- Forge는 `main`으로만 병합한다. Workspace의 기준 브랜치(`repository.baseBranch`)가 `main`이 아니면 `merge`는 접수할 때 `git_action_unsupported`(409)로 거절된다.
+  승인과 Run은 만들어지지 않는다. 다시 제출하지 않고, 사용자가 Git 호스트에서 그 PR을 병합해야 한다고 알린다.
+  `baseBranch`를 생략한 `prepare`는 저장소의 기본 브랜치를 쓰므로, 기본 브랜치가 `main`이 아닌 저장소의 Workspace도 여기에 해당한다.
 - `tag`는 검토한 HEAD에 annotated tag를 만든다. 기존 tag를 덮어쓰지 않는다.
 - `release`는 이미 있는 tag가 가리키는 승인 commit과 CI를 확인한다. tag 성공 뒤에만 준비한다.
 - `deploy`는 profile의 `deploymentWorkflows`에 있는 workflow만 허용한다. `inputs`는 이름→값 object다.

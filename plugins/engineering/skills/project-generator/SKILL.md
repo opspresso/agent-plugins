@@ -49,7 +49,7 @@ profile의 저장소 규칙이 이름을 허용해도 원격 저장소가 존재
    - 오류 `git_connection_required`와 503은 영수증을 남기지 않는다. `git_connection_required`이면 오류의 `connectUrl`을 사용자에게 주고
      사용자가 연결한 뒤에, 503이면 `retryAfterSeconds` 뒤에 같은 `requestKey`로 다시 요청한다.
    - `status:"created"`이면 Forge가 초기 commit을 만들었다. 저장소를 따로 등록하지 않는다. 영수증의 `result.origin`·`result.repository`를
-     Git `prepare`의 `origin`·`repository`로, 실제 `result.defaultBranch`를 `baseBranch`로 쓴다.
+     Git `prepare`의 `origin`·`repository`로 쓴다. `baseBranch`를 생략하면 `prepare`가 `result.defaultBranch`에서 시작한다.
    - `created`인데 `allowed:false`이면 현재 profile이 그 저장소를 허용하지 않는다. 다시 만들지 않는다.
      profile 소유자가 profile의 `repositories`에 추가해야 한다고 알린다.
    - `failed`는 생성이 거절된 것이다. 영수증의 `error`로 원인을 확인한다.
@@ -61,7 +61,8 @@ profile의 저장소 규칙이 이름을 허용해도 원격 저장소가 존재
      그 저장소도 profile의 저장소 규칙이 허용해야 `prepare`된다. `new`는 Forge가 만든 저장소와 `repositories`의 저장소만 허용한다.
 5. 기존 저장소가 비어 있으면 clone할 branch가 없다. 첫 commit을 만드는 지원 경로와 요청 범위를 확인하고
    초기화한다. 존재하는 파일을 덮거나 Git 보호 경계를 우회하지 않는다.
-6. 준비된 저장소의 `origin`·`repository`와 기본 branch(`baseBranch`)로 Git `prepare`를 실행한다. 실패하면 네트워크·권한·빈 저장소·없는 branch를
+6. 준비된 저장소의 `origin`·`repository`로 Git `prepare`를 실행한다. `baseBranch`는 사용자가 브랜치를 지정했을 때만 보낸다.
+   생략하면 저장소의 기본 branch에서 시작하고, 결과의 `gitResult.baseBranch`가 실제로 쓴 branch다. 실패하면 네트워크·권한·빈 저장소·없는 branch를
    구분하고 확인된 원인을 고친 뒤 같은 Workspace에서 다시 준비한다. 새 Workspace 생성으로 해결하지 않는다.
    `git_repository_not_found`는 연결된 계정이 그 저장소를 볼 수 없다는 뜻이다. 다시 연결하라고 하지 않고 저장소 이름과 그 계정의 권한을 확인한다.
 

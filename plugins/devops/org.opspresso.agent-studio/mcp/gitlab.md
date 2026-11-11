@@ -52,7 +52,7 @@ appears only when GitLab Duo Agent Platform is available.
 | CI investigation | list_pipelines, get_pipeline, get_job | Read the pipeline, failing job and a bounded log; omit save_pipeline for investigation-only use |
 | Remote feedback | save_note, save_work_item | Post only the requested comment or update |
 | Merge | accept_merge_request | Only on an explicit request; respect protected branches and approval rules |
-| Publication of Sandbox files | Forge `run_submit` Git actions | Forge works on a GitLab host that the user connected in Agent Studio (Profile → Git accounts): `pull-request` opens or updates a merge request and `merge` merges it. `release`, `deploy` and repository creation are GitHub only. Do not substitute add_commit, add_branch or save_merge_request for reviewed Sandbox publication |
+| Publication of Sandbox files | Forge `run_submit` Git actions | Forge works on a GitLab host that the user connected in Agent Studio (Profile → Git accounts): `pull-request` opens or updates a merge request and `merge` merges it when the Workspace's base branch is `main`. `release`, `deploy` and repository creation are GitHub only. Do not substitute add_commit, add_branch or save_merge_request for reviewed Sandbox publication |
 
 These names come from the official server; use the actually discovered schemas. Do not send
 secrets from job logs into prompts or public comments. Do not broaden account permissions merely

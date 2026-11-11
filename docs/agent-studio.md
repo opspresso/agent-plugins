@@ -294,8 +294,9 @@ Forge URL, caller identity, organization or provider credentials.
 Read the profile with `profile_list`/`profile_get`, reuse an existing Workspace from
 `workspace_list`, or create one with `workspace_create`. Prepare a repository with
 a Git `prepare` run on an `agent/` branch: it names the Git host `origin` (from
-`git_connections`), the `repository` path on that host and the `baseBranch`. The
-Git host decides access for the connected account. When the host is not connected,
+`git_connections`), the `repository` path on that host and, when the user names
+one, the `baseBranch`. Without `baseBranch` the run starts from the repository's
+default branch. The Git host decides access for the connected account. When the host is not connected,
 Forge refuses with `git_connection_required` and a `connectUrl`; the Agent gives
 that link to the user. Then submit command, native task or Git
 steps with `run_submit`. One run executes per Workspace at a time. Keep
@@ -311,8 +312,12 @@ A coding request includes review, commit, work-branch push and pull-request runs
 without another approval, unless the user limits the scope. Protected branch
 publication, merge, tags, releases and deployment workflow dispatch require a
 separate request and the Workspace owner's approval in the Forge console; MCP has
-no approval tool. Tags bind to the reviewed HEAD; releases bind to an existing tag
-and its exact commit. General agent descriptions and system prompts identify
+no approval tool. The approval page shows the committed change from the `prepare`
+base commit to the approved HEAD and, for a merge, a link to the pull request.
+Forge merges into `main` only: it refuses a merge on a Workspace whose base branch
+is not `main` with `git_action_unsupported` before it creates an approval, and the
+user merges that pull request on the Git host. Tags bind to the reviewed HEAD;
+releases bind to an existing tag and its exact commit. General agent descriptions and system prompts identify
 capabilities; account, repository, branch and requested file changes belong in
 each user's task input.
 See the [Workspace agent profile](code-agent.md) for task bindings, runtime limits,

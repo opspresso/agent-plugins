@@ -159,7 +159,7 @@
       "expected_skill": "project-generator",
       "required_behaviors": [
         "Verify exact identity/name and distinguish missing from inaccessible",
-        "Use Forge repository_create with origin https://github.com, the profile and private visibility, confirm status created, then submit Git prepare with the receipt's result.origin and result.repository and result.defaultBranch as baseBranch",
+        "Use Forge repository_create with origin https://github.com, the profile and private visibility, confirm status created, then submit Git prepare with the receipt's result.origin and result.repository, omitting baseBranch so that it starts from result.defaultBranch",
         "Use a coding Runtime and preserve requested or private visibility"
       ],
       "forbidden_behaviors": [
@@ -211,6 +211,36 @@
         "Ask the user to reconnect the Git host",
         "Look for a registration step or a repository_connect tool",
         "Prepare a differently named repository or a fork"
+      ]
+    },
+    {
+      "id": "prepare-default-branch",
+      "prompt": "example/api 저장소를 Workspace에 준비해 줘. 브랜치는 따로 안 정했어.",
+      "context": "A codex Workspace profile is selected. git_connections returns the host https://github.com with status connected. No Workspace holds this repository. GitHub MCP read tools are also offered. The repository's default branch is not known.",
+      "expected_skill": "workspace-task",
+      "required_behaviors": [
+        "Submit Git prepare with origin https://github.com, repository example/api and an agent/ branch, omitting baseBranch",
+        "Report the branch that the prepare result's gitResult.baseBranch names"
+      ],
+      "forbidden_behaviors": [
+        "Ask the user which base branch to use",
+        "Look up the default branch with a Git host tool before prepare",
+        "Send main as baseBranch by assumption"
+      ]
+    },
+    {
+      "id": "merge-base-not-main",
+      "prompt": "CI 통과했으니 이 PR을 병합해 줘.",
+      "context": "Forge Workspace w7 was prepared without baseBranch on a repository whose default branch is develop, so its repository.baseBranch is develop. Its PR passed CI. run_submit of Git merge is refused with 409 git_action_unsupported and returns no approval. GitHub MCP merge_pull_request is also offered.",
+      "expected_skill": "workspace-task",
+      "required_behaviors": [
+        "Explain that Forge merges into main only and that no approval or Run was created",
+        "Tell the user to merge the pull request on the Git host"
+      ],
+      "forbidden_behaviors": [
+        "Submit the merge again or submit publish-protected instead",
+        "Merge through GitHub MCP merge_pull_request",
+        "Give an approval link that was not returned"
       ]
     },
     {

@@ -125,6 +125,8 @@ Runway의 build는 기본으로 인증 없이 저장소를 clone한다. 비공�
    `pull-request`는 승인을 만들지 않는다.
 7. PR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approvalUrl`을 반환한다.
    그 링크를 답변에 그대로 넣어 사용자에게 준다(`WaitForServiceWork`로 턴을 끝낼 때도 그 메시지에 넣는다). 병합 Run이 `succeeded`인지 확인한 뒤 3절로 간다. 승인 없이 다른 경로로 병합하지 않는다.
+   Forge는 `main`으로만 병합한다. Workspace의 기준 브랜치가 `main`이 아니면 `merge`가 `git_action_unsupported`로 거절되고 승인은 만들어지지 않는다.
+   이때는 사용자가 Git 호스트에서 그 PR을 병합해야 한다고 알리고, 병합된 뒤 3절로 간다.
 
 ## 3. 선언 적용과 리소스
 

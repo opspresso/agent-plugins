@@ -69,8 +69,8 @@ create_repository, create_branch, push_files, create_pull_request, merge_pull_re
 Issue·PR 읽기, 파일·커밋·릴리즈 읽기와 검색을 연결하고 CI 조사에는 Actions의
 actions_list, actions_get, get_job_logs 읽기 도구를 연결한다. workflow 실행/재실행 도구는 조사에 필요하지 않다.
 새 저장소 생성에는 Forge `repository_create`를 사용하고 계정·저장소 조회를 위해 get_me와 조회 도구를
-연결한다. 생성 전에 프로필의 저장소 규칙이 그 이름을 허용하는지 확인하고, 생성 결과의 `result.origin`·`result.repository`와
-실제 `result.defaultBranch`로 Git `prepare`를 실행한다. 이름이 허용 목록에 있다는 이유로 저장소가 있다고 판단하지 않는다.
+연결한다. 생성 전에 프로필의 저장소 규칙이 그 이름을 허용하는지 확인하고, 생성 결과의 `result.origin`·`result.repository`로
+Git `prepare`를 실행한다. `baseBranch`를 생략하면 `prepare`가 `result.defaultBranch`에서 시작한다. 이름이 허용 목록에 있다는 이유로 저장소가 있다고 판단하지 않는다.
 리뷰·Issue 피드백 게시까지 필요한 별도 프로필은 요청 범위에 맞는 쓰기 도구만 명시적으로 연결한다.
 읽기 전용 기본 프로필은 해당 게시를 지원한다고 약속하지 않는다.
 
@@ -84,7 +84,8 @@ actions_list, actions_get, get_job_logs 읽기 도구를 연결한다. workflow 
 - 실행 방식은 작업 공간 프로필 또는 사용자의 명시적 지정을 따른다. 생성 뒤 실행 방식은 바꿀 수 없다.
   이미 주어진 셸 스크립트·검증된 짧은 명령에는 일반 명령 실행 방식을 사용한다. CLI 프로젝트 생성도 자연어 코딩 작업이다.
 - PR 리뷰·CI 조사만으로 충분한 작업에는 작업 공간을 만들지 않는다. 재현이 필요하면 실제 HEAD를 확인한다.
-- 저장소는 Git `prepare`(`origin`, `repository`, `baseBranch`)로 `agent/` 작업 브랜치에 준비한다. 선택 `sourceRevision`으로 고정한 검토 작업 공간은 게시할 수 없다.
+- 저장소는 Git `prepare`(`origin`, `repository`, 선택 `baseBranch`)로 `agent/` 작업 브랜치에 준비한다. `baseBranch`를 생략하면 저장소의 기본 브랜치에서 시작한다.
+  선택 `sourceRevision`으로 고정한 검토 작업 공간은 게시할 수 없다.
   작업 공간은 `prepare`한 Git 계정과 저장소를 보관한다. 연결 계정이나 저장소의 식별 값이 바뀌면 Forge가 그 작업 공간의 Git 작업을
   `git_account_changed`·`repository_identity_changed`로 거절한다.
 - Git-free 프로젝트 생성은 가능하다. 게시할 프로젝트는 생성 전에 저장소가 프로필 규칙에 맞는지 확인한다.
@@ -94,6 +95,8 @@ actions_list, actions_get, get_job_logs 읽기 도구를 연결한다. workflow 
   현재 Forge 도구에는 파일 인자가 없다.
 - Studio Chat에서 접수한 Run은 terminal 결과가 원래 Chat에 한 번 전달된다. 보호된 Git 작업은 Forge 콘솔 승인 뒤 실행되고
   그 결과도 같은 방식으로 전달된다. 실패·거절·결과 불명인 동작을 자동 반복하지 않는다.
+  Forge는 `main`으로만 병합한다. 기준 브랜치가 `main`이 아닌 작업 공간의 `merge`는 접수할 때 `git_action_unsupported`로 거절되며,
+  그 PR은 사용자가 Git 호스트에서 병합한다.
   CI 완료를 기다렸다가 자동으로 재개하는 기능은 없다.
 - Run checks, 직접 실행한 검사와 GitHub CI를 구분한다. Git 게시·CI·릴리즈·배포도 서로 다른 결과다.
 

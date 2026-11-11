@@ -112,4 +112,6 @@ Run 상태는 `queued`, `running`, `succeeded`, `failed`, `cancelled`, `interrup
 | `repository_identity_changed` | Workspace 저장소의 이름이 가리키는 저장소 ID·공개 범위·주소가 바뀌었다 | 사용자와 대상 저장소를 확인한 뒤 새 Workspace에서 `prepare`한다 |
 | `git_host_removed` | 운영자가 Workspace 저장소의 Git 호스트를 설치에서 제거했다 | 현재 Git 호스트의 저장소로 새 Workspace에서 `prepare`한다 |
 | `git_fetch_failed` | Forge가 저장소를 받지 못했다(권한·없는 브랜치·네트워크) | `error`의 원인을 고친 뒤 새 요청으로 다시 제출한다 |
+| `git_action_unsupported` | 이 Workspace에서 실행할 수 없는 보호 작업이다. 기준 브랜치가 `main`이 아닌 Workspace의 `merge`, GitLab 저장소의 `release`·`deploy`다 | 접수할 때 거절되며 승인과 Run은 만들어지지 않았다. 다시 제출하지 않는다. `merge`이면 사용자가 Git 호스트에서 그 PR을 병합해야 한다고 알린다 |
+| `sandbox_outdated` | Workspace의 Sandbox가 이전 Forge 이미지로 시작돼, Forge가 승인에 기록할 커밋된 변경을 읽을 수 없다 | Git `review`를 한 번 실행한 뒤 그 결과의 `headSha`·`fingerprint`로 보호 작업을 다시 제출한다 |
 | `github_unavailable`, `gitlab_unavailable` | Git 호스트의 일시 장애나 요청 수 제한 | `retryAfterSeconds` 뒤에 원래 키의 결과를 조회하거나 같은 요청을 다시 보낸다 |
