@@ -37,8 +37,8 @@
 | `403 Studio policy refused this request` | 전체 | guest·계정 없음·비용 한도 등 Studio 정책 거절이다. 재시도로 해결되지 않는다. 비용 한도는 `StudioRead(resource="usage", name=...)`의 `limits`·`spend`로 확인한다 |
 | 401 (`Studio authorization required` 등) | 전체 | 다시 로그인하고 요청을 다시 시도한다 |
 | `reauthorization_required` (403) | Forge | 이전 위임으로 접수된 Run은 계속할 수 없다. 새 Run을 제출한다 |
-| GitHub 관련 403 | Forge | [forge](forge.md#오류) — `/git`에서 연결·저장소 등록 |
-| Git merge 승인 대기·만료 | Forge | [forge](forge.md#오류) — 승인은 Run 제한 시간과 함께 만료된다 |
+| Git 연결·저장소 오류(`git_connection_required`, `git_repository_not_found`, `git_account_changed` 등) | Forge | [forge](forge.md#오류) — 계정 연결은 Studio의 프로필 → Git 계정에서 한다. 저장소는 등록하지 않는다 |
+| Git merge 승인 대기·만료 | Forge | [forge](forge.md#오류) — 승인 기한은 Run 접수 후 50분이다 |
 | 배포 실패 | Runway | `deployment_get`의 `errorCode`와 `deployment_logs`. [delivery](delivery.md#오류) |
 | `environment_not_ready` | Runway | 오류 메시지의 원인을 따른다. 값 없는 secret은 입력 링크를 주고, `failed` 리소스는 다시 만든다. [delivery](delivery.md#오류) |
 | `pipeline_required`, `environment_not_in_pipeline`, `release_outdated` | Runway | pipeline을 고르지 않았거나 Project의 pipeline과 맞지 않는 요청이다. `pipeline_list`와 `project_status`의 `pipeline`을 확인한다. [delivery](delivery.md#오류) |

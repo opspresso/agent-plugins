@@ -104,7 +104,7 @@
     },
     {
       "request": "Forge에서 PR merge 승인을 기다리는 중이라는데 어디서 승인해요?",
-      "expected": "git_approval_get 또는 run_get으로 승인 ID와 상태를 확인하고 open_console(service=agent-forge, path=/git?approval=<id>) 또는 링크로 안내한다. 승인을 도구로 대신하지 않으며 Run 제한 시간이 지나면 만료된다고 알린다."
+      "expected": "git_approval_get 또는 run_get으로 승인 ID와 상태를 확인하고 open_console(service=agent-forge, path=/git?approval=<id>) 또는 링크로 안내한다. 승인을 도구로 대신하지 않으며 승인 기한(접수 후 50분, git_approval_get의 expiresAt)이 지나면 승인할 수 없다고 알린다."
     },
     {
       "request": "내 앱 배포가 실패했어요. 원인을 알려 주세요.",
@@ -120,7 +120,7 @@
     },
     {
       "request": "코딩 Agent를 쓰려면 뭘 준비해야 해요?",
-      "expected": "git_connections와 profile_list로 현재 준비 상태를 확인한다. 빠진 단계(Forge /git의 GitHub 연결·저장소 등록, /settings의 profile)를 콘솔로 안내하고 agent-forge와 workspace-task를 연결한 Agent 생성을 제안한다."
+      "expected": "git_connections와 profile_list로 현재 준비 상태를 확인한다. Git 호스트의 status가 connected가 아니면 그 host의 connectUrl(Studio 프로필 → Git 계정)을 주고, profile이 없으면 Forge 콘솔 /settings를 안내한다. 저장소 등록은 안내하지 않는다. agent-forge와 workspace-task를 연결한 Agent 생성을 제안한다."
     },
     {
       "setup": [

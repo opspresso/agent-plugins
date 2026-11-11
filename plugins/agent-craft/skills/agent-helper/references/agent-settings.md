@@ -66,7 +66,7 @@ Agent 화면의 guardrail 시험으로 확인하도록 안내한다.
 | 앱 리소스·배포 | `agent-runway`와 `agent-forge` | `app-delivery` |
 
 연결은 접근을 열 뿐 권한을 만들지 않는다. 서비스 도구는 호출한 사용자의 권한으로 실행되며, 사용자는 각 서비스에서
-필요한 준비(예: Forge의 GitHub 연결과 Workspace profile)를 마쳐야 한다. 준비 절차는 [journeys](journeys.md)를 따른다.
+필요한 준비(예: Studio의 Git 호스트 계정 연결과 Forge의 Workspace profile)를 마쳐야 한다. 준비 절차는 [journeys](journeys.md)를 따른다.
 
 ## 모델
 

@@ -23,35 +23,47 @@ metadata:
 완결된 자연어 작업을 전달하며 command인 경우 실제 실행할 셸 스크립트를 구성한다.
 CLI·명령행 도구를 만든다는 뜻과 command Runtime에서 이미 작성된 셸을 실행한다는 뜻을 구분한다.
 
-- 기존 저장소에 생성·게시할 요청이면 `git_connections`에 등록된 저장소로 Git `prepare`를 먼저 실행한다.
-- Git 없이 생성할 요청이면 `prepare` 없이 시작한다. 등록 목록의 첫 저장소를 임의로 선택하지 않는다.
+- 기존 저장소에 생성·게시할 요청이면 그 저장소의 Git 호스트 `origin`과 저장소 경로(`repository`)로 Git `prepare`를 먼저 실행한다.
+  저장소를 Forge에 등록하는 단계는 없다.
+- Git 없이 생성할 요청이면 `prepare` 없이 시작한다. 사용자가 지정하지 않은 저장소를 임의로 선택하지 않는다.
 - 현재 Workspace가 있으면 파일 목록을 확인하고 같은 Workspace에서 이어간다. 기존 파일을 덮지 않는 상대 경로를 사용한다.
 - Git 준비는 기존 작업 파일을 덮어쓰지 않는다. Git 없는 공간에 먼저 생성한 파일을 나중에 저장소로
   자동 게시할 수 있다고 약속하지 않는다. Git 게시가 필요하면 생성 전에 대상을 정한다.
 
 ## 원격 저장소 준비
 
-등록 목록에 이름이 있어도 원격 저장소가 존재하거나 clone 가능하다는 뜻은 아니다. 새 저장소 생성이
+profile의 저장소 규칙이 이름을 허용해도 원격 저장소가 존재하거나 clone 가능하다는 뜻은 아니다. 새 저장소 생성이
 요청됐으면 파일 작업 전에 아래 순서를 완료한다.
 
-1. 연결된 GitHub 계정과 요청한 owner/name을 확인한다. Forge에서는 `git_connections`의 `accounts`에서
-   `accountId`를 확인한다. 연결이 없으면 사용자가 Forge 콘솔의 Git 설정에서 GitHub 계정을 연결해야 한다.
+1. 요청한 owner/name과 GitHub 연결을 확인한다. Forge에서는 `git_connections`의 `hosts`에서 `origin`이 `https://github.com`인
+   host의 `status`와 `account`를 읽는다. `status`가 `connected`가 아니면 그 host의 `connectUrl`을 사용자에게 주고,
+   사용자가 Agent Studio에서 연결한 뒤 이어간다. 연결을 피하려고 다른 계정·token·생성 도구를 쓰지 않는다.
+   Forge는 GitHub에만 저장소를 만든다. GitLab 프로젝트는 사용자가 GitLab에서 만든다.
 2. 생성에 쓸 Workspace profile이 그 이름을 허용하는지 확인한다. `repositoryMode`가 `new`이면 유효한 모든 이름,
    `selected`는 `repositories`, `owners`는 그 owner의 이름, `all`은 모든 이름을 허용한다. 허용되지 않으면
    profile 소유자가 Forge 콘솔에서 profile을 바꿔야 한다고 알린다. 다른 이름의 저장소를 만들거나 profile을 임의로 넓히지 않는다.
 3. 제공된 조회 도구로 같은 이름의 저장소를 확인한다.
    404는 비공개 저장소 접근 거절일 수도 있다. 다른 이름·fork·공개 전환으로 우회하지 않는다.
-4. Forge `repository_create`에 `accountId`, `profileId`, `profileRevision`, `repository: "owner/name"`,
+4. Forge `repository_create`에 `origin: "https://github.com"`, `profileId`, `profileRevision`, `repository: "owner/name"`,
    선택 `description`, `private`, `requestKey`를 보낸다. 공개 범위는 사용자 요청을 따르고 정해지지 않았으면 `private: true`다. 단, Agent Runway로 배포할 앱은 `app-delivery` 절차에 따라 `private: false`다. Runway는 Studio 관리자가 Project의 비공개 checkout을 허용한 저장소만 인증해서 clone한다.
-   `status:"created"`이면 Forge가 초기 commit을 만들고 저장소를 사용자 연결로 등록한다. 반환된 실제 `defaultBranch`를 사용한다.
-   `failed`는 GitHub 거절이다. `unknown`이거나 응답을 잃었으면 생성을 반복하지 않는다. `repository_lookup_request`·
-   `repository_get`으로 영수증을 읽고, `requiresUserDecision`이면 사용자가 대상을 확인해 Forge 콘솔에서 직접 등록하도록 안내한다.
-   대상이 존재해도 이 요청이 만들었다는 증거가 아니다.
-   Forge 생성 기능이 없으면 해당 환경의 실제 저장소 권한 범위에서 제공된 GitHub 생성 도구로 초기화할 수 있으나 Forge 등록은 약속하지 않는다.
+   - 오류 `git_connection_required`와 503은 영수증을 남기지 않는다. `git_connection_required`이면 오류의 `connectUrl`을 사용자에게 주고
+     사용자가 연결한 뒤에, 503이면 `retryAfterSeconds` 뒤에 같은 `requestKey`로 다시 요청한다.
+   - `status:"created"`이면 Forge가 초기 commit을 만들었다. 저장소를 따로 등록하지 않는다. 영수증의 `result.origin`·`result.repository`를
+     Git `prepare`의 `origin`·`repository`로, 실제 `result.defaultBranch`를 `baseBranch`로 쓴다.
+   - `created`인데 `allowed:false`이면 현재 profile이 그 저장소를 허용하지 않는다. 다시 만들지 않는다.
+     profile 소유자가 profile의 `repositories`에 추가해야 한다고 알린다.
+   - `failed`는 생성이 거절된 것이다. 영수증의 `error`로 원인을 확인한다.
+   - `unknown`이거나 응답을 잃었으면 생성을 반복하지 않는다. `repository_lookup_request`·`repository_get`으로 영수증을 읽는다.
+     `requiresUserDecision`이면 사용자가 대상을 확인한다. 대상이 존재해도 이 요청이 만들었다는 증거가 아니다.
+     사용자의 저장소로 확인되면 그 저장소를 `prepare`에 지정한다. `repositoryMode`가 `new`인 profile은 이 저장소를 허용하지 않으므로
+     profile 소유자가 `repositories`에 추가해야 한다.
+   - Forge 생성 기능이 없으면 해당 환경의 실제 저장소 권한 범위에서 제공된 GitHub 생성 도구로 초기화할 수 있다.
+     그 저장소도 profile의 저장소 규칙이 허용해야 `prepare`된다. `new`는 Forge가 만든 저장소와 `repositories`의 저장소만 허용한다.
 5. 기존 저장소가 비어 있으면 clone할 branch가 없다. 첫 commit을 만드는 지원 경로와 요청 범위를 확인하고
    초기화한다. 존재하는 파일을 덮거나 Git 보호 경계를 우회하지 않는다.
-6. 준비된 저장소의 연결 `id`와 `defaultBranch`로 Git `prepare`를 실행한다. 실패하면 네트워크·권한·빈 저장소·없는 branch를
+6. 준비된 저장소의 `origin`·`repository`와 기본 branch(`baseBranch`)로 Git `prepare`를 실행한다. 실패하면 네트워크·권한·빈 저장소·없는 branch를
    구분하고 확인된 원인을 고친 뒤 같은 Workspace에서 다시 준비한다. 새 Workspace 생성으로 해결하지 않는다.
+   `git_repository_not_found`는 연결된 계정이 그 저장소를 볼 수 없다는 뜻이다. 다시 연결하라고 하지 않고 저장소 이름과 그 계정의 권한을 확인한다.
 
 ## 구현과 검증
 

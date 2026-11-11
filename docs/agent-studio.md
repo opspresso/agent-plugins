@@ -17,11 +17,11 @@ contracts before changing a plugin's tool instructions or connection settings.
 
 | Project | Owns | Plugin consequence |
 |---|---|---|
-| `agent-studio` | Plugin sync, current Agent bindings, builtin tools, attachment extraction, artifact delivery, MCP file references and service result delivery to Chat | A component must be offered through saved bindings or enabled dynamic discovery; describe only inputs and results the run can access |
+| `agent-studio` | Plugin sync, current Agent bindings, builtin tools, attachment extraction, artifact delivery, MCP file references, service result delivery to Chat and each user's Git host connections | A component must be offered through saved bindings or enabled dynamic discovery; describe only inputs and results the run can access |
 | `agent-models` | Provider connections, selected models, inference routing, usage ledger and the public model catalog | Not a Tools entry. Use a selected model `id`, not its provider `wireId`, in Agent settings |
 | `agent-memory` | Long-term memories and short-term task handoffs | Bind the exact service URL, current caller and `recall`/`remember`/`handoff_*` scopes |
 | `agent-knowledge` | Documents, RAG, knowledge graph, recordings, transcription, meeting notes, audio profiles and job history | Bind its Tools entry; audio runs through Agent Knowledge MCP tools with the user's audio profile |
-| `agent-forge` | Workspaces, Sandbox execution, native sessions, checkpoints, Workspace profiles, Git connections, protected-action approvals and run history | Bind its Tools entry; coding work runs through Forge MCP tools with the user's Workspace profile |
+| `agent-forge` | Workspaces, Sandbox execution, native sessions, checkpoints, Workspace profiles, Git steps, protected-action approvals and run history | Bind its Tools entry; coding work runs through Forge MCP tools with the user's Workspace profile |
 | `agent-runway` | App Projects, resources, Variables, `application.yaml`, builds, deployments and prod approvals | Bind its Tools entry; app delivery and deletion run through Runway MCP tools. Secret values go through `secret_request` links, owner approval through the Deployment's `approvalUrl`, and Studio asks the user to approve each deletion call |
 
 ### Service-owned tools
@@ -281,8 +281,11 @@ The execution plugin supplies reusable task guidance, not a shell or account cre
 Bind the Agent Forge Tools entry and the workspace-task and sandbox-task skills.
 The operator configures the Forge service, its Sandbox provider, worker and model gateway.
 Each user creates a Workspace profile (runtime, central model, repository rules,
-checks and deployment workflows), selects a default, connects GitHub and registers
-repositories in the Forge console. The plugin grants none of these permissions.
+checks and deployment workflows) and selects a default in the Forge console.
+Each user connects a Git host (GitHub or GitLab) once in Agent Studio, under
+Profile → Git accounts (`/profile/git`). Forge stores no Git credential and no
+repository list, and no repository is registered with Forge.
+The plugin grants none of these permissions.
 The actual tool schemas remain authoritative. Model tool inputs cannot choose the
 Forge URL, caller identity, organization or provider credentials.
 
@@ -290,7 +293,11 @@ Forge URL, caller identity, organization or provider credentials.
 
 Read the profile with `profile_list`/`profile_get`, reuse an existing Workspace from
 `workspace_list`, or create one with `workspace_create`. Prepare a repository with
-a Git `prepare` run on an `agent/` branch, then submit command, native task or Git
+a Git `prepare` run on an `agent/` branch: it names the Git host `origin` (from
+`git_connections`), the `repository` path on that host and the `baseBranch`. The
+Git host decides access for the connected account. When the host is not connected,
+Forge refuses with `git_connection_required` and a `connectUrl`; the Agent gives
+that link to the user. Then submit command, native task or Git
 steps with `run_submit`. One run executes per Workspace at a time. Keep
 queued/running distinct from success. Read `run_result`, then `run_events` up to
 `lastEventSeq` until `hasMore` is false; `outputLoss` remains a permanent warning.

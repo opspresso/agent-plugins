@@ -6,7 +6,8 @@ description: >
   실행에는 Forge MCP 도구가 필요하며 원격 자료를 읽는 것만으로 충분한 요청에는 Workspace를 만들지 않는다.
 compatibility: >
   연결된 Agent Forge MCP(workspace_create, run_submit, run_result 등)가 필요하다.
-  Workspace profile·실행·Git 연결·보호 작업 승인·이력은 Forge가 소유한다. Skill 설치가 Runtime·저장소 권한·계정 연결을 만들지는 않는다.
+  Workspace profile·실행·Git 단계·보호 작업 승인·이력은 Forge가 소유하고, Git 호스트 계정 연결은 Agent Studio가 소유한다.
+  Skill 설치가 Runtime·저장소 권한·계정 연결을 만들지는 않는다.
 metadata:
   org.opspresso.agent-studio.icon: folder-code
 ---
@@ -14,13 +15,16 @@ metadata:
 # 지속형 Workspace 작업 조율
 
 Workspace는 파일·Git·native Session을 유지하는 작업 공간이고 Sandbox는 그 파일을 실행하는 일시적 자원이다.
-Agent Forge는 Workspace profile·실행·checkpoint·Git 연결·보호 작업 승인·실행 이력을 소유한다.
+Agent Forge는 Workspace profile·실행·checkpoint·Git 단계 실행·보호 작업 승인·실행 이력을 소유한다.
 Studio는 Forge MCP 연결을 전담 specialist로 제공하고, Chat에서 접수한 실행의 terminal 결과를 원래 Chat에 한 번 전달한다.
 계정·저장소·브랜치·작업 파일은 사용자 요청에서 얻는다.
 
-사람이 profile·GitHub 연결·승인·이력을 다룰 때는 Forge 콘솔을 안내한다. Studio Tools의 Forge 상세 화면에
+Git 호스트(GitHub·GitLab) 계정은 사용자가 Agent Studio의 프로필 → Git 계정에서 한 번 연결한다.
+Forge는 Git credential과 저장소 목록을 갖지 않는다. 저장소를 Forge에 등록하는 단계와 도구는 없다.
+
+사람이 profile·승인·이력을 다룰 때는 Forge 콘솔을 안내한다. Studio Tools의 Forge 상세 화면에
 설정·이력 링크가 있고, Workspace·Run 응답의 `links`에 `settingsUrl`·`historyUrl`·`workspaceUrl`·`runUrl`·`approvalUrl`이 있다.
-반환된 URL만 링크로 쓴다.
+Git 호스트 연결이 필요하면 Forge가 반환한 `connectUrl`을 준다. 반환된 URL만 링크로 쓴다.
 
 ## 필요한 경로 선택
 
@@ -53,9 +57,17 @@ Forge URL·조직·사용자 신원·provider credential·Git token은 서버 �
    `closed`는 다시 열 수 없다. Workspace당 실행은 한 번에 하나다.
 3. **새 Workspace**: 재사용할 공간이 없을 때만 `workspace_create`에 `title`과 profile을 보낸다.
    `title`은 사용자 언어의 짧은 작업 목적이다. 셸 스크립트를 제목으로 복사하지 않는다.
-4. **저장소 연결**: 저장소 작업이면 `git_connections`에서 등록된 저장소의 연결 `id`와 `defaultBranch`를 확인한다.
-   `{kind:"git", action:"prepare"}` 실행으로 `agent/`로 시작하는 작업 브랜치를 준비한다. 등록되지 않은 저장소는
-   사용자가 Forge 콘솔의 Git 설정에서 연결·등록해야 한다. credential을 인수로 보내지 않는다.
+4. **저장소 준비**: 저장소 작업이면 `{kind:"git", action:"prepare"}` 실행에 `origin`, `repository`, `baseBranch`와
+   `agent/`로 시작하는 `branch`를 보낸다. 저장소를 먼저 등록하지 않는다.
+   - `origin`은 `git_connections`가 반환한 `hosts[]` 중 그 저장소가 있는 host의 `origin`이다(예: `https://github.com`).
+     `repository`는 그 host 안의 저장소 경로다. GitHub는 `owner/repo`, GitLab은 `group/project`다.
+   - 그 host의 `status`가 `connected`가 아니면 host의 `connectUrl`을 사용자에게 주고, 사용자가 Agent Studio에서
+     연결한 뒤 이어간다. 다른 계정·token·도구로 대신하지 않는다. credential을 인수로 보내지 않는다.
+   - `baseBranch`는 사용자가 지정한 브랜치다. 지정하지 않았으면 제공된 Git 호스트 조회 도구로 저장소의 기본 브랜치를 확인하고,
+     확인할 수 없으면 사용자에게 묻는다. `git_connections`는 저장소와 브랜치를 반환하지 않는다.
+   - `prepare`는 저장소가 없는 Workspace에만 보낸다. Workspace는 브랜치 하나만 가지므로 다른 저장소·브랜치의 새 작업은
+     새 Workspace에서 한다.
+   - `prepare`가 거절되거나 실패하면 [Forge 도구](references/forge.md#git-오류)의 code별 처리에 따른다.
    새 저장소 생성은 project-generator의 원격 준비 절차를 따른다.
 
 실행 지시를 만들 때는 [task 전달과 파일 작업](references/task-handoff.md)을 필요한 부분만 읽는다.
@@ -71,6 +83,8 @@ command Runtime에는 실제 셸 스크립트를, native Runtime(codex·claude·
 - 응답을 잃으면 `run_lookup_request`·`workspace_lookup_request`로 원래 키의 접수를 확인한다.
   결과가 불확실한 작업을 새 키나 새 입력으로 다시 제출하지 않는다.
 - 오류는 입력·환경·상태의 확인된 원인을 고친 뒤 같은 Workspace에서 이어간다. 새 Workspace나 다른 Git 경로로 우회하지 않는다.
+  Git 계정·저장소 신원이 바뀐 오류(`git_account_changed`·`repository_identity_changed`·`git_host_removed`)는
+  [Forge 도구](references/forge.md#git-오류)의 처리에 따른다. 그 처리가 정한 새 Workspace의 `prepare`는 우회가 아니다.
 - 사용자가 중지를 요청하면 `run_cancel`, 재시도를 요청하면 `run_retry`(현재 `profileRevision` 필요)를 쓴다.
   공간 정리는 사용자가 요청한 경우에만 `workspace_suspend`·`workspace_close`를 쓴다. 일반 턴 완료나 PR 생성 때문에 닫지 않는다.
 
