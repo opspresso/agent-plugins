@@ -27,7 +27,7 @@ Studio에 서비스 데이터의 사본이 없으므로 서비스의 현재 상�
 | Agent Memory | 장기·단기 기억과 작업 handoff | Memory 도구, `agent-memory` 콘솔 | [memory](references/memory.md) |
 | Agent Knowledge | 문서·RAG·지식 그래프·ontology 객체·녹음·전사·회의록·오디오 profile | Knowledge 도구, `agent-knowledge` 콘솔 | [knowledge](references/knowledge.md) |
 | Agent Forge | Workspace·Sandbox·Run·Workspace profile·Git 연결·보호된 Git 작업 승인 | Forge 도구, `agent-forge` 콘솔 | [forge](references/forge.md) |
-| Agent Runway | Project·dev/prod 환경·DB·bucket·secret·`application.yaml`·빌드·배포·prod 승인 | Runway 도구, `agent-runway` 콘솔 | [delivery](references/delivery.md) |
+| Agent Runway | Project·환경·pipeline·DB·bucket·secret·`application.yaml`·빌드·배포·소유자 승인 | Runway 도구, `agent-runway` 콘솔 | [delivery](references/delivery.md) |
 | Agent Models | 모델 공급자·승인된 모델 선택·라우팅·사용량 | MCP 도구와 Helper 패널 없음. `StudioRead(resource="models")`로 선택 가능한 모델만 읽는다 | [agent-settings](references/agent-settings.md#모델) |
 
 여러 서비스에 걸친 작업(앱 개발·배포, 녹음→회의록, 문서 Q&A Agent, 기억하는 Agent, 코딩 Agent 준비)은
@@ -73,7 +73,7 @@ Studio에 서비스 데이터의 사본이 없으므로 서비스의 현재 상�
   나중에 이 Chat으로 돌아온다. 결과를 기다리며 같은 상태를 반복 조회하지 않는다. 응답이 유실되면 새로
   제출하지 말고 같은 키로 `*_lookup_request`·`audio_request_status`를 조회한다.
 - **콘솔 전용 작업은 콘솔에서 한다.** Forge의 GitHub 연결·보호된 Git 작업 승인, Runway의 secret 입력·
-  prod 배포 승인, Memory·Knowledge의 관리자 설정과 검토 작업이 여기에 속한다. Runway의 서비스·리소스·Project 삭제는
+  환경과 pipeline 관리, Memory·Knowledge의 관리자 설정과 검토 작업이 여기에 속한다. Runway의 서비스·리소스·Project 삭제는
   `service_remove`·`resource_delete`·`project_delete`로 요청하며, Studio가 호출마다 사람에게 승인을 받는다.
 - **저장은 검증이 아니다.** 설정 저장 성공을 Agent 동작 검증으로, 클릭 성공을 저장 성공으로 보고하지 않는다.
 - **요청 범위만 수행한다.** 필수 정보가 없을 때만 질문한다. 되돌릴 수 있는 선택은 합리적인 기본값으로
@@ -127,7 +127,7 @@ Studio에 서비스 데이터의 사본이 없으므로 서비스의 현재 상�
 
 - 서비스 도구를 직접 쓰거나, 실행에 있으면 서비스 이름의 위임 도구로 그 서비스만 쓰는 specialist에게 맡긴다.
 - **조회**(기억 검색, 문서 상태, Workspace·Run 상태, 배포 상태와 로그)는 바로 수행하고 결과를 요약한다.
-- **설정·작업 시작**(Workspace profile 선택, 문서 수집, 오디오 작업, Run, `project_apply`, `deploy`·`promote`·`rollback`)은
+- **설정·작업 시작**(Workspace profile 선택, 문서 수집, 오디오 작업, Run, `project_apply`, `project_configure`, `resource_create`, `deploy`·`promote`·`rollback`)은
   결과와 영향을 설명하고 승인 카드로 진행한다.
 - **긴 개발·배포 작업**은 연결된 `workspace-task`·`app-delivery`·`audio-processing` Skill이 있으면 그 절차를 따른다.
   반복해서 쓸 작업이면 전용 Agent를 만들어 주는 편이 낫다고 제안할 수 있다.

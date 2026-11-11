@@ -40,7 +40,8 @@
 | GitHub 관련 403 | Forge | [forge](forge.md#오류) — `/git`에서 연결·저장소 등록 |
 | Git merge 승인 대기·만료 | Forge | [forge](forge.md#오류) — 승인은 Run 제한 시간과 함께 만료된다 |
 | 배포 실패 | Runway | `deployment_get`의 `errorCode`와 `deployment_logs`. [delivery](delivery.md#오류) |
-| `environment_not_ready` | Runway | secret 입력 링크와 리소스 `ready` 확인 |
+| `environment_not_ready` | Runway | 오류 메시지의 원인을 따른다. 값 없는 secret은 입력 링크를 주고, `failed` 리소스는 다시 만든다. [delivery](delivery.md#오류) |
+| `pipeline_required`, `environment_not_in_pipeline`, `release_outdated` | Runway | pipeline을 고르지 않았거나 Project의 pipeline과 맞지 않는 요청이다. `pipeline_list`와 `project_status`의 `pipeline`을 확인한다. [delivery](delivery.md#오류) |
 | 문서 처리 멈춤·실패 | Knowledge | [knowledge](knowledge.md#오류) |
 | 녹음 작업 결과 불명 | Knowledge | `audio_request_status`로 영수증 확인. 다시 제출하지 않는다 |
 | 기억 검색이 안 맞음 | Memory | [memory](memory.md#오류) |
