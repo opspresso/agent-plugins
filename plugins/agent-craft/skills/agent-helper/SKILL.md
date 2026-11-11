@@ -75,8 +75,9 @@ Studio에 서비스 데이터의 사본이 없으므로 서비스의 현재 상�
 - **콘솔 전용 작업은 콘솔에서 한다.** Forge의 보호된 Git 작업 승인, Runway의 secret 입력·
   환경과 pipeline 관리, Memory·Knowledge의 관리자 설정과 검토 작업이 여기에 속한다. Runway의 서비스·리소스·Project 삭제는
   `service_remove`·`resource_delete`·`project_delete`로 요청하며, Studio가 호출마다 사람에게 승인을 받는다.
-- **Forge가 쓰는 Git 호스트 계정은 사용자가 Studio에서 연결한다.** 위치는 Studio의 프로필 → Git 계정(`/profile/git`)이다.
-  Forge 콘솔과 도구에는 계정 연결·저장소 등록 기능이 없다. Forge 도구가 `connectUrl`을 주면 그 링크를 준다.
+- **Forge와 Runway가 쓰는 Git 호스트 계정은 사용자가 Studio에서 연결한다.** 위치는 Studio의 프로필 → Git 계정(`/profile/git`)이다.
+  Forge와 Runway의 콘솔과 도구에는 계정 연결·저장소 등록 기능이 없다. Forge 도구가 `connectUrl`을 주거나
+  Runway 도구의 `git_connection_required` 오류 메시지가 Studio 연결 링크를 주면 그 링크를 준다.
 - **저장은 검증이 아니다.** 설정 저장 성공을 Agent 동작 검증으로, 클릭 성공을 저장 성공으로 보고하지 않는다.
 - **요청 범위만 수행한다.** 필수 정보가 없을 때만 질문한다. 되돌릴 수 있는 선택은 합리적인 기본값으로
   정하고 결과에 설명한다.

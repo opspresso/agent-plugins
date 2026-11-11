@@ -45,7 +45,7 @@ profile의 저장소 규칙이 이름을 허용해도 원격 저장소가 존재
 3. 제공된 조회 도구로 같은 이름의 저장소를 확인한다.
    404는 비공개 저장소 접근 거절일 수도 있다. 다른 이름·fork·공개 전환으로 우회하지 않는다.
 4. Forge `repository_create`에 `origin: "https://github.com"`, `profileId`, `profileRevision`, `repository: "owner/name"`,
-   선택 `description`, `private`, `requestKey`를 보낸다. 공개 범위는 사용자 요청을 따르고 정해지지 않았으면 `private: true`다. 단, Agent Runway로 배포할 앱은 `app-delivery` 절차에 따라 `private: false`다. Runway는 Studio 관리자가 Project의 비공개 checkout을 허용한 저장소만 인증해서 clone한다.
+   선택 `description`, `private`, `requestKey`를 보낸다. 공개 범위는 사용자 요청을 따르고 정해지지 않았으면 `private: true`다. Agent Runway로 배포할 앱도 같다. Runway는 공개·비공개 저장소를 모두 요청한 사용자의 Git 계정으로 읽는다.
    - 오류 `git_connection_required`와 503은 영수증을 남기지 않는다. `git_connection_required`이면 오류의 `connectUrl`을 사용자에게 주고
      사용자가 연결한 뒤에, 503이면 `retryAfterSeconds` 뒤에 같은 `requestKey`로 다시 요청한다.
    - `status:"created"`이면 Forge가 초기 commit을 만들었다. 저장소를 따로 등록하지 않는다. 영수증의 `result.origin`·`result.repository`를

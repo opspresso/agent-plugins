@@ -119,6 +119,14 @@
       "expected": "project_status로 dev의 현재 Release와 prod 준비 상태를 확인하고 promote(from=dev)를 승인 카드로 요청한다. 결과가 awaiting_approval이면 approvalUrl을 주고 소유자가 24시간 안에 콘솔에서 승인해야 한다고 알린다. 접수를 배포 완료로 보고하지 않는다."
     },
     {
+      "request": "비공개 저장소도 Runway로 배포할 수 있나요? 뭘 준비해야 해요?",
+      "expected": "Runway가 공개·비공개 저장소를 모두 요청한 사용자의 Git 계정으로 읽는다고 설명한다. Studio 프로필 → Git 계정(/profile/git)에서 그 Git 호스트를 연결하도록 안내한다. 저장소 연결 단계, deploy key, 관리자의 비공개 checkout 허용은 안내하지 않는다."
+    },
+    {
+      "request": "main에 push하면 dev에 배포되게 해 주세요.",
+      "expected": "project_get의 push.state를 확인한다. 켜면 Runway가 저장소에 push webhook을 만들고 push마다 사용자의 Git 권한으로 저장소를 읽으며, 끄거나 Studio에서 위임을 폐기할 때까지 유지된다고 알린 뒤 push_enable을 승인 카드로 요청한다. 사용자의 Git 계정에 GitHub admin 또는 GitLab Maintainer 이상 역할이 필요하고, trigger와 맞는 push만 pipeline의 첫 단계에 배포된다고 설명한다."
+    },
+    {
       "request": "코딩 Agent를 쓰려면 뭘 준비해야 해요?",
       "expected": "git_connections와 profile_list로 현재 준비 상태를 확인한다. Git 호스트의 status가 connected가 아니면 그 host의 connectUrl(Studio 프로필 → Git 계정)을 주고, profile이 없으면 Forge 콘솔 /settings를 안내한다. 저장소 등록은 안내하지 않는다. agent-forge와 workspace-task를 연결한 Agent 생성을 제안한다."
     },
