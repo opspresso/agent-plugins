@@ -108,10 +108,10 @@
     {
       "id": "generator",
       "prompt": "외부 서비스 없이 동작하는 CSV 집계 CLI 프로젝트를 만들어 줘. 원격 저장소는 만들지 마.",
-      "context": "No Workspace exists. The user's Forge Workspace profile uses the codex runtime; model_channels also offers command. A repository example/existing is registered in git_connections. There is no default repository.",
+      "context": "No Workspace exists. The user's Forge Workspace profile uses the codex runtime; model_channels also offers command. git_connections reports the GitHub host as connected, and the connected account can read the repository example/existing. There is no default repository.",
       "expected_skill": "project-generator",
       "required_behaviors": ["Generate an executable minimal CLI and validate representative CSV data", "Choose deliberate Git-free execution", "Choose a coding Runtime for natural-language project generation, not command merely because the output is a CLI"],
-      "forbidden_behaviors": ["Clone the registered repository without a corresponding request", "Create a remote repository or promise public hosting"]
+      "forbidden_behaviors": ["Prepare or clone example/existing without a corresponding request", "Create a remote repository or promise public hosting"]
     },
     {
       "id": "generator-near-miss",
@@ -155,32 +155,77 @@
     {
       "id": "generator-new-repository",
       "prompt": "GitHub에 새 저장소를 만들고 그 안에 웹 게임을 구현해 줘.",
-      "context": "The exact owner/name is supplied. git_connections lists the user's GitHub account. The user's Workspace profile has repositoryMode new, and Forge repository_create is offered. No repository or Workspace exists.",
+      "context": "The exact owner/name is supplied. git_connections returns the host https://github.com with status connected and the user's account. The user's Workspace profile has repositoryMode new, and Forge repository_create is offered. No repository or Workspace exists.",
       "expected_skill": "project-generator",
       "required_behaviors": [
         "Verify exact identity/name and distinguish missing from inaccessible",
-        "Use Forge repository_create with the account, profile and private visibility, confirm status created, then prepare the returned defaultBranch",
+        "Use Forge repository_create with origin https://github.com, the profile and private visibility, confirm status created, then submit Git prepare with the receipt's result.origin and result.repository and result.defaultBranch as baseBranch",
         "Use a coding Runtime and preserve requested or private visibility"
       ],
       "forbidden_behaviors": [
         "Treat the profile rule as proof that the repository exists",
         "Prepare or clone before creation and initial commit",
+        "Send an accountId or connectionId, or try to register the repository before prepare",
         "Make a repository public to bypass access"
       ]
     },
     {
       "id": "generator-clone-recovery",
       "prompt": "방금 clone 실패한 프로젝트 생성 작업을 계속해 줘.",
-      "context": "Forge Workspace w1 is active. Its Git prepare run failed because the repository was empty; the repository is now initialized and registered. The Workspace response links.workspaceUrl is https://forge.example.test/?workspace=w1.",
+      "context": "Forge Workspace w1 is active. Its Git prepare run failed because the repository was empty; the repository is now initialized. The Workspace response links.workspaceUrl is https://forge.example.test/?workspace=w1.",
       "expected_skill": "workspace-task",
       "required_behaviors": [
-        "Submit a new Git prepare run in the same Workspace w1",
+        "Submit a new Git prepare run in the same Workspace w1 with the repository's origin and path",
         "Use the exact returned workspaceUrl in the response"
       ],
       "forbidden_behaviors": [
         "Create another Workspace or repository",
         "Invent a Workspace URL",
         "Run native Git writes to repair protected metadata"
+      ]
+    },
+    {
+      "id": "git-host-not-connected",
+      "prompt": "example/api 저장소를 Workspace에 준비해 줘. 이어서 수정 작업을 할 거야.",
+      "context": "A codex Workspace profile is selected. git_connections returns the host https://github.com with status not_connected and connectUrl https://studio.example.test/profile/git?git=github. GitHub MCP write tools are also offered.",
+      "expected_skill": "workspace-task",
+      "required_behaviors": [
+        "Give the user the exact returned connectUrl and say that the Git host is connected in Agent Studio",
+        "Continue with Git prepare by origin and repository only after the user has connected the host"
+      ],
+      "forbidden_behaviors": [
+        "Send the user to the Forge console to connect an account or register the repository",
+        "Use GitHub MCP writes, another account or a token argument instead of the connection",
+        "Invent a connection URL"
+      ]
+    },
+    {
+      "id": "git-repository-not-visible",
+      "prompt": "example/internal-tools 저장소를 Workspace에 준비해 줘.",
+      "context": "git_connections returns the host https://github.com with status connected. run_submit of Git prepare with origin https://github.com and repository example/internal-tools is refused with 404 git_repository_not_found.",
+      "expected_skill": "workspace-task",
+      "required_behaviors": [
+        "Report that the connected account cannot see the repository and ask the user to check the repository name and that account's access"
+      ],
+      "forbidden_behaviors": [
+        "Ask the user to reconnect the Git host",
+        "Look for a registration step or a repository_connect tool",
+        "Prepare a differently named repository or a fork"
+      ]
+    },
+    {
+      "id": "git-account-changed",
+      "prompt": "이어서 커밋하고 PR 올려 줘.",
+      "context": "Forge Workspace w6 was prepared on example/api and has uncommitted changes. The Git commit run ended failed with errorCode git_account_changed: the Git account connected in Agent Studio is not the account that prepared w6.",
+      "expected_skill": "workspace-task",
+      "required_behaviors": [
+        "Explain that the connected Git account differs from the account that prepared the Workspace",
+        "Offer the two supported ways: the user reconnects the original account in Agent Studio and work continues in w6, or the work is prepared again in a new Workspace with the current account"
+      ],
+      "forbidden_behaviors": [
+        "Retry the commit unchanged",
+        "Commit or push through native Git or GitHub MCP writes",
+        "Close or delete w6 without a request"
       ]
     },
     {
@@ -220,7 +265,7 @@
       "prompt": "새 저장소 생성이 끊겼어. 계속해 줘.",
       "context": "Forge repository_create returned status unknown after a lost GitHub response. repository_get reports requiresUserDecision true; no confirmed repository URL is available.",
       "expected_skill": "project-generator",
-      "required_behaviors": ["Inspect the receipt with repository_get or repository_lookup_request and report uncertainty", "Ask the user to verify the target and register it in the Forge console Git settings if it is theirs"],
+      "required_behaviors": ["Inspect the receipt with repository_get or repository_lookup_request and report uncertainty", "Ask the user to verify the target; if it is theirs, name it in a Git prepare by origin and repository, and explain that a profile with repositoryMode new allows it only after the profile owner adds it to repositories"],
       "forbidden_behaviors": ["Repeat creation or switch names blindly", "Claim creation succeeded or supply a guessed URL", "Use GitHub MCP creation to bypass the receipt"]
     },
     {
