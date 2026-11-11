@@ -2,6 +2,7 @@
 
 연결된 Agent Forge MCP의 현재 schema가 기준이다. 도구는 호출자 scope가 허용할 때만 목록에 나온다.
 조직·owner·email·token을 인수로 만들지 않는다. 오류는 `{error, code, status, outcome}`로 반환된다.
+일시 장애에는 `retryAfterSeconds`가, `git_connection_required`에는 `connectUrl`이 함께 올 수 있다.
 
 ## 도구 목록
 
@@ -16,8 +17,12 @@
 | 접수 확인 | `workspace_lookup_request`, `run_lookup_request` | 원래 `requestKey` |
 | 중지·재시도 | `run_cancel`, `run_retry` | `runId`, 재시도는 `requestKey`와 현재 `profileRevision` |
 | 수명 관리 | `workspace_suspend`, `workspace_resume`, `workspace_close` | `workspaceId` |
-| Git 연결·승인 조회 | `git_connections`, `git_approval_get` | `approvalId` |
-| 저장소 생성 | `repository_create`, `repository_get`, `repository_lookup_request` | 아래 참조 |
+| Git 호스트 연결 상태 | `git_connections` | 없음 |
+| 보호 작업 승인 조회 | `git_approval_get` | `approvalId` |
+| 저장소 생성(GitHub) | `repository_create` | `origin`, `profileId`+`profileRevision`, `repository`, 선택 `description`, `private`, `requestKey` |
+| 저장소 생성 확인 | `repository_get`, `repository_lookup_request` | `creationId` 또는 원래 `requestKey` |
+
+저장소를 등록하거나 Git 호스트 계정을 연결하는 도구는 없다.
 
 `profile_save`·`profile_select`는 사용자가 profile 저장·선택을 명시적으로 요청한 경우에만 쓴다.
 `workspace_delete`는 영구 삭제 요청에만 쓴다. closed Workspace와 관측한 `expectedRevision`이 필요하다.
@@ -38,6 +43,27 @@
   profile과 `runtime`·`modelChannel`·`idleTtlSeconds`를 함께 보내지 않는다.
 - `timeoutMs`는 대기·준비·실행·검사 전체 시간이다. 기본 10분, 최대 1시간이다.
 - 명시적 Workspace의 `checks`는 `{name:"test"|"lint"|"build", command}` 최대 3개다.
+
+## Git 호스트와 연결 상태
+
+`git_connections`는 `{hosts}`를 반환한다. 저장소 목록은 없다. 어느 Forge 도구도 계정 ID나 연결 ID를 입력으로 받지 않는다.
+
+| 필드 | 뜻 |
+|---|---|
+| `hosts[].origin` | Git 호스트 주소(`https://<host>`). Git `prepare`와 `repository_create`의 `origin`으로 그대로 쓴다 |
+| `hosts[].provider` | `github` 또는 `gitlab` |
+| `hosts[].status` | `connected`, `not_connected`, `reconnect_required` |
+| `hosts[].account` | `connected`일 때만 있다. 연결된 계정의 `id`와 `login`이다 |
+| `hosts[].connectUrl` | 사용자가 그 호스트를 연결·재연결하는 Agent Studio 주소 |
+
+- 사용자는 Git 호스트를 Agent Studio의 프로필 → Git 계정에서 한 번 연결한다. Forge 콘솔과 MCP에는 계정 연결 기능이 없다.
+- `status`가 `connected`가 아니면 그 host의 `connectUrl`을 사용자에게 준다. 사용자가 연결한 뒤 이어간다.
+- `hosts`가 `null`이면 이 호출로는 호스트를 알 수 없다는 뜻이다. 호스트가 없다고 판단하지 않는다.
+  사용자가 지정한 저장소의 호스트 주소(`https://<host>`)를 `origin`으로 보내면 Forge가 접수할 때 판정한다.
+- 저장소 접근은 Git 호스트가 판정한다. 연결된 계정이 읽을 수 있는 저장소는 `prepare`할 수 있고, 쓸 수 있는 저장소에 커밋·게시할 수 있다.
+  profile의 저장소 규칙(`repositoryMode`)이 그 범위를 더 좁힐 수 있다. 새 profile의 기본값 `all`은 좁히지 않는다.
+- `prepare`가 성공하면 Workspace가 저장소 신원(Git 호스트, 연결 계정, 저장소 ID, 공개 범위)을 보관한다.
+  Forge는 이후 Git 단계마다 현재 연결 계정과 저장소를 이 신원과 비교한다.
 
 ## requestKey와 응답 유실
 
@@ -65,7 +91,25 @@ Run 상태는 `queued`, `running`, `succeeded`, `failed`, `cancelled`, `interrup
 | `profile_revision_conflict` | `profile_get`으로 현재 revision을 다시 읽는다 |
 | `profile_required`, `profile_input_conflict` | profile 쌍을 함께 보내거나 충돌 입력을 뺀다 |
 | `profile_runtime_mismatch` | 기존 Workspace의 Runtime·profile을 유지하거나 새 Workspace를 만든다 |
-| `profile_repository_forbidden`, `git_connection_required` | profile의 저장소 규칙과 Forge 콘솔의 Git 연결을 확인하도록 안내한다 |
+| `profile_repository_forbidden` | profile의 저장소 규칙이 그 저장소를 허용하지 않는다. profile 소유자가 Forge 콘솔 설정에서 규칙을 바꿔야 한다고 안내한다 |
 | `timeout_exceeds_authorization` | 오류의 만료 시각 전에 끝나도록 `timeoutMs`를 줄인다 |
 | `work_authorization_invalid` | 접수 권한이 만료·철회됐다. 사용자가 다시 로그인한 뒤 새 요청으로 제출한다 |
 | `model_gateway_unavailable` | 운영자 설정 문제다. 새 키로 반복하지 않는다 |
+
+## Git 오류
+
+`run_submit`의 거절(도구 오류의 `code`)이나 끝난 Run의 `errorCode`로 온다. `prepare`는 접수할 때 호스트 연결과 저장소를
+확인하므로 `git_connection_required`·`git_repository_not_found`·`invalid_repository`가 `run_submit`의 거절로 온다.
+어느 경우에도 GitHub MCP 쓰기·다른 계정·native Git으로 대신하지 않는다.
+
+| code | 뜻 | 행동 |
+|---|---|---|
+| `git_connection_required` | 사용자가 그 Git 호스트를 Agent Studio에서 연결하지 않았거나 다시 연결해야 한다 | 오류나 Run의 `connectUrl`을 사용자에게 준다. 없으면 `git_connections`의 그 host `connectUrl`을 준다. 사용자가 연결한 뒤 새 요청으로 다시 제출한다 |
+| `git_repository_not_found` | 저장소가 없거나, 이름이 바뀌었거나, 연결된 계정이 볼 수 없다 | 계정은 연결돼 있다. 다시 연결하라고 하지 않는다. 저장소 이름과 그 계정의 저장소 권한을 사용자와 확인한다. Workspace 저장소의 이름이 바뀌었으면 새 Workspace에서 새 이름으로 `prepare`한다 |
+| `invalid_repository` | `origin`이 이 설치의 Git 호스트가 아니거나 저장소 경로 형식이 틀렸다 | `git_connections`의 host `origin`과 경로를 확인해 고친다 |
+| `workspace_repository_attached` | 저장소가 있는 Workspace에 `prepare`를 보냈다 | 그 Workspace의 브랜치에서 이어간다. 다른 저장소·브랜치의 작업이면 새 Workspace를 만든다 |
+| `git_account_changed` | Studio에 연결된 Git 계정이 이 Workspace를 `prepare`한 계정과 다르다 | 사용자에게 알린다. 사용자가 원래 계정을 Studio에서 다시 연결하면 같은 Workspace에서 이어가고, 현재 계정으로 작업하려면 새 Workspace에서 `prepare`한다 |
+| `repository_identity_changed` | Workspace 저장소의 이름이 가리키는 저장소 ID·공개 범위·주소가 바뀌었다 | 사용자와 대상 저장소를 확인한 뒤 새 Workspace에서 `prepare`한다 |
+| `git_host_removed` | 운영자가 Workspace 저장소의 Git 호스트를 설치에서 제거했다 | 현재 Git 호스트의 저장소로 새 Workspace에서 `prepare`한다 |
+| `git_fetch_failed` | Forge가 저장소를 받지 못했다(권한·없는 브랜치·네트워크) | `error`의 원인을 고친 뒤 새 요청으로 다시 제출한다 |
+| `github_unavailable`, `gitlab_unavailable` | Git 호스트의 일시 장애나 요청 수 제한 | `retryAfterSeconds` 뒤에 원래 키의 결과를 조회하거나 같은 요청을 다시 보낸다 |

@@ -8,7 +8,7 @@ Forge의 Git 실행 계약이다. Git 단계마다 `run_submit`에 `input.kind="
 
 | 요청 | `action` | 필수 입력 | 승인 |
 |---|---|---|---|
-| 저장소 준비 | `prepare` | `connectionId`, `baseBranch`, `branch`(`agent/`로 시작), 선택 `sourceRevision` | 없음 |
+| 저장소 준비 | `prepare` | `origin`, `repository`, `baseBranch`, `branch`(`agent/`로 시작), 선택 `sourceRevision` | 없음 |
 | 변경 검토 | `review` | 없음 | 없음 |
 | 커밋 | `commit` | `fingerprint`, `message` | 없음 |
 | 작업 브랜치 푸시 | `push` | `headSha` | 없음 |
@@ -19,8 +19,20 @@ Forge의 Git 실행 계약이다. Git 단계마다 `run_submit`에 `input.kind="
 | 릴리즈 | `release` | `tag`, `headSha`, `fingerprint`, `title`, `body`, `draft`, `prerelease` | Forge 콘솔 |
 | 배포 | `deploy` | `workflow`, `ref:"main"`, `inputs`, `headSha`, `fingerprint` | Forge 콘솔 |
 
-`connectionId`는 `git_connections`의 `repositories[].id`다. `headSha`·`fingerprint`는 직전 `review`·`commit` 실행의
-`run_result.gitResult`에서 받은 실제 값이다. 값을 추측하거나 다른 실행의 값을 섞지 않는다.
+`origin`은 `git_connections`의 host `origin`(예: `https://github.com`)이고, `repository`는 그 host 안의 저장소 경로다
+(GitHub는 `owner/repo`, GitLab은 `group/project`). 앞에 `<host>/`가 붙은 Agent Runway의 저장소 식별자도 그대로 받는다.
+저장소를 먼저 등록하지 않는다. `repository_create`로 만든 저장소는
+영수증의 `result.origin`·`result.repository`를 그대로 쓰고 `result.defaultBranch`를 `baseBranch`로 쓴다.
+
+```json
+{"tool":"run_submit","arguments":{"workspaceId":"<id>","input":{"kind":"git","action":"prepare","origin":"https://github.com","repository":"<owner>/<repo>","baseBranch":"<기준 브랜치>","branch":"agent/<작업 이름>"},"profileId":"<profile id>","profileRevision":3,"requestKey":"<고정 키>"}}
+```
+
+`headSha`·`fingerprint`는 직전 `review`·`commit` 실행의 `run_result.gitResult`에서 받은 실제 값이다.
+값을 추측하거나 다른 실행의 값을 섞지 않는다.
+
+GitLab 저장소에서는 `pull-request`가 merge request를 만들거나 갱신하고(`pullRequestNumber`는 그 IID다) `merge`가 그것을 병합한다.
+`release`와 `deploy`는 GitHub 저장소만 지원한다.
 
 ## 작업 브랜치 게시
 
@@ -60,5 +72,7 @@ PR 설명 형식이 필요하고 `pr-description`이 연결됐으면 해당 Skil
 - 외부 응답 유실·5xx·불명확한 결과는 `interrupted`다. 같은 게시를 새 키·새 Workspace·다른 API로 반복하지 않는다.
 - `failed`는 원인을 확인하고 수정한 뒤 새 review부터 다시 준비한다. 성공한 단계를 다시 실행하지 않는다.
 - `run_retry`는 사용자가 재시도를 명시적으로 요청한 failed·cancelled 실행에만 쓴다. 이미 dispatch한 Git 효과나 interrupted 실행은 재시도할 수 없다.
+- Git 단계가 `git_connection_required`·`git_repository_not_found`·`git_account_changed`·`repository_identity_changed`·
+  `git_host_removed`로 거절되거나 끝나면 [Forge 도구](forge.md#git-오류)의 처리에 따른다. 연결이 필요하면 `connectUrl`을 사용자에게 준다.
 - native 작업에 git add·commit·push·merge를 시키거나 GitHub MCP 쓰기·임시 index로 Forge의 Git 경계를 우회하지 않는다.
-- GitHub token은 Forge가 서버에서만 사용한다. 작업 지시·Sandbox·로그에 credential을 넣지 않는다.
+- Git token은 Forge가 Git 단계마다 Agent Studio에서 받아 서버에서만 사용한다. 작업 지시·Sandbox·로그에 credential을 넣지 않는다.
