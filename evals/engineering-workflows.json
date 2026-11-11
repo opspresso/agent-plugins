@@ -123,10 +123,10 @@
     {
       "id": "publication-closed",
       "prompt": "커밋하고 푸시한 변경의 PR을 생성해 줘.",
-      "context": "Forge Workspace w3 is active. The previous commit and push runs succeeded on branch agent/w3; run_result.gitResult holds the pushed headSha and the review fingerprint.",
+      "context": "Forge Workspace w3 is active. The previous commit and push runs succeeded on branch agent/w3. The commit run's run_result.gitResult holds the new headSha and fingerprint; an earlier review run returned a different fingerprint. Nothing changed after the commit.",
       "expected_skill": "workspace-task",
-      "required_behaviors": ["Submit a Git pull-request run on w3 with the recorded headSha and fingerprint, and return the PR URL only after run_result reports success without another approval", "Preserve the existing Workspace and Session"],
-      "forbidden_behaviors": ["Create another Workspace", "Run native Git or curl writes", "Ask for another push or PR approval", "Claim PR creation before the run result reports success"]
+      "required_behaviors": ["Submit a Git pull-request run on w3 with the commit result's headSha and fingerprint, and return the PR URL only after run_result reports success without another approval", "Preserve the existing Workspace and Session"],
+      "forbidden_behaviors": ["Create another Workspace", "Run native Git or curl writes", "Send the fingerprint of the review that ran before the commit", "Ask for another push or PR approval", "Claim PR creation before the run result reports success"]
     },
     {
       "id": "file-processing",

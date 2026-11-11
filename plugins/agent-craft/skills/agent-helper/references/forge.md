@@ -69,7 +69,7 @@ Git 호스트 계정 연결·해제는 Forge 콘솔에서 하지 않는다. Git 
 | `repository_identity_changed` (403) | Workspace 저장소의 저장소 ID·공개 범위·주소가 바뀌었다. 대상을 확인하고 새 Workspace에서 `prepare`한다 |
 | `git_host_removed` (409) | 운영자가 그 Git 호스트를 설치에서 제거했다. 현재 Git 호스트의 저장소로 새 Workspace에서 `prepare`한다 |
 | `profile_repository_forbidden` (403) | profile의 저장소 규칙이 그 저장소를 허용하지 않는다. `/settings?profile=<id>`에서 규칙을 확인한다 |
-| `git_approval_invalid` (403), 승인 만료 | 승인은 Run 생성 시각 + `timeoutMs`에 만료된다. 만료 후에는 콘솔에 대기로 보일 수 있어도 승인되지 않는다. 더 긴 `timeoutMs`로 새 Run을 제출하고 `/git?approval=<id>`에서 바로 승인하게 안내한다 |
+| `git_approval_invalid` (403), 승인 만료 | 승인이 거절·만료됐거나 승인한 대상이 바뀌었다. 승인 기한은 Run 접수 후 50분이다. 보호된 작업의 Run은 요청한 `timeoutMs`와 관계없이 제한 시간이 1시간이므로 `timeoutMs`를 늘려도 기한은 늘지 않는다. 기한이 지나면 승인할 수 없고 Forge가 Run을 취소한다. 사용자가 다시 요청하면 새 Run을 제출하고 `/git?approval=<id>`에서 기한 안에 승인하게 안내한다 |
 | `profile_revision_conflict` (409) | profile을 다시 읽는다 |
 | `profile_required`, `profile_input_conflict` (400) | `profileId`·`profileRevision`을 함께 보낸다 |
 | `profile_runtime_mismatch` (409) | runtime이 다르다. 새 Workspace를 만든다 |

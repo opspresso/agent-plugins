@@ -11,7 +11,7 @@ Forge가 코드를, Runway가 리소스와 배포를 소유한다. 실제 진행
 |---|---|---|---|
 | 1. 준비 | 사용자 | Studio 프로필 → Git 계정(`/profile/git`)에서 Git 호스트 연결, Forge `/settings`에서 저장소 생성을 허용하는 profile 선택 | `git_connections`의 host `status`, `profile_get` |
 | 2. 저장소·코드 | Helper/Agent | `repository_create`, `run_submit`(Git `prepare` → 작업 → 검사 → push → PR). 코드에는 `application.yaml`(v4), `PORT`를 듣고 pipeline의 architecture로 빌드되는 `Dockerfile`, health 경로가 있어야 한다 | Run 결과가 Chat으로 돌아온다 |
-| 3. merge | 사용자 | `run_submit`의 Git `merge`는 보호된 작업이다. 소유자가 Run 제한 시간 안에 Forge `/git?approval=<id>`에서 승인한다 | `git_approval_get` |
+| 3. merge | 사용자 | `run_submit`의 Git `merge`는 보호된 작업이다. 소유자가 접수 후 50분 안에 Forge `/git?approval=<id>`에서 승인한다 | `git_approval_get` |
 | 4. 선언·리소스 | Helper/Agent | main의 `application.yaml`로 `project_apply`. 새 Project가 `default`가 아닌 pipeline을 쓰면 `pipeline_list`에서 고른 이름을 `pipeline`으로 넘긴다. 앱에 필요한 리소스는 단계마다 `resource_create`로 만든다 | `project_apply` 결과의 단계별 리소스 상태와 secret 링크 |
 | 5. secret | 사용자 | Runway secret 링크에서 값 입력 | `project_status`에서 그 단계의 `missingSecrets`가 비어 있음 |
 | 6. 첫 단계 배포 | Helper/Agent | pipeline의 첫 단계(기본 `dev`)에 `deploy(environment="dev", ref="main")`로 Release를 build해 배포. 생성 중인 리소스는 Deployment가 기다린다 | 결과가 Chat으로 돌아온다. `https://<slug>-dev.<domain>` |

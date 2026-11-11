@@ -28,8 +28,13 @@ Forge의 Git 실행 계약이다. Git 단계마다 `run_submit`에 `input.kind="
 {"tool":"run_submit","arguments":{"workspaceId":"<id>","input":{"kind":"git","action":"prepare","origin":"https://github.com","repository":"<owner>/<repo>","baseBranch":"<기준 브랜치>","branch":"agent/<작업 이름>"},"profileId":"<profile id>","profileRevision":3,"requestKey":"<고정 키>"}}
 ```
 
-`headSha`·`fingerprint`는 직전 `review`·`commit` 실행의 `run_result.gitResult`에서 받은 실제 값이다.
-값을 추측하거나 다른 실행의 값을 섞지 않는다.
+`headSha`·`fingerprint`는 `run_result.gitResult`에서 받은 실제 값이다. 값을 추측하거나 다른 실행의 값을 섞지 않는다.
+
+- `commit`에는 직전 `review`의 `fingerprint`를 보낸다.
+- `commit`은 `headSha`와 `fingerprint`를 모두 바꾸고 새 값을 결과로 돌려준다. `push`·`pull-request`와 그 뒤의 Git 단계에는
+  commit 결과의 값을 보낸다. commit 전 `review`의 `fingerprint`는 더 이상 맞지 않는다.
+- commit 뒤에 파일이 다시 바뀌었으면 `review`를 다시 실행하고 그 값을 쓴다.
+- 현재 HEAD와 다른 값은 `git_review_changed`(409)로 거절된다. `review`를 다시 실행한 뒤 그 값으로 다시 제출한다.
 
 GitLab 저장소에서는 `pull-request`가 merge request를 만들거나 갱신하고(`pullRequestNumber`는 그 IID다) `merge`가 그것을 병합한다.
 `release`와 `deploy`는 GitHub 저장소만 지원한다.
@@ -39,7 +44,7 @@ GitLab 저장소에서는 `pull-request`가 merge request를 만들거나 갱신
 1. 파일 수정과 검사를 마친 뒤 `review`를 실행한다. `gitResult`의 `diff`·`truncated`로 요청 밖 변경이 없는지 확인한다.
 2. `commit`에 review의 `fingerprint`와 실제 변경을 설명하는 `message`를 보낸다.
 3. `push`에 commit 결과의 `headSha`를 보낸다. Forge는 `agent/` 브랜치에 정확한 HEAD만 non-force push한다.
-4. `pull-request`에 같은 `headSha`·`fingerprint`와 실제 결과를 담은 제목·본문을 보낸다. 같은 브랜치의 열린 PR은 갱신된다.
+4. `pull-request`에 commit 결과의 `headSha`·`fingerprint`와 실제 결과를 담은 제목·본문을 보낸다. 같은 브랜치의 열린 PR은 갱신된다.
 
 ```json
 {"tool":"run_submit","arguments":{"workspaceId":"<id>","input":{"kind":"git","action":"commit","fingerprint":"<review fingerprint>","message":"fix: return 400 for empty input"},"profileId":"<profile id>","profileRevision":3,"requestKey":"<고정 키>"}}
@@ -54,7 +59,8 @@ PR 설명 형식이 필요하고 `pr-description`이 연결됐으면 해당 Skil
 - 보호 작업은 사용자가 그 동작을 요청한 경우에만 제출한다. PR 생성이 main 병합·태그·릴리즈·배포 요청을 포함하지 않는다.
 - 제출하면 Run은 `queued`에서 승인을 기다린다. 응답의 `approvalUrl`을 링크로 전달하고 Forge 콘솔에서 Workspace 소유자가 승인해야 한다고 알린다.
   MCP에는 승인 결정 도구가 없다. `git_approval_get`은 승인 상태를 읽기만 한다.
-- 승인 대기도 Run의 `timeoutMs`에 포함된다. 거절·만료·취소는 효과를 막는다.
+- 보호 작업의 Run은 요청한 `timeoutMs`와 관계없이 제한 시간이 1시간이다. 승인 기한은 접수 후 50분이다.
+  기한이 지나면 승인할 수 없고 Forge가 Run을 취소한다. 거절·만료·취소는 효과를 막는다.
 - Studio Chat에서 제출한 보호 작업의 terminal 결과는 원래 Chat에 전달된다. 승인 여부를 반복 조회하지 않는다.
 - 여러 단계를 요청했으면(예: PR 생성 후 main 병합) 각 단계를 순서대로 진행한다. 한 단계의 성공을 전체 요청 완료로 표현하지 않는다.
 
