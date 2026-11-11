@@ -62,6 +62,7 @@ env:
 | 환경과 승격 순서, cloud, target type, architecture | Project의 pipeline. 새 Project는 `project_ensure`·`project_apply`의 `pipeline`, 기존 Project는 `project_configure`의 `pipeline` |
 | 복제 수·CPU·memory·instance type | pipeline의 단계별 크기(`small`·`medium`·`large`). Project 값은 `project_configure`의 `sizes` |
 | 자동 배포를 시작하는 push | pipeline의 trigger. Project 값은 `project_configure`의 `trigger` |
+| 앱 주소 | 단계의 위치. 마지막 단계는 `<slug>.<도메인>`, 그 밖의 단계는 `<slug>-<env>.<도메인>`이다. 마지막 단계에도 환경 이름을 붙이려면 `project_configure`의 `suffixEveryStage` |
 | 리소스(DB·cache·bucket) | 단계마다 `resource_create` |
 | 환경마다 다른 값 | 그 환경의 Variable. 비밀 값은 `secrets`에 이름을 선언하고 `secret_request` 링크로, 비밀이 아닌 값은 콘솔의 Project 환경 변수 화면(`/projects/<slug>/variables`)에서 소유자가 입력한다. 비밀이 아닌 Variable의 이름은 `env`와 `secrets`에 쓰지 않는다. 적용한 `env`에 있는 이름은 콘솔에서 입력할 때 `variable_declared`(409)로 거부된다 |
 

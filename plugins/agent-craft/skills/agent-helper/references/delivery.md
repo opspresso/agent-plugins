@@ -7,13 +7,13 @@
 
 - **환경**: 관리자가 정한 배포 대상이다. 기본은 `dev`·`prod`이고 `staging` 같은 환경이 더 있을 수 있다. 환경마다 cloud 하나와
   제공하는 target type(`eks`: 클러스터, `eb`: Elastic Beanstalk)이 있다. sandbox 환경(기본 `dev`)의 값만 Forge Sandbox에 전달된다.
-  `approval: owner` 환경(기본 `prod`)은 Agent의 요청을 소유자가 승인해야 한다. primary 환경(기본 `prod`)은 접미사 없는 주소를 쓴다.
+  `approval: owner` 환경(기본 `prod`)은 Agent의 요청을 소유자가 승인해야 한다. 환경의 규칙은 `approval`과 `sandbox` 두 가지다.
 - **pipeline**(콘솔 표기: 파이프라인): 관리자가 정한 배포 경로다. cloud·target type·architecture(`amd64` 또는 `arm64`) 하나씩,
   trigger(`{kind: branch | tag, pattern}`, 자동 배포를 시작하는 push)와 **단계** 목록을 가진다. 단계는 환경과 그 환경의 크기(`small`·`medium`·`large`)이고,
   목록 순서가 승격 순서다. 첫 부팅이 `default` pipeline을 만든다. `pipeline_list`가 설치의 pipeline을 준다.
 - **Project**: GitHub 또는 GitLab 저장소(`<host>/<path>`, `owner/repo`는 GitHub) 하나. 처음 등록한 Studio 사용자가 소유자다. slug는 전체에서 유일하며 다시 쓰지 않는다.
   Project는 pipeline 하나로 배포한다. 새 Project는 `default`이거나 `project_ensure`·`project_apply`의 `pipeline`으로 고른 것이다.
-  기존 Project의 pipeline과 Project 자기 값(단계별 크기, trigger, 인스턴스 target의 install script)은 `project_configure`로 바꾼다.
+  기존 Project의 pipeline과 Project 자기 값(단계별 크기, trigger, 인스턴스 target의 install script, 마지막 단계의 주소 형식)은 `project_configure`로 바꾼다.
   실제 pipeline·단계·규칙은 `project_status`가 준다.
 - **리소스**: 운영자가 관리하는 **리소스 템플릿**으로 만든다. `resource_catalog`가 지금 쓸 수 있는 템플릿(`template` 이름, 종류, 좁힌 `parameters`,
   연결 키, sandbox 허용, 환경당 한도, `available`)을 준다. 템플릿 이름을 짐작하지 않고 이 목록에서 고른다. 기본 템플릿은 종류 이름과 같다.
@@ -31,7 +31,9 @@
   설치에 따라 analyze·publish가 더 있다. `resources`는 그 환경의 리소스가 `ready`가 되기를 기다릴 뿐 리소스를 만들지 않는다.
   상태는 `awaiting_approval`·`queued`·`running`·`succeeded`·`failed`·`rejected`다.
   pipeline의 첫 단계만 ref를 직접 받는다. 그다음 단계는 앞 단계에서 성공한 Release를 `promote`로 받는다.
-  주소는 primary 환경이 `https://<slug>.<domain>`, 그 밖은 `https://<slug>-<env>.<domain>`이다.
+  주소는 Project pipeline의 마지막 단계가 `https://<slug>.<domain>`, 그 밖의 단계가 `https://<slug>-<env>.<domain>`이다.
+  Project가 `suffixEveryStage`를 켜면 마지막 단계도 `https://<slug>-<env>.<domain>`이다. 실행 중인 서비스는 다음 배포까지 기존 주소를 유지한다.
+  단계의 주소는 `project_status`의 `environments[].host`가 준다.
 
 ## Helper가 쓸 수 있는 도구
 
@@ -45,7 +47,7 @@
 | `deployment_lookup_request` | 응답 유실 복구 | 같은 `idempotencyKey`로 조회한다 |
 | `application_validate` | `application.yaml` 검사 | 아무것도 만들거나 바꾸지 않는다 |
 | `project_ensure`, `project_apply` | Project 생성, `application.yaml` 적용 | 리소스를 만들지 않는다. `pipeline`은 새 Project에만 쓴다. `project_apply`는 단계마다 리소스 상태와 값이 없는 secret의 입력 링크를 돌려준다 |
-| `project_configure` | Project의 pipeline, 단계별 크기(`sizes`), `trigger`, `installScript` 변경 | 소유자나 Studio 관리자만. 생략한 필드는 유지, `null`은 제거, `sizes`는 map 전체 교체. 다음 Deployment부터 적용된다 |
+| `project_configure` | Project의 pipeline, 단계별 크기(`sizes`), `trigger`, `installScript`, 마지막 단계 주소에 환경 이름 붙이기(`suffixEveryStage`) 변경 | 소유자나 Studio 관리자만. 생략한 필드는 유지, `null`은 제거, `sizes`는 map 전체 교체. 다음 Deployment부터 적용된다 |
 | `resource_create` | 템플릿(`template`)과 `parameters`로 환경 하나에 리소스 생성 | 접수형. `pending → ready | failed`. 단계마다 따로 호출한다 |
 | `deploy`, `promote`, `rollback` | ref를 첫 단계에 배포, 같은 Release를 다음 단계로 승격, 직전 Release로 되돌리기 | 접수형. `idempotencyKey` 필수. 결과는 원래 Chat으로 돌아온다. `approval: owner` 환경은 소유자 승인 대기 |
 | `secret_request` | secret 입력 콘솔 링크 | 읽기 전용이라 승인 없이 실행된다. 링크만 돌려준다. 값은 묻지 않는다 |
@@ -70,7 +72,7 @@ sandbox 환경(기본 `dev`) Variable에는 Sandbox 예약 이름을 쓰지 않�
 | `/projects/<slug>/resources` | 리소스 탭. 환경별 리소스와 템플릿으로 리소스 추가 |
 | `/projects/<slug>/variables` | 환경 변수 탭. 환경별 Variable과 secret. 소유자의 입력·변경·삭제 |
 | `/projects/<slug>/application` | 앱 탭. 적용한 `application.yaml`과 값이 없는 secret |
-| `/projects/<slug>/settings` | 설정 탭. 소유자, 파이프라인 설정(pipeline·단계별 크기·trigger), 비공개 checkout, 소유자 이전(Studio 관리자), Project 삭제 |
+| `/projects/<slug>/settings` | 설정 탭. 소유자, 파이프라인 설정(pipeline·단계별 크기·trigger·모든 단계 주소에 환경 이름 붙이기), 비공개 checkout, 소유자 이전(Studio 관리자), Project 삭제 |
 | `/projects/<slug>/audit` | 감사 기록 탭 |
 | `/projects/<slug>/deployments/<id>` | Deployment 스텝·로그, 소유자의 승인 |
 | `/projects/<slug>/secrets/new` | secret 값 입력 |
@@ -102,6 +104,7 @@ sandbox 환경(기본 `dev`) Variable에는 Sandbox 예약 이름을 쓰지 않�
 | `deployment_in_progress` (409) | 진행 중인 배포를 먼저 확인한다. trigger와 맞는 push가 시작한 자동 배포일 수 있다 |
 | `release_not_promoted` (409) | 첫 단계가 아닌 단계에 앞 단계에서 성공하지 않은 Release나 ref를 배포하려 했다. 첫 단계에 `deploy`한 뒤 `promote`한다 |
 | `release_outdated` (409) | Release가 pipeline과 다른 architecture로 build됐거나 이전 버전의 `application.yaml`로 build됐다. 첫 단계에 ref를 `deploy`해 새 Release를 만든다 |
+| `host_conflict` (409) | 요청한 주소를 같은 Project의 다른 환경이 쓰고 있거나, 다른 Project의 주소다. 오류 메시지가 조치를 알려 준다: 그 환경에 다시 배포하거나, 그 환경의 서비스를 삭제하거나, 진행 중인 배포가 끝나기를 기다린다 |
 | `no_rollback_target`, `no_next_environment` (409) | 되돌릴 Release나 승격할 다음 단계가 없다. `project_status`의 `rollbackTo`·`next`로 확인한다 |
 | `target_unsupported` (409) | `eks`가 아닌 pipeline에는 리소스 템플릿이 없다. 연결 값을 secret과 Variable로 입력한다 |
 | `template_not_in_sandbox` (400) | 그 템플릿은 sandbox 환경에 만들 수 없다. `resource_catalog`에서 `sandbox`가 `true`인 템플릿을 고른다 |

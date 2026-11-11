@@ -17,7 +17,7 @@ Forge가 코드를, Runway가 리소스와 배포를 소유한다. 실제 진행
 | 6. 첫 단계 배포 | Helper/Agent | pipeline의 첫 단계(기본 `dev`)에 `deploy(environment="dev", ref="main")`로 Release를 build해 배포. 생성 중인 리소스는 Deployment가 기다린다 | 결과가 Chat으로 돌아온다. `https://<slug>-dev.<domain>` |
 | 7. 다음 단계 배포 | Helper/Agent → 사용자 | `promote(from="dev")`로 dev에서 성공한 Release를 pipeline의 다음 단계(기본 `prod`)에 배포. `approval: owner` 환경은 소유자가 24시간 안에 `approvalUrl`에서 승인 | `deployment_get`, `project_status` |
 
-앱 선언(`application.yaml`) 변경은 PR → merge → `project_apply` → 다시 배포 순서다. 단계별 크기·trigger·pipeline은 파일이 아니라 `project_configure`로 바꾼다.
+앱 선언(`application.yaml`) 변경은 PR → merge → `project_apply` → 다시 배포 순서다. 단계별 크기·trigger·주소 형식·pipeline은 파일이 아니라 `project_configure`로 바꾼다.
 서비스·리소스·Project 삭제는 `service_remove`·`resource_delete`·`project_delete`로 요청하고 Studio가 사람의 승인을 받는다. 삭제 도구가 없으면 Runway 콘솔에서 사용자가 한다.
 
 ## 녹음에서 회의록까지
