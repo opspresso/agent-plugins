@@ -19,12 +19,13 @@ metadata:
 
 ## 배포 모델
 
-- **환경**: 관리자가 정한 배포 대상이다(기본 설치는 `dev`, `prod`). 환경마다 승인 규칙(`approval`)이 있다.
-  sandbox 환경(기본 `dev`)의 Variable만 Forge Run에 전달된다. primary 환경(기본 `prod`)은 접미사 없는 주소를 쓴다.
+- **환경**: 관리자가 정한 배포 대상이다(기본 설치는 `dev`, `prod`). 환경의 규칙은 승인(`approval`)과 `sandbox` 두 가지다.
+  sandbox 환경(기본 `dev`)의 Variable만 Forge Run에 전달된다.
 - **pipeline**: 관리자가 정한 배포 경로다. cloud, target type(`eks`: 클러스터의 Pod, `eb`: Elastic Beanstalk 인스턴스),
   architecture(`amd64` 또는 `arm64`), trigger(자동 배포를 시작하는 push)와 단계 목록을 가진다.
 - **단계**: pipeline에 들어 있는 환경이다. 목록 순서가 승격 순서이고, 단계마다 크기(`small`·`medium`·`large`)가 있다.
-- **Project**: 저장소 하나이고 pipeline 하나로 배포한다. 단계별 크기와 trigger를 자기 값으로 바꿀 수 있다.
+  앱 주소는 단계의 위치가 정한다. 마지막 단계의 주소에만 환경 이름이 붙지 않는다.
+- **Project**: 저장소 하나이고 pipeline 하나로 배포한다. 단계별 크기, trigger, 마지막 단계의 주소 형식을 자기 값으로 바꿀 수 있다.
 - **`application.yaml`**: 앱의 빌드·테스트·실행 방법과 `secrets`·`env`만 선언한다. 환경·리소스·크기·trigger·cloud·target type·architecture는
   파일에 없다. 이 값들은 pipeline, `project_configure`, `resource_create`가 정한다.
 
@@ -34,8 +35,9 @@ metadata:
 2. 저장소 owner를 정한다. 사용자가 정하지 않았으면 Agent 지침이 정한 기본 owner를 쓰고, 그것도 없으면 묻는다.
 3. 이름(slug)을 정한다. `^[a-z][a-z0-9-]{1,30}[a-z0-9]$`이고 설치의 환경 이름으로 끝날 수 없다(예: `-dev`, `-prod`).
    `agent-`·`addon-`·`delivery-`·`kube-`로 시작하는 이름과 `istio`·`argocd`·`default`·`system`은 쓸 수 없다.
-   저장소 이름과 같게 하면 추적이 쉽다. 주소는 primary 환경이 `https://<slug>.<도메인>`, 그 밖의 환경이 `https://<slug>-<env>.<도메인>`이다.
-   실제 주소는 `project_status`의 `environments[].host`로 확인한다.
+   저장소 이름과 같게 하면 추적이 쉽다. 주소는 Project pipeline의 마지막 단계가 `https://<slug>.<도메인>`, 그 밖의 단계가 `https://<slug>-<env>.<도메인>`이다.
+   Project가 `suffixEveryStage`를 켜면 마지막 단계도 `https://<slug>-<env>.<도메인>`이다([5. 운영과 변경](#5-운영과-변경)).
+   단계의 주소는 `project_status`의 `environments[].host`로 확인한다.
 4. [pipeline 선택](#pipeline-선택)으로 pipeline을 정한다.
 
 ### pipeline 선택
@@ -183,6 +185,8 @@ Runway의 build는 기본으로 인증 없이 저장소를 clone한다. 비공�
    - `environment_not_in_pipeline`: 그 환경은 Project pipeline의 단계가 아니다. `project_status`의 단계 중에서 고른다.
    - `release_outdated`: 그 Release는 다른 architecture로 build됐거나 이전 버전의 `application.yaml`로 build됐다(`release_list`의 `deployable: false`).
      다시 배포할 수 없다. 첫 단계에 ref를 `deploy`해 새 Release를 만든 뒤 승격한다.
+   - `host_conflict`: 요청한 주소를 같은 Project의 다른 환경이 쓰고 있다(pipeline의 마지막 단계나 주소 형식을 바꾼 뒤에 생긴다). 오류 메시지의 조치를 따른다:
+     그 환경에 다시 배포하거나, 그 환경의 서비스를 `service_remove`로 삭제하거나, 진행 중인 배포가 끝나기를 기다린다.
    - `deployment_in_progress`: 진행 중인 Deployment가 끝나기를 기다린다.
 6. 배포한 Release에 문제가 있으면 `rollback`(`project`, `environment`, `idempotencyKey`)으로 그 환경의 직전 Release를 다시 배포한다.
    승격은 필요 없다. 되돌릴 Release가 없으면 `no_rollback_target`이다. `project_status`의 `rollbackTo`가 대상 Release다.
@@ -192,7 +196,7 @@ Runway의 build는 기본으로 인증 없이 저장소를 clone한다. 비공�
 - **값 변경과 재시작**: Variable 값을 바꾸면 다시 배포해야 앱이 새 값을 읽는다. 그 환경에서 실행 중인 Release를 `deploy`(`release`)로 다시 배포한다.
 - **앱 선언 변경**(port·health·command·build·test·`secrets`·`env`): `application.yaml`을 고치는 PR → 병합 → `project_apply` → 배포·승격 순서로 바꾼다.
   GitOps 저장소의 배포 값 파일을 직접 고치지 않는다.
-- **크기·trigger·pipeline 변경**: 파일 PR이 아니라 `project_configure`(`project`와 바꿀 필드)로 바꾼다. 다음 Deployment부터 적용된다.
+- **크기·trigger·주소·pipeline 변경**: 파일 PR이 아니라 `project_configure`(`project`와 바꿀 필드)로 바꾼다. 다음 Deployment부터 적용된다.
   Project 소유자나 Studio 관리자만 호출할 수 있다(`owner_required`). 호출 전에 `project_status`의 `pipeline`을 읽는다.
   `stages[].overridden`과 `trigger.overridden`이 Project가 직접 정한 값을 표시한다.
   - `sizes`: 환경 이름별 크기다(예: `{prod: large}`). map 전체를 교체하므로, 자기 값을 유지할 단계를 모두 함께 넘긴다.
@@ -200,6 +204,9 @@ Runway의 build는 기본으로 인증 없이 저장소를 clone한다. 비공�
     크기의 실제 값(CPU·memory·복제 수 또는 instance type)은 관리자가 환경의 target에 정한다. Deployment의 `size`가 적용된 값을 보여 준다.
   - `trigger`: `{kind: branch, pattern: main}` 또는 `{kind: tag, pattern: "v*"}` 형태다. `null`은 제거해 pipeline의 trigger로 돌아간다.
   - `installScript`: target type이 인스턴스를 쓰는 pipeline(`pipeline.machines`가 `true`)에서만 쓴다. secret을 넣지 않는다. `null`은 제거한다.
+  - `suffixEveryStage`: `true`이면 마지막 단계의 주소도 `<slug>-<env>.<도메인>`이 된다. `false` 또는 `null`은 기본값으로 되돌려
+    마지막 단계가 다시 `<slug>.<도메인>`을 쓴다. 현재 값은 `pipeline.suffixEveryStage`다. 실행 중인 서비스는 다음 Deployment까지
+    기존 주소(`environments[].current.url`)를 유지하므로, 주소를 바꾸려면 그 단계에 다시 배포한다.
   - `pipeline`: `pipeline_list`의 이름이다. 생략하면 유지한다. cloud나 target type이 다른 pipeline은 Project에 서비스·리소스·Variable이
     남아 있으면 `project_in_use`로 거부된다. 새 pipeline에 맞지 않는 Project 값(단계가 아닌 환경의 크기 등)은 제거된다.
   - 생략한 필드는 그대로 유지된다. `invalid_pipeline`이면 메시지가 위반을 모두 알려 준다.
@@ -211,6 +218,8 @@ Runway의 build는 기본으로 인증 없이 저장소를 clone한다. 비공�
   Agent Runway가 모든 환경의 서비스를 제거한 뒤 모든 리소스와 그 데이터, Project를 차례로 지운다. 되돌릴 수 없다.
   응답의 남은 서비스·리소스를 알리고, 사용자가 다시 물으면 `project_deletion_get`으로 한 번 확인한다.
   서비스 하나만 내리면 `service_remove`, 리소스 하나만 지우면 `resource_delete`를 쓴다. 둘 다 승인 뒤 실행된다.
+  `service_remove`의 대상이 있는지는 `project_status`의 `environments[].removable`이 알려 준다. 실행 중인 서비스가 없어도
+  실패한 배포가 앱을 남겼을 수 있으면 `true`다.
 
 ## 보고
 
