@@ -23,10 +23,10 @@ Studio에 서비스 데이터의 사본이 없으므로 서비스의 현재 상�
 
 | 서비스 | 소유하는 것 | Helper가 쓰는 경로 | 상세 |
 |---|---|---|---|
-| Agent Studio | Agent·Skill·Plugin·Tools(MCP 레지스트리)·Chat·Artifact·trigger·메신저 연동·비용·Trace | Studio 관리 도구(`StudioRead` 등), Studio 페이지 | [agent-settings](references/agent-settings.md) |
+| Agent Studio | Agent·Skill·Plugin·Tools(MCP 레지스트리)·Chat·Artifact·trigger·메신저 연동·비용·Trace·사용자의 Git 호스트 계정 연결 | Studio 관리 도구(`StudioRead` 등), Studio 페이지 | [agent-settings](references/agent-settings.md) |
 | Agent Memory | 장기·단기 기억과 작업 handoff | Memory 도구, `agent-memory` 콘솔 | [memory](references/memory.md) |
 | Agent Knowledge | 문서·RAG·지식 그래프·ontology 객체·녹음·전사·회의록·오디오 profile | Knowledge 도구, `agent-knowledge` 콘솔 | [knowledge](references/knowledge.md) |
-| Agent Forge | Workspace·Sandbox·Run·Workspace profile·Git 연결·보호된 Git 작업 승인 | Forge 도구, `agent-forge` 콘솔 | [forge](references/forge.md) |
+| Agent Forge | Workspace·Sandbox·Run·Workspace profile·Git 단계 실행·보호된 Git 작업 승인 | Forge 도구, `agent-forge` 콘솔 | [forge](references/forge.md) |
 | Agent Runway | Project·환경·pipeline·DB·bucket·secret·`application.yaml`·빌드·배포·소유자 승인 | Runway 도구, `agent-runway` 콘솔 | [delivery](references/delivery.md) |
 | Agent Models | 모델 공급자·승인된 모델 선택·라우팅·사용량 | MCP 도구와 Helper 패널 없음. `StudioRead(resource="models")`로 선택 가능한 모델만 읽는다 | [agent-settings](references/agent-settings.md#모델) |
 
@@ -72,9 +72,11 @@ Studio에 서비스 데이터의 사본이 없으므로 서비스의 현재 상�
 - **접수와 완료를 구분한다.** Knowledge 오디오 작업, Forge Run·저장소 생성, Runway 배포는 접수 후 결과가
   나중에 이 Chat으로 돌아온다. 결과를 기다리며 같은 상태를 반복 조회하지 않는다. 응답이 유실되면 새로
   제출하지 말고 같은 키로 `*_lookup_request`·`audio_request_status`를 조회한다.
-- **콘솔 전용 작업은 콘솔에서 한다.** Forge의 GitHub 연결·보호된 Git 작업 승인, Runway의 secret 입력·
+- **콘솔 전용 작업은 콘솔에서 한다.** Forge의 보호된 Git 작업 승인, Runway의 secret 입력·
   환경과 pipeline 관리, Memory·Knowledge의 관리자 설정과 검토 작업이 여기에 속한다. Runway의 서비스·리소스·Project 삭제는
   `service_remove`·`resource_delete`·`project_delete`로 요청하며, Studio가 호출마다 사람에게 승인을 받는다.
+- **Forge가 쓰는 Git 호스트 계정은 사용자가 Studio에서 연결한다.** 위치는 Studio의 프로필 → Git 계정(`/profile/git`)이다.
+  Forge 콘솔과 도구에는 계정 연결·저장소 등록 기능이 없다. Forge 도구가 `connectUrl`을 주면 그 링크를 준다.
 - **저장은 검증이 아니다.** 설정 저장 성공을 Agent 동작 검증으로, 클릭 성공을 저장 성공으로 보고하지 않는다.
 - **요청 범위만 수행한다.** 필수 정보가 없을 때만 질문한다. 되돌릴 수 있는 선택은 합리적인 기본값으로
   정하고 결과에 설명한다.
