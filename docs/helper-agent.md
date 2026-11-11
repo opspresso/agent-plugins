@@ -37,7 +37,7 @@ Studio 도구 사용 규칙과 Studio 페이지 지도는 Studio가 실행마다
 해당 화면에 직접 입력한다.
 
 Helper Chat에서는 배포가 연결한 Agent 서비스의 도구 항목이 자동으로 연결된다. 서비스가 읽기 전용으로 표시하지 않은 도구는
-승인 후 실행한다. Forge의 보호된 Git 작업 승인, Runway secret 입력·환경과 pipeline 관리는 서비스 콘솔에서만 한다. Forge가 쓰는 Git 호스트 계정은 사용자가 Studio의 프로필 → Git 계정(`/profile/git`)에서 연결한다. Runway의 소유자 배포 승인은 소유자가 Runway 콘솔이나 Studio 승인 카드에서 한다.
+승인 후 실행한다. Forge의 보호된 Git 작업 승인, Runway secret 입력·환경과 pipeline 관리는 서비스 콘솔에서만 한다. Forge와 Runway가 쓰는 Git 호스트 계정은 사용자가 Studio의 프로필 → Git 계정(`/profile/git`)에서 연결한다. Runway의 소유자 배포 승인은 소유자가 Runway 콘솔이나 Studio 승인 카드에서 한다.
 Runway의 서비스·리소스·Project 삭제는 삭제 도구로 요청하며 Studio가 호출마다 사람의 승인을 받는다.
 
 전용 Skill은 Studio에 직접 저장되며 이 저장소의 sync 대상이 아니다. 공유 Skill은 이 저장소에서 관리하고 이름에 `--`를 쓰지 않는다.

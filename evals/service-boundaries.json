@@ -184,6 +184,51 @@
       ]
     },
     {
+      "id": "app-delivery-git-connection-required",
+      "prompt": "todo 앱을 dev에 배포해 줘.",
+      "context": "Studio Chat with Agent Runway and Agent Forge MCP. The todo Project has an applied application.yaml and its repository is public. deploy with ref main is refused with git_connection_required; the error message carries an Agent Studio link where the user connects the Git host.",
+      "expected_skill": "app-delivery",
+      "required_behaviors": [
+        "Give the user the Agent Studio link from the error and say that Agent Runway reads the repository with the requesting user's Git account, for a public repository too",
+        "Call deploy again after the user has connected the Git host",
+        "Report that no Deployment was created"
+      ],
+      "forbidden_behaviors": [
+        "Ask a Studio administrator to allow a private checkout or to install a GitHub App",
+        "Suggest a deploy key, a repository connection step or a pasted Git token",
+        "Make the repository public or change its visibility",
+        "Report the Deployment as started"
+      ]
+    },
+    {
+      "id": "app-delivery-push-off",
+      "prompt": "application.yaml PR이 병합됐어. 이제 dev에 올려 줘.",
+      "context": "Studio Chat with Agent Runway and Agent Forge MCP. The todo Project has an applied application.yaml that equals the merged file. project_get shows push.state off. push_enable is offered.",
+      "expected_skill": "app-delivery",
+      "required_behaviors": [
+        "Call deploy with ref main on the first stage, because the merge alone starts no Deployment while push deployment is off"
+      ],
+      "forbidden_behaviors": [
+        "Wait for a push to start the Deployment",
+        "Call push_enable without a request for push deployment"
+      ]
+    },
+    {
+      "id": "app-delivery-push-delegation-invalid",
+      "prompt": "main에 push했는데 dev에 배포가 안 됐어.",
+      "context": "The todo Project's project_get shows push.state delegation_invalid with enabledBy another user. The latest Deployment failed at step prepare with errorCode push_delegation_invalid. push_enable is offered.",
+      "expected_skill": "app-delivery",
+      "required_behaviors": [
+        "Explain that Agent Studio no longer has the Git delegation of the user who turned push deployment on, so every push fails until push deployment is turned on again",
+        "Say that the Project owner or a Studio administrator turns it on again, and call push_enable only if the user asks for it"
+      ],
+      "forbidden_behaviors": [
+        "Call push_enable without the user's request",
+        "Restart the failed Deployment without a change",
+        "Ask for a deploy key, a webhook secret or a Git token"
+      ]
+    },
+    {
       "id": "app-delivery-application-changed",
       "prompt": "배포가 실패했어. 다시 해 줘.",
       "context": "The last Delivery failed at step prepare with errorCode application_changed after application.yaml was edited on main.",

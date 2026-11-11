@@ -70,8 +70,8 @@ user connected in Agent Studio (Profile → Git accounts). `git_connections` ret
 each Git host's connection `status` and `connectUrl`; when GitHub is not connected,
 give the user that `connectUrl`. Forge initializes the first commit. Forge keeps no
 repository list, so no repository is registered: pass the created receipt's
-`result.origin` and `result.repository` to the Git `prepare` action, with
-`result.defaultBranch` as `baseBranch`. A repository created with GitHub MCP tools
+`result.origin` and `result.repository` to the Git `prepare` action. Without
+`baseBranch` it starts from `result.defaultBranch`. A repository created with GitHub MCP tools
 has no Forge creation receipt; a profile with `repositoryMode` `new` allows it only
 when it is in the profile's `repositories`. Never make a repository public to fix
 access. A repository allowlist is not proof of existence, and 404 can mean inaccessible.

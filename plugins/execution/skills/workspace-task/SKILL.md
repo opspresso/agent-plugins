@@ -57,14 +57,15 @@ Forge URL·조직·사용자 신원·provider credential·Git token은 서버 �
    `closed`는 다시 열 수 없다. Workspace당 실행은 한 번에 하나다.
 3. **새 Workspace**: 재사용할 공간이 없을 때만 `workspace_create`에 `title`과 profile을 보낸다.
    `title`은 사용자 언어의 짧은 작업 목적이다. 셸 스크립트를 제목으로 복사하지 않는다.
-4. **저장소 준비**: 저장소 작업이면 `{kind:"git", action:"prepare"}` 실행에 `origin`, `repository`, `baseBranch`와
+4. **저장소 준비**: 저장소 작업이면 `{kind:"git", action:"prepare"}` 실행에 `origin`, `repository`와
    `agent/`로 시작하는 `branch`를 보낸다. 저장소를 먼저 등록하지 않는다.
    - `origin`은 `git_connections`가 반환한 `hosts[]` 중 그 저장소가 있는 host의 `origin`이다(예: `https://github.com`).
      `repository`는 그 host 안의 저장소 경로다. GitHub는 `owner/repo`, GitLab은 `group/project`다.
    - 그 host의 `status`가 `connected`가 아니면 host의 `connectUrl`을 사용자에게 주고, 사용자가 Agent Studio에서
      연결한 뒤 이어간다. 다른 계정·token·도구로 대신하지 않는다. credential을 인수로 보내지 않는다.
-   - `baseBranch`는 사용자가 지정한 브랜치다. 지정하지 않았으면 제공된 Git 호스트 조회 도구로 저장소의 기본 브랜치를 확인하고,
-     확인할 수 없으면 사용자에게 묻는다. `git_connections`는 저장소와 브랜치를 반환하지 않는다.
+   - `baseBranch`는 작업을 시작하고 PR이 대상으로 삼는 브랜치다. 사용자가 브랜치를 지정했으면 그 값을 보내고, 지정하지 않았으면 생략한다.
+     생략하면 Forge가 저장소의 기본 브랜치에서 시작한다. 기본 브랜치를 조회하거나 사용자에게 묻지 않는다.
+     `prepare` 결과의 `gitResult.baseBranch`가 실제로 쓴 브랜치다.
    - `prepare`는 저장소가 없는 Workspace에만 보낸다. Workspace는 브랜치 하나만 가지므로 다른 저장소·브랜치의 새 작업은
      새 Workspace에서 한다.
    - `prepare`가 거절되거나 실패하면 [Forge 도구](references/forge.md#git-오류)의 code별 처리에 따른다.
