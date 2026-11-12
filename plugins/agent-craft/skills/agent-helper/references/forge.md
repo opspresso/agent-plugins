@@ -13,7 +13,8 @@
   `interrupted`는 외부 효과가 불확실하다는 뜻이며 자동으로 다시 실행하지 않는다. 기본 제한 시간 10분, 최대 1시간이다.
 - **Workspace profile**: runtime·모델·검사(test/lint/build)·유휴 시간·허용 저장소 규칙(`repositoryMode`: `all`·`selected`·`owners`·`new`)을
   저장한 사용자 설정. revision이 있으며 생성·제출 때 `profileId`와 `profileRevision`을 함께 보낸다. 기본 profile은 자동 적용되지 않는다.
-  새 profile의 `repositoryMode` 기본값은 `all`이며 연결한 Git 계정이 접근할 수 있는 모든 저장소를 허용한다. 나머지 값은 profile의 목록으로 저장소를 제한한다.
+  새 profile의 `repositoryMode` 기본값은 `all`이며 연결한 Git 계정이 접근할 수 있는 모든 저장소와 그 계정이 만들 수 있는 저장소의 생성을 허용한다.
+  나머지 값은 profile의 목록으로 저장소 접근과 생성을 제한한다. 이전 기본값이던 목록이 빈 `selected` profile은 Forge v0.43.0이 revision을 유지한 채 `all`로 바꿨다.
 - **Git 호스트 연결**: 사용자가 Agent Studio의 프로필 → Git 계정(`/profile/git`)에서 Git 호스트마다 한 번 연결한다.
   Git 호스트는 GitHub(github.com·GitHub Enterprise Server)와 GitLab(GitLab.com·self-managed GitLab)이다. `provider`가 `github`이고
   `origin`이 `https://github.com`이 아니면 GitHub Enterprise Server다. GitHub 저장소 경로는 `owner/repo`, GitLab은 `group/subgroup/project`처럼 group 경로 전체다.
@@ -25,8 +26,11 @@
   `publish-protected`·`merge`·`tag`·`release`·`deploy`는 **보호된 작업**이며 Workspace 소유자가 Forge 콘솔에서 승인해야 한다.
   `merge`는 저장소의 기본 branch로만 병합하므로 base branch가 기본 branch인 Workspace에서만 된다. 기본 branch는 `main`이 아닐 수 있다.
   `deploy`도 기본 branch에서만 workflow를 실행한다. `sourceRevision`으로 준비한 Workspace는 읽기 전용이며 `review` 밖의 Git 단계가 거절된다.
-- **승인 상태**: `git_approval_get`의 `status`는 `pending`·`approved`·`rejected`·`executing`·`expired`·`cancelled`다.
+- **승인 상태**: `git_approval_get`의 `status`는 `pending`(결정 대기)·`approved`·`rejected`·`executing`(효과 시작)과,
+  Run이 끝난 뒤의 `executed`·`failed`·`interrupted`·`expired`·`cancelled`다.
   결정 전에 Run이 끝나면 승인 요청도 끝난다. 승인 기한 뒤면 `expired`, 그 전이면 `cancelled`이며 대기 목록에 남지 않고 승인할 수 없다.
+  승인을 소비한 Run이 끝나면 `executed`(승인한 단계가 실행됨, 결과는 Run의 `gitResult`), `failed`(결과 전에 중지·거절됨),
+  `interrupted`(원격 반영 여부를 알 수 없음. 다시 요청하기 전에 Git 호스트를 확인한다)가 된다.
 
 ## Helper가 쓸 수 있는 도구
 
@@ -64,7 +68,7 @@ Git 호스트 계정 연결·해제는 Forge 콘솔에서 하지 않는다. Git 
    `connected`인지 확인한다. 저장소는 등록하지 않는다. Tools의 GitHub MCP 연결과는 별개의 연결이다.
 3. `/settings`에서 profile을 만들고 기본으로 선택한다. `repositoryMode`의 기본값 `all`은 기존 저장소 작업과 새 저장소 생성을 모두 허용한다.
    저장소를 제한하려면 `selected`·`owners`·`new`를 고르고 허용 저장소를 지정한다.
-   `selected` 모드에 저장소 목록이 비어 있으면 `repository_create`는 성공할 수 없다.
+   `selected` 모드에 저장소 목록이 비어 있으면 어떤 저장소도 허용하지 않으므로 `prepare`와 `repository_create`가 거절된다.
 4. Studio에서 작업할 Agent의 `mcpList`에 `agent-forge`를 연결한다. [journeys](journeys.md#코딩-agent-준비)
 
 ## 오류

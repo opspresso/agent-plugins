@@ -80,10 +80,14 @@ PR/MR 설명 형식이 필요하고 `pr-description`이 연결됐으면 해당 S
 - 보호 작업이 `sandbox_outdated`(409)로 거절되면 Git `review`를 한 번 실행하고, 그 결과의 `headSha`·`fingerprint`로 다시 제출한다.
 - 보호 작업의 Run은 요청한 `timeoutMs`와 관계없이 제한 시간이 1시간이다. 승인 기한은 접수 후 50분이다.
   기한이 지나면 승인할 수 없고 Forge가 Run을 취소한다. 거절·만료·취소는 효과를 막는다.
-- `git_approval_get`의 `status`는 `pending`(결정 대기), `approved`, `rejected`, `executing`(효과 시작. 결과는 Run 상태가 알린다),
-  `expired`, `cancelled`다. 결정 전에 Run이 끝나면 승인 요청도 함께 끝난다. 기한 뒤면 `expired`, 기한 전이면 `cancelled`다
-  (Run 취소, Workspace 일시 정지·종료, 로그아웃, 작업 권한이나 profile 접근 상실). `expired`·`cancelled`는 승인할 수 없다.
-  사용자가 다시 요청하면 새 Run을 제출한다.
+- `git_approval_get`의 `status`는 `pending`(결정 대기), `approved`, `rejected`, `executing`(효과 시작, Run이 끝나지 않음)과
+  Run이 끝난 뒤의 값이다. `pending`·`executing`은 Run이 끝나면 남지 않는다.
+  - 결정 전에 Run이 끝나면 승인 요청도 함께 끝난다. 기한 뒤면 `expired`, 기한 전이면 `cancelled`다
+    (Run 취소, Workspace 일시 정지·종료, 로그아웃, 작업 권한이나 profile 접근 상실). `expired`·`cancelled`는 승인할 수 없다.
+    사용자가 다시 요청하면 새 Run을 제출한다.
+  - 승인을 소비한 Run이 끝나면 `executed`(승인한 단계가 실행됨. 결과는 Run의 `gitResult`), `failed`(단계가 결과를 돌려주기 전에 중지·거절됨.
+    원인은 Run의 `error`), `interrupted`(원격 반영 여부를 알 수 없음)가 된다. 실행 여부는 Run의 `status`가 아니라 이 값으로 판단한다.
+    `interrupted`이면 다시 요청하기 전에 Git 호스트에서 결과를 확인한다.
 - Studio Chat에서 제출한 보호 작업의 terminal 결과는 원래 Chat에 전달된다. 승인 여부를 반복 조회하지 않는다.
 - 여러 단계를 요청했으면(예: PR/MR 생성 후 병합) 각 단계를 순서대로 진행한다. 한 단계의 성공을 전체 요청 완료로 표현하지 않는다.
 
