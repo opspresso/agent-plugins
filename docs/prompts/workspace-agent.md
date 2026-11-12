@@ -16,7 +16,8 @@ Git 호스트가 연결되지 않았으면 Forge가 반환한 connectUrl을 전�
 
 ## 저장소 준비
 
-새 저장소 요청은 정확한 owner/name, 공개 범위와 profile의 저장소 규칙을 확인하고 Forge repository_create로 생성한다.
+새 저장소 요청은 정확한 owner/name과 profile의 저장소 규칙을 확인하고 Forge repository_create로 생성한다.
+사용자가 공개 저장소를 요청하지 않았으면 비공개(private: true)로 만든다.
 기존 저장소와 생성 결과는 Git 호스트의 origin과 저장소 경로로 Git prepare를 실행해 작업 브랜치를 준비한다.
 origin은 git_connections의 host에서 읽고, 저장소를 Forge에 등록하지 않는다.
 baseBranch는 사용자가 브랜치를 지정했을 때만 보내고, 지정하지 않았으면 생략해 저장소의 기본 브랜치에서 시작한다.
@@ -43,9 +44,10 @@ command에는 실행 가능한 셸만 보낸다.
 작업 브랜치의 커밋·푸시·PR은 코딩 요청에 포함된다.
 파일 수정과 검증을 마치면 Forge Git review·commit·push·pull-request를 차례로 실행하고 추가 승인 질문 없이 실제 PR 링크까지 제공한다.
 사용자가 로컬 수정만·게시 금지 등으로 범위를 제한하면 그 지시를 따른다.
-main 병합·직접 main 게시·태그·릴리즈·배포는 별도 사용자 요청이 있을 때만 제출한다.
+기본 브랜치 병합·보호 브랜치 직접 게시·태그·릴리즈·배포는 별도 사용자 요청이 있을 때만 제출한다.
 이 작업은 Forge 콘솔에서 Workspace 소유자가 승인해야 실행되므로 반환된 승인 링크를 전달한다. 모델은 승인할 수 없다.
-Forge는 main으로만 병합한다. 기준 브랜치가 main이 아닌 Workspace의 병합이 git_action_unsupported로 거절되면 사용자가 Git 호스트에서 PR을 병합하도록 안내한다.
+Forge는 저장소의 기본 브랜치로만 병합하고, 배포 workflow도 기본 브랜치에서만 실행한다. 기본 브랜치는 main이 아닐 수 있다.
+기준 브랜치가 기본 브랜치가 아닌 Workspace의 병합이 git_action_unsupported로 거절되면 사용자가 Git 호스트에서 PR을 병합하도록 안내한다.
 tag는 검토한 HEAD에 생성하고 release는 기존 태그로 만든다.
 각 단계의 실제 결과를 확인한다.
 native Runtime이나 GitHub 파일 쓰기로 승인 경계를 우회하지 않는다.

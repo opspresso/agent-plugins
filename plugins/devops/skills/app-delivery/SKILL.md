@@ -139,12 +139,14 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
    `pull-request`는 승인을 만들지 않는다.
 7. PR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approvalUrl`을 반환한다.
    그 링크를 답변에 그대로 넣어 사용자에게 준다(`WaitForServiceWork`로 턴을 끝낼 때도 그 메시지에 넣는다). 병합 Run이 `succeeded`인지 확인한 뒤 3절로 간다. 승인 없이 다른 경로로 병합하지 않는다.
-   Forge는 `main`으로만 병합한다. Workspace의 기준 브랜치가 `main`이 아니면 `merge`가 `git_action_unsupported`로 거절되고 승인은 만들어지지 않는다.
+   Forge는 저장소의 기본 브랜치(`main`이 아닐 수 있다)로만 병합한다.
+   Workspace의 기준 브랜치가 기본 브랜치가 아니면 `merge`가 `git_action_unsupported`로 거절되고 승인은 만들어지지 않는다.
+   `baseBranch` 없이 준비한 Workspace는 기본 브랜치에서 시작하므로 이 이유로 거절되지 않는다.
    이때는 사용자가 Git 호스트에서 그 PR을 병합해야 한다고 알리고, 병합된 뒤 3절로 간다.
 
 ## 3. 선언 적용과 리소스
 
-1. 배포할 revision(기본 병합된 main)의 `application.yaml` 내용을 그대로 `project_apply`에 넘긴다(`repository`, `application`).
+1. 배포할 revision(기본: PR을 병합한 브랜치)의 `application.yaml` 내용을 그대로 `project_apply`에 넘긴다(`repository`, `application`).
    새 Project를 `default`가 아닌 pipeline으로 만들 때만 `pipeline`을 함께 넘긴다. 기존 Project에는 `pipeline`을 넘기지 않는다.
    Project의 pipeline과 다른 이름을 넘기면 `pipeline_mismatch`로 실패한다.
    새 Project를 만드는 `project_apply`는 호출한 사용자의 Git 계정이 저장소를 읽을 수 있는지 확인한다([저장소 접근](#저장소-접근)).
@@ -170,7 +172,8 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
 `pipeline.stages`가 승격 순서와 크기를, `environments[]`의 `position`·`next`·`approval`·`deployBlockers`·`promoteBlockers`가 단계별 상태를 준다.
 기본 설치의 `default` pipeline은 `dev`(승인 없음) → `prod`(소유자 승인)이다.
 
-1. 첫 단계(`position`이 `0`인 환경)에 `deploy`(`project`, `environment`, `ref`, `idempotencyKey`)를 호출한다. 기본 ref는 `main`이다.
+1. 첫 단계(`position`이 `0`인 환경)에 `deploy`(`project`, `environment`, `ref`, `idempotencyKey`)를 호출한다.
+   `ref`는 배포할 브랜치(기본: PR을 병합한 브랜치)다. 생략하면 Runway는 `main`을 쓰므로, 저장소의 기본 브랜치가 `main`이 아니면 그 브랜치를 보낸다.
    Agent Runway가 호출한 사용자의 Git 계정으로 저장소를 읽고, ref를 pipeline의 architecture로 build해 Release(`r<n>`)를 만들고 배포한다.
    Git 계정이나 `ref` 때문에 거절되면 [저장소 접근](#저장소-접근)의 code별 행동에 따른다.
    push 배포를 켠 Project(`project_get`의 `push.state`가 `on`)는 trigger(`project_status`의 `pipeline.trigger`)와 맞는 push를

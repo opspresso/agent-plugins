@@ -51,7 +51,7 @@ profile의 저장소 규칙이 이름을 허용해도 원격 저장소가 존재
    - `status:"created"`이면 Forge가 초기 commit을 만들었다. 저장소를 따로 등록하지 않는다. 영수증의 `result.origin`·`result.repository`를
      Git `prepare`의 `origin`·`repository`로 쓴다. `baseBranch`를 생략하면 `prepare`가 `result.defaultBranch`에서 시작한다.
    - `created`인데 `allowed:false`이면 현재 profile이 그 저장소를 허용하지 않는다. 다시 만들지 않는다.
-     profile 소유자가 profile의 `repositories`에 추가해야 한다고 알린다.
+     영수증의 `error`(`registrationError`와 같은 원인)를 사용자에게 전하고, profile 소유자가 profile의 `repositories`에 추가해야 한다고 알린다.
    - `failed`는 생성이 거절된 것이다. 영수증의 `error`로 원인을 확인한다.
    - `unknown`이거나 응답을 잃었으면 생성을 반복하지 않는다. `repository_lookup_request`·`repository_get`으로 영수증을 읽는다.
      `requiresUserDecision`이면 사용자가 대상을 확인한다. 대상이 존재해도 이 요청이 만들었다는 증거가 아니다.
@@ -81,4 +81,4 @@ profile의 저장소 규칙이 이름을 허용해도 원격 저장소가 존재
 내부 파일명은 상대 경로를 코드로 표시하고 `/workspace/...`를 다운로드 링크로 만들지 않는다.
 호스트 앱에서 저장소를 지정한 프로젝트 생성은 사용자가 제한하지 않으면 새 작업 브랜치에서 구현·검증 후
 `workspace-task`의 Git 게시 절차로 커밋·푸시·PR까지 추가 승인 없이 완료한다.
-Git-free 결과물에는 원격 게시를 추가하지 않는다. main 반영·태그·릴리즈·배포는 별도 요청과 확인을 따른다.
+Git-free 결과물에는 원격 게시를 추가하지 않는다. 기본 브랜치 반영·태그·릴리즈·배포는 별도 요청과 확인을 따른다.

@@ -314,9 +314,13 @@ publication, merge, tags, releases and deployment workflow dispatch require a
 separate request and the Workspace owner's approval in the Forge console; MCP has
 no approval tool. The approval page shows the committed change from the `prepare`
 base commit to the approved HEAD and, for a merge, a link to the pull request.
-Forge merges into `main` only: it refuses a merge on a Workspace whose base branch
-is not `main` with `git_action_unsupported` before it creates an approval, and the
-user merges that pull request on the Git host. Tags bind to the reviewed HEAD;
+Forge merges into the repository's default branch only, which the Git host reports
+and which need not be `main`. It refuses a merge on a Workspace whose base branch
+is not the default branch with `git_action_unsupported` before it creates an
+approval, and the user merges that pull request on the Git host. A deployment
+workflow runs on the default branch only. A Workspace prepared with
+`sourceRevision` is read-only: Forge refuses every Git step except `review` there.
+Tags bind to the reviewed HEAD;
 releases bind to an existing tag and its exact commit. General agent descriptions and system prompts identify
 capabilities; account, repository, branch and requested file changes belong in
 each user's task input.

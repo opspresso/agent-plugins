@@ -34,7 +34,7 @@ Agent는 그 주소를 사용자에게 전달한다.
 
 시스템 프롬프트는 [workspace-agent.md](prompts/workspace-agent.md)를 그대로 사용한다.
 코딩 요청의 기본 완료 범위는 새 작업 브랜치의 구현·검증·커밋·push·PR이다.
-main 반영·tag·릴리즈·배포는 별도 사용자 요청과 확인을 따른다. 조회·리뷰나 게시 제한 요청은 그 범위를 지킨다.
+기본 브랜치 반영·tag·릴리즈·배포는 별도 사용자 요청과 확인을 따른다. 조회·리뷰나 게시 제한 요청은 그 범위를 지킨다.
 작업별 상세 지침과 Git 예제는 연결 Skill에서 읽는다. 시스템 프롬프트에 특정 계정·저장소·Issue를 넣지 않는다.
 
 ## Skill 바인딩
@@ -85,7 +85,8 @@ Git `prepare`를 실행한다. `baseBranch`를 생략하면 `prepare`가 `result
   이미 주어진 셸 스크립트·검증된 짧은 명령에는 일반 명령 실행 방식을 사용한다. CLI 프로젝트 생성도 자연어 코딩 작업이다.
 - PR 리뷰·CI 조사만으로 충분한 작업에는 작업 공간을 만들지 않는다. 재현이 필요하면 실제 HEAD를 확인한다.
 - 저장소는 Git `prepare`(`origin`, `repository`, 선택 `baseBranch`)로 `agent/` 작업 브랜치에 준비한다. `baseBranch`를 생략하면 저장소의 기본 브랜치에서 시작한다.
-  선택 `sourceRevision`으로 고정한 검토 작업 공간은 게시할 수 없다.
+  선택 `sourceRevision`으로 준비한 작업 공간은 그 커밋을 읽기만 한다. 실행되는 Git 단계는 `review`뿐이고,
+  커밋·push·PR·보호 작업은 접수할 때 `git_action_unsupported`로 거절된다. 게시할 작업은 `sourceRevision` 없이 준비한다.
   작업 공간은 `prepare`한 Git 계정과 저장소를 보관한다. 연결 계정이나 저장소의 식별 값이 바뀌면 Forge가 그 작업 공간의 Git 작업을
   `git_account_changed`·`repository_identity_changed`로 거절한다.
 - Git-free 프로젝트 생성은 가능하다. 게시할 프로젝트는 생성 전에 저장소가 프로필 규칙에 맞는지 확인한다.
@@ -95,8 +96,9 @@ Git `prepare`를 실행한다. `baseBranch`를 생략하면 `prepare`가 `result
   현재 Forge 도구에는 파일 인자가 없다.
 - Studio Chat에서 접수한 Run은 terminal 결과가 원래 Chat에 한 번 전달된다. 보호된 Git 작업은 Forge 콘솔 승인 뒤 실행되고
   그 결과도 같은 방식으로 전달된다. 실패·거절·결과 불명인 동작을 자동 반복하지 않는다.
-  Forge는 `main`으로만 병합한다. 기준 브랜치가 `main`이 아닌 작업 공간의 `merge`는 접수할 때 `git_action_unsupported`로 거절되며,
-  그 PR은 사용자가 Git 호스트에서 병합한다.
+  Forge는 저장소의 기본 브랜치로만 병합한다. 기본 브랜치는 Git 호스트가 알려 준 값이며 `main`이 아니어도 된다.
+  기준 브랜치가 기본 브랜치가 아닌 작업 공간의 `merge`는 접수할 때 `git_action_unsupported`로 거절되며,
+  그 PR은 사용자가 Git 호스트에서 병합한다. 배포 workflow도 기본 브랜치(`ref`)에서만 실행한다.
   CI 완료를 기다렸다가 자동으로 재개하는 기능은 없다.
 - Run checks, 직접 실행한 검사와 GitHub CI를 구분한다. Git 게시·CI·릴리즈·배포도 서로 다른 결과다.
 

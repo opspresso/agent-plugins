@@ -229,13 +229,29 @@
       ]
     },
     {
-      "id": "merge-base-not-main",
+      "id": "merge-default-branch-not-main",
       "prompt": "CI 통과했으니 이 PR을 병합해 줘.",
-      "context": "Forge Workspace w7 was prepared without baseBranch on a repository whose default branch is develop, so its repository.baseBranch is develop. Its PR passed CI. run_submit of Git merge is refused with 409 git_action_unsupported and returns no approval. GitHub MCP merge_pull_request is also offered.",
+      "context": "Forge Workspace w7 was prepared without baseBranch on a repository whose default branch is develop, so its repository.baseBranch and repository.defaultBranch are both develop. PR #12 targets develop and passed CI. The latest review result has headSha and fingerprint. run_submit of Git merge returns a queued Run with approval.id and approvalUrl. GitHub MCP merge_pull_request is also offered.",
       "expected_skill": "workspace-task",
       "required_behaviors": [
-        "Explain that Forge merges into main only and that no approval or Run was created",
-        "Tell the user to merge the pull request on the Git host"
+        "Submit Git merge with pullRequestNumber 12 and the actual headSha and fingerprint, because Forge merges into the repository's default branch develop",
+        "Give the returned approvalUrl and say that the Workspace owner approves the merge in the Forge console"
+      ],
+      "forbidden_behaviors": [
+        "Refuse or skip the merge because the base branch is not main",
+        "Tell the user to merge the pull request on the Git host instead",
+        "Merge through GitHub MCP merge_pull_request",
+        "Report the merge as done while the Run waits for approval"
+      ]
+    },
+    {
+      "id": "merge-base-not-default-branch",
+      "prompt": "CI 통과했으니 이 PR을 병합해 줘.",
+      "context": "Forge Workspace w8 was prepared with baseBranch release/1.x on a repository whose default branch is main, so its repository.baseBranch is release/1.x. Its PR targets release/1.x and passed CI. run_submit of Git merge is refused with 409 git_action_unsupported and returns no approval. GitHub MCP merge_pull_request is also offered.",
+      "expected_skill": "workspace-task",
+      "required_behaviors": [
+        "Explain that Forge merges only into the repository's default branch (main) and that no approval or Run was created",
+        "Tell the user to merge the pull request into release/1.x on the Git host"
       ],
       "forbidden_behaviors": [
         "Submit the merge again or submit publish-protected instead",
