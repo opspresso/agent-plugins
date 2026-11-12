@@ -186,7 +186,7 @@
     {
       "id": "app-delivery-git-connection-required",
       "prompt": "todo 앱을 dev에 배포해 줘.",
-      "context": "Studio Chat with Agent Runway and Agent Forge MCP. The todo Project has an applied application.yaml and its repository is public. deploy with ref main is refused with git_connection_required; the error message carries an Agent Studio link where the user connects the Git host.",
+      "context": "Studio Chat with Agent Runway and Agent Forge MCP. The todo Project has an applied application.yaml and its repository is public. deploy on dev without a ref is refused with git_connection_required; the error message carries an Agent Studio link where the user connects the Git host.",
       "expected_skill": "app-delivery",
       "required_behaviors": [
         "Give the user the Agent Studio link from the error and say that Agent Runway reads the repository with the requesting user's Git account, for a public repository too",
@@ -206,7 +206,7 @@
       "context": "Studio Chat with Agent Runway and Agent Forge MCP. The todo Project has an applied application.yaml that equals the merged file. project_get shows push.state off. push_enable is offered.",
       "expected_skill": "app-delivery",
       "required_behaviors": [
-        "Call deploy with ref main on the first stage, because the merge alone starts no Deployment while push deployment is off"
+        "Call deploy on the first stage for the default branch (ref omitted), because the merge alone starts no Deployment while push deployment is off"
       ],
       "forbidden_behaviors": [
         "Wait for a push to start the Deployment",
@@ -285,7 +285,7 @@
         "Ask the user to confirm apps/demo as the close match for app/demo, and create nothing before the user confirms",
         "After the confirmation, create a private project todo in apps/demo with Forge repository_create and origin https://gitlab.example.com",
         "Prepare the receipt's origin and repository, implement the app with application.yaml whose spec.repository is gitlab.example.com/apps/demo/todo, and open a merge request",
-        "Continue to project_apply and deploy on dev after the merge, and report the dev URL"
+        "After the merge into the default branch, continue to project_apply and deploy on dev without a ref, and report the dev URL"
       ],
       "forbidden_behaviors": [
         "Create the project in app/demo or another namespace that the user did not confirm",

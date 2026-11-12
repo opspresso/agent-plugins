@@ -76,16 +76,18 @@ Git 호스트는 GitHub(github.com·GitHub Enterprise Server)와 GitLab(GitLab.c
 host가 없는 `owner/repo`는 github.com만 뜻하므로 다른 호스트의 저장소에는 host를 쓴다. GitLab은 group 경로 전체를 쓴다.
 host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
 
-- **Git 계정이 필요한 호출**: 새 Project를 만드는 `project_ensure`·`project_apply`와 `ref`를 보내는 `deploy`다.
+- **Git 계정이 필요한 호출**: 새 Project를 만드는 `project_ensure`·`project_apply`와 `release` 없이 호출하는 `deploy`(`ref`를 보내거나 생략)다.
   호출한 사용자가 그 Git 호스트를 연결했고, 연결한 계정이 저장소를 읽을 수 있어야 한다.
 - **Git 계정이 필요 없는 호출**: 이미 있는 Project의 `project_ensure`·`project_apply`, `release`를 보내는 `deploy`, `promote`, `rollback`, 배포 승인이다.
-- `ref`를 보낸 `deploy`는 응답하기 전에 저장소를 읽고 `ref`를 commit으로 확정한다. 아래 code로 거절되면 Deployment는 만들어지지 않았다.
+- `release` 없는 `deploy`는 응답하기 전에 저장소를 읽고 `ref`를 commit으로 확정한다. `ref`를 생략하면 Git 호스트가 알려 주는
+  저장소의 기본 브랜치를 쓴다. 아래 code로 거절되면 Deployment는 만들어지지 않았다.
 
 | code | 뜻 | 행동 |
 |---|---|---|
 | `git_connection_required` | 사용자가 그 Git 호스트를 연결하지 않았거나 다시 연결해야 한다 | 오류 메시지에 있는 Agent Studio 연결 링크(`connectUrl`)를 사용자에게 준다. 사용자가 연결한 뒤 같은 호출을 다시 한다 |
 | `repository_access_denied` | 연결한 Git 계정이 저장소를 볼 수 없다. `push_enable`에서는 저장소의 webhook을 관리하는 역할이 없다는 뜻일 수도 있다 | 다시 연결하게 하지 않는다. 저장소 이름과 그 계정의 저장소 권한을 사용자와 확인한다 |
-| `ref_not_found` | 저장소에 그 branch·tag·commit이 없다 | `ref`를 확인해 고친 뒤 다시 호출한다 |
+| `ref_not_found` | 저장소에 그 branch·tag·commit이 없다. `ref`를 생략했으면 저장소에 기본 브랜치가 없다(커밋 없는 저장소) | `ref`를 확인해 고친 뒤 다시 호출한다. 기본 브랜치가 없으면 첫 커밋을 만든 뒤 배포한다 |
+| `invalid_ref` | `ref` 형식이 틀렸다. `ref`를 생략했으면 저장소의 기본 브랜치 이름이 Runway의 `ref` 규칙에 맞지 않는다 | 형식을 고친다. 기본 브랜치 이름 때문이면 배포할 tag나 commit SHA를 `ref`로 보낸다 |
 | `source_too_large` | 그 commit의 소스 아카이브가 설치의 한도를 넘는다 | 사용자에게 알린다. 저장소를 줄이거나 운영자가 한도를 올려야 한다 |
 | `source_busy` | Runway가 한 번에 읽는 소스 아카이브 수가 한도에 있거나, 같은 Project의 다른 소스 아카이브를 읽는 중이다 | 메시지가 알려 주는 시간(10초) 뒤에 같은 호출을 다시 한다 |
 | `git_host_removed` | Agent Studio가 그 Git 호스트를 더 이상 Git 호스트로 두지 않는다 | 사용자에게 알린다. 운영자가 Agent Studio에 그 호스트를 다시 등록해야 한다 |
@@ -163,7 +165,7 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
 
 ## 3. 선언 적용과 리소스
 
-1. 배포할 revision(기본: PR/MR을 병합한 브랜치)의 `application.yaml` 내용을 그대로 `project_apply`에 넘긴다(`repository`, `application`).
+1. 배포할 revision(기본: 저장소의 기본 브랜치. Forge가 병합한 PR/MR이 들어가는 브랜치다)의 `application.yaml` 내용을 그대로 `project_apply`에 넘긴다(`repository`, `application`).
    새 Project를 `default`가 아닌 pipeline으로 만들 때만 `pipeline`을 함께 넘긴다. 기존 Project에는 `pipeline`을 넘기지 않는다.
    Project의 pipeline과 다른 이름을 넘기면 `pipeline_mismatch`로 실패한다.
    새 Project를 만드는 `project_apply`는 호출한 사용자의 Git 계정이 저장소를 읽을 수 있는지 확인한다([저장소 접근](#저장소-접근)).
@@ -189,9 +191,11 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
 `pipeline.stages`가 승격 순서와 크기를, `environments[]`의 `position`·`next`·`approval`·`deployBlockers`·`promoteBlockers`가 단계별 상태를 준다.
 기본 설치의 `default` pipeline은 `dev`(승인 없음) → `prod`(소유자 승인)이다.
 
-1. 첫 단계(`position`이 `0`인 환경)에 `deploy`(`project`, `environment`, `ref`, `idempotencyKey`)를 호출한다.
-   `ref`는 배포할 브랜치(기본: PR/MR을 병합한 브랜치)다. 생략하면 Runway는 `main`을 쓰므로, 저장소의 기본 브랜치가 `main`이 아니면 그 브랜치를 보낸다.
-   Agent Runway가 호출한 사용자의 Git 계정으로 저장소를 읽고, ref를 pipeline의 architecture로 build해 Release(`r<n>`)를 만들고 배포한다.
+1. 첫 단계(`position`이 `0`인 환경)에 `deploy`(`project`, `environment`, 선택 `ref`, `idempotencyKey`)를 호출한다.
+   저장소의 기본 브랜치를 배포하면 `ref`를 생략한다. Runway가 Git 호스트에서 기본 브랜치를 읽어 build하며, 이름이 `main`이 아니어도 된다.
+   Forge가 병합한 PR/MR은 기본 브랜치에 들어가므로 병합 뒤의 첫 배포는 `ref` 없이 호출한다. 다른 branch·tag·commit을 배포할 때만 `ref`를 보낸다.
+   응답의 `ref`·`commit`이 실제로 build한 branch와 commit이다.
+   Agent Runway가 호출한 사용자의 Git 계정으로 저장소를 읽고, 그 commit을 pipeline의 architecture로 build해 Release(`r<n>`)를 만들고 배포한다.
    Git 계정이나 `ref` 때문에 거절되면 [저장소 접근](#저장소-접근)의 code별 행동에 따른다.
    push 배포를 켠 Project(`project_get`의 `push.state`가 `on`)는 trigger(`project_status`의 `pipeline.trigger`)와 맞는 push를
    Runway가 첫 단계에 배포한다. 그래서 병합 직후의 `deploy`가 `deployment_in_progress`일 수 있다. 이때는 새로 요청하지 않고 `project_status`의 그 단계 `inProgress.deploymentId`를

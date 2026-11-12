@@ -23,7 +23,8 @@
 - **저장소 접근**: Runway는 한 사용자의 Git 계정으로 저장소를 읽어 build한다. 요청한 배포는 요청한 사용자의 계정으로,
   push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계정으로 읽는다. 공개 저장소와 비공개 저장소가 같다.
   사용자는 Agent Studio의 프로필 → Git 계정(`/profile/git`)에서 Git 호스트마다 계정을 한 번 연결한다. Runway 콘솔에는 계정 연결과 token 입력이 없고,
-  Runway는 deploy key를 만들지 않는다. 새 Project를 만드는 `project_ensure`·`project_apply`와 `ref`를 보내는 `deploy`에 그 사용자의 Git 계정이 필요하다.
+  Runway는 deploy key를 만들지 않는다. 새 Project를 만드는 `project_ensure`·`project_apply`와 `release` 없이 호출하는 `deploy`에 그 사용자의 Git 계정이 필요하다.
+  `ref`를 생략한 `deploy`는 Git 호스트가 알려 주는 저장소의 기본 브랜치(`main`이 아닐 수 있다)를 build한다.
   Release를 지정한 `deploy`, `promote`, `rollback`, 승인에는 필요 없다.
 - **push 배포**: Project마다 켜고 끈다. 켠 Project만 trigger와 맞는 push를 pipeline의 첫 단계에 배포하고, 켜지 않은 Project는 요청으로만 배포한다.
   `project_get`·`project_list`의 `push.state`가 상태다. `off`는 꺼짐, `on`은 켜짐, `delegation_invalid`는 켠 사용자의 Git 위임이 Studio에 없어
@@ -62,7 +63,7 @@
 | `project_ensure`, `project_apply` | Project 생성, `application.yaml` 적용 | 리소스를 만들지 않는다. `pipeline`은 새 Project에만 쓴다. 새 Project를 만들 때는 호출한 사용자의 Git 계정이 저장소를 볼 수 있어야 한다. `project_apply`는 단계마다 리소스 상태와 값이 없는 secret의 입력 링크를 돌려준다 |
 | `project_configure` | Project의 pipeline, 단계별 크기(`sizes`), `trigger`, `installScript`, 마지막 단계 주소에 환경 이름 붙이기(`suffixEveryStage`) 변경 | 소유자나 Studio 관리자만. 생략한 필드는 유지, `null`은 제거, `sizes`는 map 전체 교체. 다음 Deployment부터 적용된다. `deployedEnvironments`가 비어 있지 않으면 다른 `pipeline`은 `pipeline_locked`로 거절된다 |
 | `resource_create` | 템플릿(`template`)과 `parameters`로 환경 하나에 리소스 생성 | 접수형. `pending → ready | failed`. 단계마다 따로 호출한다 |
-| `deploy`, `promote`, `rollback` | ref를 첫 단계에 배포, 같은 Release를 다음 단계로 승격, 직전 Release로 되돌리기 | 접수형. `idempotencyKey` 필수. 결과는 원래 Chat으로 돌아온다. `approval: owner` 환경은 소유자 승인 대기. `ref`를 보낸 `deploy`는 응답하기 전에 호출한 사용자의 Git 계정으로 저장소를 읽는다 |
+| `deploy`, `promote`, `rollback` | ref를 첫 단계에 배포, 같은 Release를 다음 단계로 승격, 직전 Release로 되돌리기 | 접수형. `idempotencyKey` 필수. 결과는 원래 Chat으로 돌아온다. `approval: owner` 환경은 소유자 승인 대기. `release` 없는 `deploy`는 응답하기 전에 호출한 사용자의 Git 계정으로 저장소를 읽는다. `ref`를 생략하면 저장소의 기본 브랜치를 build한다 |
 | `push_enable`, `push_disable` | Project의 push 배포 켜기·끄기 | 소유자나 Studio 관리자만. `push_enable`은 사용자가 push 배포를 요청할 때만 호출한다. Studio가 호출마다 사람의 승인을 받고, 승인할 사람이 없는 실행에는 도구가 없다. 승인 표시가 없는 호출은 Runway가 `person_approval_required`로 거절한다. 켜는 사용자의 Git 계정이 저장소의 webhook을 관리하는 역할(GitHub `admin`, GitLab Maintainer 이상)이어야 한다. `push_disable`은 Git 계정 없이 끈다. 응답의 `remoteCleanup`이 `skipped`이면 저장소에 webhook이, `delegationRevoked`가 `false`이면 Studio에 Git 위임이 남았다. `message`가 다음 행동을 알려 주므로 그대로 전한다 |
 | `secret_request` | secret 입력 콘솔 링크 | 읽기 전용이라 승인 없이 실행된다. 링크만 돌려준다. 값은 묻지 않는다 |
 | `service_remove`, `resource_delete`, `project_delete`, `project_deletion_get` | 환경 하나의 서비스 중지, 리소스 하나 삭제, Project 삭제와 그 진행 조회 | `runway:delete` 권한이 있을 때만 보인다. 소유자나 Studio 관리자만. 정확한 `confirmation`(환경 이름·리소스 이름·slug)이 필요하고 Studio가 호출마다 사람의 승인을 받는다. 승인 표시가 없는 호출은 Runway가 `person_approval_required`로 거절한다. 되돌릴 수 없다 |
@@ -152,9 +153,10 @@ push 배포는 설정 탭이나 `push_enable`·`push_disable`로 켜고 끈다. 
 | `application_changed` | 커밋된 파일로 `project_apply`를 다시 하고 다시 배포한다 |
 | `git_connection_required` (409, push로 시작한 Deployment의 `errorCode`) | 사용자가 그 Git 호스트를 Studio에서 연결하지 않았거나 다시 연결해야 한다. 오류 메시지의 Studio 연결 링크(`connectUrl`)를 주고, 사용자가 연결한 뒤 다시 요청한다. push로 시작한 Deployment에서는 push 배포를 켠 사용자가 다시 연결해야 하며, 다시 연결하면 다음 push부터 배포된다 |
 | `repository_access_denied` (403, push로 시작한 Deployment의 `errorCode`) | 그 사용자의 Git 계정이 저장소를 볼 수 없거나, `push_enable`에 필요한 역할(GitHub `admin`, GitLab Maintainer 이상)이 없다. 다시 연결하게 하지 않는다. 저장소 이름과 그 계정의 권한을 확인한다 |
-| `ref_not_found` (404) | 저장소에 그 branch·tag·commit이 없다. `ref`를 확인한다 |
+| `ref_not_found` (404) | 저장소에 그 branch·tag·commit이 없다. `ref`를 생략했으면 저장소에 기본 브랜치가 없다(커밋 없는 저장소). `ref`를 확인한다 |
+| `invalid_ref` (400) | `ref` 형식이 틀렸거나, `ref`를 생략했는데 저장소의 기본 브랜치 이름이 Runway의 `ref` 규칙에 맞지 않는다. 그때는 tag나 commit SHA를 `ref`로 보낸다 |
 | `source_too_large` (413, push로 시작한 Deployment의 `errorCode`) | 소스 아카이브가 설치의 한도를 넘는다. 저장소를 줄이거나 운영자가 한도를 올린다 |
-| `source_busy` (503) | `ref`를 보낸 `deploy`에서 Runway가 한 번에 읽는 소스 수가 한도에 있거나 같은 Project의 다른 소스를 읽는 중이다. Deployment는 만들어지지 않았다. 메시지의 시간(10초) 뒤에 같은 요청을 다시 보낸다. push로 시작한 Deployment는 Runway가 다시 읽으므로 할 일이 없다 |
+| `source_busy` (503) | `release` 없는 `deploy`에서 Runway가 한 번에 읽는 소스 수가 한도에 있거나 같은 Project의 다른 소스를 읽는 중이다. Deployment는 만들어지지 않았다. 메시지의 시간(10초) 뒤에 같은 요청을 다시 보낸다. push로 시작한 Deployment는 Runway가 다시 읽으므로 할 일이 없다 |
 | `git_host_removed` (409, push로 시작한 Deployment의 `errorCode`) | Studio가 그 Git 호스트를 더 이상 Git 호스트로 두지 않는다. 운영자가 Studio에 그 호스트를 다시 등록한다. push 배포의 상태와 위임은 그대로이고, 호스트를 되돌리면 다음 push부터 배포된다 |
 | `invalid_repository` (400) | 새 Project의 저장소가 이 설치의 Git 호스트에 있지 않거나 저장소 주소 형식이 틀렸다(GitHub는 정확히 `owner/repo`, port가 있는 주소는 받지 않는다). 메시지가 Git 호스트를 알려 준다 |
 | `push_delegation_invalid` | push로 시작한 Deployment가 `prepare` 스텝에서 실패했다. push 배포를 켠 사용자가 Studio에서 위임을 폐기했거나, 그 호스트의 연결을 해제했거나, 다른 계정을 연결했다. `push.state`가 `delegation_invalid`가 되고 그 뒤의 push도 같은 code로 실패한다. 소유자나 Studio 관리자가 push 배포를 다시 켠다 |
