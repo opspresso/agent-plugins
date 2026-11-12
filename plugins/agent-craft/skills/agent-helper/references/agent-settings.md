@@ -86,6 +86,14 @@ Agent Models가 공급자 연결·승인된 모델 선택·라우팅·사용량�
 - GitHub PR 리뷰는 webhook trigger의 `githubReview`로 켠다. `{ scope: "accessible" }`는 호출자의 GitHub 권한이 닿는 모든
   저장소, `{ scope: "repositories", repositories: ["owner/repo"] }`는 지정한 저장소만 리뷰한다. `null`은 리뷰를 끈다.
   Agent에 GitHub MCP 서버가 연결돼 있어야 하며, 리뷰와 댓글은 trigger 호출자의 GitHub 연결로 실행된다.
+- GitLab MR 리뷰는 webhook trigger의 `gitlabReview`로 켠다. `host`는 Studio `GIT_HOSTS`에서 provider가 `gitlab`인 호스트
+  이름이다(gitlab.com·self-managed GitLab). `{ host, scope: "accessible" }`는 호출자의 Git 계정이 닿는 모든 프로젝트,
+  `{ host, scope: "repositories", repositories: ["group/subgroup/project"] }`는 지정한 프로젝트만 리뷰한다. `null`은 리뷰를 끈다.
+  GitLab MCP는 필요 없다. MR 조회와 노트 게시는 trigger 호출자가 프로필 → Git 계정(`/profile/git`)에서 연결한 그 호스트의
+  계정으로 실행된다. 연결이 없거나 `reconnect_required`이면 전달이 `409 review-not-ready`로 거절된다.
+- 한 webhook은 `githubReview`와 `gitlabReview` 중 하나만 가진다. 다른 쪽으로 바꾸는 `mode="update"`는 기존 리뷰를
+  같은 호출에서 `null`로 보낸다. GitLab 프로젝트 Webhook에는 Agent의 Webhook 주소를 URL로, 호출자의 개인 webhook token을
+  Secret token으로 넣고 Merge request events를 구독한다. GitLab 17.4 이상이어야 한다.
 - Slack·Telegram·Teams의 활성화, Slack 추천 프롬프트·채널 키워드, Teams tenant는 `StudioUpdateIntegration`으로 바꾼다.
   현재 상태는 `StudioRead(resource="integrations", name=...)`로 읽는다. 활성화에는 저장된 credential이 필요하다.
   Telegram 활성화에는 배포의 공개 기본 URL이 필요하다.

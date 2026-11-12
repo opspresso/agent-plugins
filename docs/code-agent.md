@@ -103,12 +103,16 @@ Git `prepare`를 실행한다. `baseBranch`를 생략하면 `prepare`가 `result
   CI 완료를 기다렸다가 자동으로 재개하는 기능은 없다.
 - Run checks, 직접 실행한 검사와 Git 호스트의 CI(GitHub Actions·GitLab CI/CD)를 구분한다. Git 게시·CI·릴리즈·배포도 서로 다른 결과다.
 
-## GitHub Webhook
+## Git 호스트 Webhook
 
-Agent의 연동 탭에 있는 Webhook URL을 GitHub Payload URL로 사용하고 Content type은 application/json으로
-설정한다. Agent가 발급한 시크릿을 GitHub Secret에 넣으면 서명으로 인증하므로 커스텀 헤더가 필요 없다.
+- **GitHub**: Agent의 연동 탭에 있는 Webhook URL을 GitHub Payload URL로 사용하고 Content type은 application/json으로
+  설정한다. Agent가 발급한 시크릿을 GitHub Secret에 넣으면 서명으로 인증하므로 커스텀 헤더가 필요 없다.
+- **GitLab**: 같은 Webhook 주소를 GitLab 프로젝트 Webhook의 URL로, 발급한 시크릿을 Secret token으로 넣는다.
+  GitLab은 그 값을 `X-Gitlab-Token`으로 보내므로 커스텀 헤더가 필요 없다. GitLab 17.4 이상이 보내는 delivery ID가 있어야 한다.
+
 202는 접수 결과이며 실제 응답은 Trigger 이력에서 확인한다. Webhook은 machine actor로 실행되며
 개인 사용자의 Forge 실행 권한이나 Git 승인 권한을 자동으로 얻지 않는다.
+PR·MR 자동 리뷰는 [PR·MR 자동 리뷰 Agent](code-review-agent.md)를 따른다.
 
 ## 검증
 
