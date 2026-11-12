@@ -1,7 +1,7 @@
 # Git 게시와 확인
 
 Forge의 Git 실행 계약이다. Git 단계마다 `run_submit`에 `input.kind="git"`과 `action`을 보낸다. 실제 제공된 schema가 우선한다.
-코딩 요청의 기본 완료 범위는 새 작업 브랜치의 구현·검증·커밋·푸시·PR이다.
+코딩 요청의 기본 완료 범위는 새 작업 브랜치의 구현·검증·커밋·푸시·PR/MR이다.
 사용자가 게시를 금지하거나 로컬 수정만 요청하면 그 범위를 따른다. 조회·리뷰 요청에는 게시를 추가하지 않는다.
 
 ## 동작과 필수 입력
@@ -12,25 +12,33 @@ Forge의 Git 실행 계약이다. Git 단계마다 `run_submit`에 `input.kind="
 | 변경 검토 | `review` | 없음 | 없음 |
 | 커밋 | `commit` | `fingerprint`, `message` | 없음 |
 | 작업 브랜치 푸시 | `push` | `headSha` | 없음 |
-| PR 생성·갱신 | `pull-request` | `headSha`, `fingerprint`, `title`, `body`, `draft` | 없음 |
+| PR/MR 생성·갱신 | `pull-request` | `headSha`, `fingerprint`, `title`, `body`, `draft` | 없음 |
 | 보호 branch 직접 게시 | `publish-protected` | `targetBranch`, `expectedHeadSha`, `headSha`, `fingerprint` | Forge 콘솔 |
-| PR을 기본 브랜치에 병합 | `merge` | `pullRequestNumber`, `headSha`, `fingerprint` | Forge 콘솔 |
+| PR/MR을 기본 브랜치에 병합 | `merge` | `pullRequestNumber`, `headSha`, `fingerprint` | Forge 콘솔 |
 | 태그 | `tag` | `tag`, `message`, `headSha`, `fingerprint` | Forge 콘솔 |
 | 릴리즈 | `release` | `tag`, `headSha`, `fingerprint`, `title`, `body`, `draft`, `prerelease` | Forge 콘솔 |
 | 배포 | `deploy` | `workflow`, `ref`(저장소의 기본 브랜치), `inputs`, `headSha`, `fingerprint` | Forge 콘솔 |
 
-`origin`은 `git_connections`의 host `origin`(예: `https://github.com`)이고, `repository`는 그 host 안의 저장소 경로다
-(GitHub는 `owner/repo`, GitLab은 `group/project`). 앞에 `<host>/`가 붙은 Agent Runway의 저장소 식별자도 그대로 받는다.
+`origin`은 `git_connections`의 host `origin`(예: `https://github.com`, GitHub Enterprise Server `https://github.example.com`,
+self-managed GitLab `https://gitlab.example.com`)이고, `repository`는 그 host 안의 저장소 경로다
+(GitHub는 github.com과 GitHub Enterprise Server 모두 `owner/repo`, GitLab은 `group/subgroup/project`처럼 group 경로 전체).
+앞에 `<host>/`가 붙은 Agent Runway의 저장소 식별자도 그대로 받는다.
 저장소를 먼저 등록하지 않는다. `repository_create`로 만든 저장소는
 영수증의 `result.origin`·`result.repository`를 그대로 쓴다.
 
-`baseBranch`는 작업을 시작하고 PR이 대상으로 삼는 브랜치다. 사용자가 브랜치를 지정했을 때만 보낸다.
+`baseBranch`는 작업을 시작하고 PR/MR이 대상으로 삼는 브랜치다. 사용자가 브랜치를 지정했을 때만 보낸다.
 생략하면 저장소의 기본 브랜치에서 시작한다(`repository_create`로 만든 저장소는 `result.defaultBranch`).
 결과의 `gitResult.baseBranch`와 Workspace의 `repository.baseBranch`가 실제로 쓴 브랜치다.
 같은 `requestKey`로 `baseBranch`를 생략한 요청과 지정한 요청은 서로 다른 요청이다.
 
 ```json
 {"tool":"run_submit","arguments":{"workspaceId":"<id>","input":{"kind":"git","action":"prepare","origin":"https://github.com","repository":"<owner>/<repo>","branch":"agent/<작업 이름>"},"profileId":"<profile id>","profileRevision":3,"requestKey":"<고정 키>"}}
+```
+
+self-managed GitLab 프로젝트도 같은 형태다. `origin`과 group 경로만 다르다.
+
+```json
+{"tool":"run_submit","arguments":{"workspaceId":"<id>","input":{"kind":"git","action":"prepare","origin":"https://gitlab.example.com","repository":"<group>/<subgroup>/<project>","branch":"agent/<작업 이름>"},"profileId":"<profile id>","profileRevision":3,"requestKey":"<고정 키>"}}
 ```
 
 `headSha`·`fingerprint`는 `run_result.gitResult`에서 받은 실제 값이다. 값을 추측하거나 다른 실행의 값을 섞지 않는다.
@@ -42,32 +50,32 @@ Forge의 Git 실행 계약이다. Git 단계마다 `run_submit`에 `input.kind="
 - 현재 HEAD와 다른 값은 `git_review_changed`(409)로 거절된다. `review`를 다시 실행한 뒤 그 값으로 다시 제출한다.
 
 GitLab 저장소에서는 `pull-request`가 merge request를 만들거나 갱신하고(`pullRequestNumber`는 그 IID다) `merge`가 그것을 병합한다.
-`release`와 `deploy`는 GitHub 저장소만 지원한다. GitLab 저장소의 Workspace에서는 접수할 때 `git_action_unsupported`(409)로 거절된다.
+`release`와 `deploy`는 GitHub 저장소(github.com·GitHub Enterprise Server)만 지원한다. GitLab 저장소의 Workspace에서는 접수할 때 `git_action_unsupported`(409)로 거절된다.
 
 ## 작업 브랜치 게시
 
 1. 파일 수정과 검사를 마친 뒤 `review`를 실행한다. `gitResult`의 `diff`·`truncated`로 요청 밖 변경이 없는지 확인한다.
 2. `commit`에 review의 `fingerprint`와 실제 변경을 설명하는 `message`를 보낸다.
 3. `push`에 commit 결과의 `headSha`를 보낸다. Forge는 `agent/` 브랜치에 정확한 HEAD만 non-force push한다.
-4. `pull-request`에 commit 결과의 `headSha`·`fingerprint`와 실제 결과를 담은 제목·본문을 보낸다. 같은 브랜치의 열린 PR은 갱신된다.
+4. `pull-request`에 commit 결과의 `headSha`·`fingerprint`와 실제 결과를 담은 제목·본문을 보낸다. 같은 브랜치의 열린 PR/MR은 갱신된다.
 
 ```json
 {"tool":"run_submit","arguments":{"workspaceId":"<id>","input":{"kind":"git","action":"commit","fingerprint":"<review fingerprint>","message":"fix: return 400 for empty input"},"profileId":"<profile id>","profileRevision":3,"requestKey":"<고정 키>"}}
 ```
 
-이 네 단계는 별도 승인 없이 실행한다. 각 단계의 실제 결과(`gitResult.headSha`, PR `url`)를 확인한 뒤 다음 단계로 간다.
-PR 설명 형식이 필요하고 `pr-description`이 연결됐으면 해당 Skill을 사용한다.
+이 네 단계는 별도 승인 없이 실행한다. 각 단계의 실제 결과(`gitResult.headSha`, PR/MR `url`)를 확인한 뒤 다음 단계로 간다.
+PR/MR 설명 형식이 필요하고 `pr-description`이 연결됐으면 해당 Skill을 사용한다.
 `sourceRevision`으로 준비한 Workspace는 그 커밋을 읽기만 하는 검토 Workspace다. 실행되는 Git 단계는 `review`뿐이다.
 `commit`·`push`·`pull-request`와 보호 작업은 접수할 때 `git_action_unsupported`(409)로 거절되며 Run과 승인은 만들어지지 않는다.
 다른 도구로 우회하지 않는다. 커밋하거나 게시할 작업은 `sourceRevision` 없이 `prepare`한 새 Workspace에서 한다.
 
 ## 보호 작업과 승인
 
-- 보호 작업은 사용자가 그 동작을 요청한 경우에만 제출한다. PR 생성이 기본 브랜치 병합·태그·릴리즈·배포 요청을 포함하지 않는다.
+- 보호 작업은 사용자가 그 동작을 요청한 경우에만 제출한다. PR/MR 생성이 기본 브랜치 병합·태그·릴리즈·배포 요청을 포함하지 않는다.
 - 제출하면 Run은 `queued`에서 승인을 기다린다. 응답의 `approvalUrl`을 링크로 전달하고 Forge 콘솔에서 Workspace 소유자가 승인해야 한다고 알린다.
   MCP에는 승인 결정 도구가 없다. `git_approval_get`은 승인 상태를 읽기만 한다.
 - `publish-protected`·`merge`·`tag`의 승인 화면은 Workspace 브랜치가 커밋한 변경을 보여 준다. `prepare` 기준 커밋(`baseSha`)부터 승인할 `headSha`까지의 diff다.
-  `merge`의 승인 화면에는 Git 호스트의 PR을 여는 링크도 있다. `release`·`deploy`의 승인 화면에는 diff가 없다.
+  `merge`의 승인 화면에는 Git 호스트의 PR/MR을 여는 링크도 있다. `release`·`deploy`의 승인 화면에는 diff가 없다.
   커밋하지 않은 변경은 어떤 보호 작업도 게시하지 않으며 승인 화면에도 나오지 않는다.
 - 보호 작업이 `sandbox_outdated`(409)로 거절되면 Git `review`를 한 번 실행하고, 그 결과의 `headSha`·`fingerprint`로 다시 제출한다.
 - 보호 작업의 Run은 요청한 `timeoutMs`와 관계없이 제한 시간이 1시간이다. 승인 기한은 접수 후 50분이다.
@@ -77,15 +85,15 @@ PR 설명 형식이 필요하고 `pr-description`이 연결됐으면 해당 Skil
   (Run 취소, Workspace 일시 정지·종료, 로그아웃, 작업 권한이나 profile 접근 상실). `expired`·`cancelled`는 승인할 수 없다.
   사용자가 다시 요청하면 새 Run을 제출한다.
 - Studio Chat에서 제출한 보호 작업의 terminal 결과는 원래 Chat에 전달된다. 승인 여부를 반복 조회하지 않는다.
-- 여러 단계를 요청했으면(예: PR 생성 후 병합) 각 단계를 순서대로 진행한다. 한 단계의 성공을 전체 요청 완료로 표현하지 않는다.
+- 여러 단계를 요청했으면(예: PR/MR 생성 후 병합) 각 단계를 순서대로 진행한다. 한 단계의 성공을 전체 요청 완료로 표현하지 않는다.
 
 ## 병합·태그·릴리즈·배포
 
-- `merge`는 저장소의 기본 브랜치가 대상인 PR의 현재 HEAD와 CI를 확인한 뒤 head SHA 조건으로 병합한다. 사용자가 PR 병합을 요청했으면 `publish-protected`로 대체하지 않는다.
+- `merge`는 저장소의 기본 브랜치가 대상인 PR/MR의 현재 HEAD와 CI를 확인한 뒤 head SHA 조건으로 병합한다. 사용자가 PR/MR 병합을 요청했으면 `publish-protected`로 대체하지 않는다.
 - Forge는 저장소의 기본 브랜치로만 병합한다. 기본 브랜치는 Git 호스트가 알려 준 값(Workspace의 `repository.defaultBranch`)이며 `main`이 아니어도 된다.
   `baseBranch`를 생략한 `prepare`는 기본 브랜치에서 시작하므로 그 Workspace는 이 조건을 만족한다.
 - Workspace의 기준 브랜치(`repository.baseBranch`)가 기본 브랜치가 아니면 `merge`는 접수할 때 `git_action_unsupported`(409)로 거절된다.
-  승인과 Run은 만들어지지 않는다. 다시 제출하지 않고, 사용자가 Git 호스트에서 그 PR을 병합해야 한다고 알린다.
+  승인과 Run은 만들어지지 않는다. 다시 제출하지 않고, 사용자가 Git 호스트에서 그 PR/MR을 병합해야 한다고 알린다.
   접수 뒤 실행 전에 저장소의 기본 브랜치가 바뀌면 병합하지 않고 Run이 `failed`(`errorCode: git_action_unsupported`)로 끝난다. 이때도 다시 제출하지 않고 사용자에게 알린다.
 - `tag`는 검토한 HEAD에 annotated tag를 만든다. 기존 tag를 덮어쓰지 않는다.
 - `release`는 이미 있는 tag가 가리키는 승인 commit과 CI를 확인한다. tag 성공 뒤에만 준비한다.
@@ -102,5 +110,5 @@ PR 설명 형식이 필요하고 `pr-description`이 연결됐으면 해당 Skil
 - `run_retry`는 사용자가 재시도를 명시적으로 요청한 failed·cancelled 실행에만 쓴다. 이미 dispatch한 Git 효과나 interrupted 실행은 재시도할 수 없다.
 - Git 단계가 `git_connection_required`·`git_repository_not_found`·`git_account_changed`·`repository_identity_changed`·
   `git_host_removed`로 거절되거나 끝나면 [Forge 도구](forge.md#git-오류)의 처리에 따른다. 연결이 필요하면 `connectUrl`을 사용자에게 준다.
-- native 작업에 git add·commit·push·merge를 시키거나 GitHub MCP 쓰기·임시 index로 Forge의 Git 경계를 우회하지 않는다.
+- native 작업에 git add·commit·push·merge를 시키거나 GitHub·GitLab MCP 쓰기·임시 index로 Forge의 Git 경계를 우회하지 않는다.
 - Git token은 Forge가 Git 단계마다 Agent Studio에서 받아 서버에서만 사용한다. 작업 지시·Sandbox·로그에 credential을 넣지 않는다.

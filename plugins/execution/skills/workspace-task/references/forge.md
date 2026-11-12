@@ -20,7 +20,8 @@
 | 수명 관리 | `workspace_suspend`, `workspace_resume`, `workspace_close` | `workspaceId` |
 | Git 호스트 연결 상태 | `git_connections` | 없음 |
 | 보호 작업 승인 조회 | `git_approval_get` | `approvalId` |
-| 저장소 생성(GitHub) | `repository_create` | `origin`, `profileId`+`profileRevision`, `repository`, 선택 `description`, `private`, `requestKey` |
+| 저장소를 만들 수 있는 namespace | `repository_namespaces` | `origin`, 선택 `search` |
+| 저장소 생성(GitHub 저장소, GitLab 프로젝트) | `repository_create` | `origin`, `profileId`+`profileRevision`, `repository`, 선택 `description`, `private`, `requestKey` |
 | 저장소 생성 확인 | `repository_get`, `repository_lookup_request` | `creationId` 또는 원래 `requestKey` |
 
 저장소를 등록하거나 Git 호스트 계정을 연결하는 도구는 없다.
@@ -61,6 +62,8 @@
 | `hosts[].connectUrl` | 사용자가 그 호스트를 연결·재연결하는 Agent Studio 주소 |
 
 - 사용자는 Git 호스트를 Agent Studio의 프로필 → Git 계정에서 한 번 연결한다. Forge 콘솔과 MCP에는 계정 연결 기능이 없다.
+- `hosts`에는 github.com, GitHub Enterprise Server, GitLab.com, self-managed GitLab 호스트가 여럿 있을 수 있다. 저장소가 있는 host를 `origin`으로 고른다.
+  `provider`로 GitHub·GitLab을 구분하고, `provider`가 `github`이고 `origin`이 `https://github.com`이 아니면 GitHub Enterprise Server다.
 - `status`가 `connected`가 아니면 그 host의 `connectUrl`을 사용자에게 준다. 사용자가 연결한 뒤 이어간다.
 - `hosts`가 `null`이면 이 호출로는 호스트를 알 수 없다는 뜻이다. 호스트가 없다고 판단하지 않는다.
   사용자가 지정한 저장소의 호스트 주소(`https://<host>`)를 `origin`으로 보내면 Forge가 접수할 때 판정한다.
@@ -105,7 +108,7 @@ Run 상태는 `queued`, `running`, `succeeded`, `failed`, `cancelled`, `interrup
 
 `run_submit`의 거절(도구 오류의 `code`)이나 끝난 Run의 `errorCode`로 온다. `prepare`는 접수할 때 호스트 연결과 저장소를
 확인하므로 `git_connection_required`·`git_repository_not_found`·`invalid_repository`가 `run_submit`의 거절로 온다.
-어느 경우에도 GitHub MCP 쓰기·다른 계정·native Git으로 대신하지 않는다.
+어느 경우에도 GitHub·GitLab MCP 쓰기·다른 계정·native Git으로 대신하지 않는다.
 
 | code | 뜻 | 행동 |
 |---|---|---|

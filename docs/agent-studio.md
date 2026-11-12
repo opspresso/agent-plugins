@@ -282,7 +282,8 @@ Bind the Agent Forge Tools entry and the workspace-task and sandbox-task skills.
 The operator configures the Forge service, its Sandbox provider, worker and model gateway.
 Each user creates a Workspace profile (runtime, central model, repository rules,
 checks and deployment workflows) and selects a default in the Forge console.
-Each user connects a Git host (GitHub or GitLab) once in Agent Studio, under
+Each user connects a Git host (github.com, GitHub Enterprise Server, GitLab.com or
+self-managed GitLab, as the operator registers it in Studio) once in Agent Studio, under
 Profile → Git accounts (`/profile/git`). Forge stores no Git credential and no
 repository list, and no repository is registered with Forge.
 The plugin grants none of these permissions.

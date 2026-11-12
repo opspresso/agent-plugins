@@ -59,11 +59,13 @@ Forge URL·조직·사용자 신원·provider credential·Git token은 서버 �
    `title`은 사용자 언어의 짧은 작업 목적이다. 셸 스크립트를 제목으로 복사하지 않는다.
 4. **저장소 준비**: 저장소 작업이면 `{kind:"git", action:"prepare"}` 실행에 `origin`, `repository`와
    `agent/`로 시작하는 `branch`를 보낸다. 저장소를 먼저 등록하지 않는다.
-   - `origin`은 `git_connections`가 반환한 `hosts[]` 중 그 저장소가 있는 host의 `origin`이다(예: `https://github.com`).
-     `repository`는 그 host 안의 저장소 경로다. GitHub는 `owner/repo`, GitLab은 `group/project`다.
+   - `origin`은 `git_connections`가 반환한 `hosts[]` 중 그 저장소가 있는 host의 `origin`이다
+     (예: `https://github.com`, GitHub Enterprise Server `https://github.example.com`, self-managed GitLab `https://gitlab.example.com`).
+     host 주소를 짐작하지 않는다. `repository`는 그 host 안의 저장소 경로다. GitHub(github.com·GitHub Enterprise Server)는 `owner/repo`,
+     GitLab은 `group/subgroup/project`처럼 group 경로를 모두 포함한다.
    - 그 host의 `status`가 `connected`가 아니면 host의 `connectUrl`을 사용자에게 주고, 사용자가 Agent Studio에서
      연결한 뒤 이어간다. 다른 계정·token·도구로 대신하지 않는다. credential을 인수로 보내지 않는다.
-   - `baseBranch`는 작업을 시작하고 PR이 대상으로 삼는 브랜치다. 사용자가 브랜치를 지정했으면 그 값을 보내고, 지정하지 않았으면 생략한다.
+   - `baseBranch`는 작업을 시작하고 PR/MR이 대상으로 삼는 브랜치다. 사용자가 브랜치를 지정했으면 그 값을 보내고, 지정하지 않았으면 생략한다.
      생략하면 Forge가 저장소의 기본 브랜치에서 시작한다. 기본 브랜치를 조회하거나 사용자에게 묻지 않는다.
      `prepare` 결과의 `gitResult.baseBranch`가 실제로 쓴 브랜치다.
    - `prepare`는 저장소가 없는 Workspace에만 보낸다. Workspace는 브랜치 하나만 가지므로 다른 저장소·브랜치의 새 작업은
@@ -87,19 +89,20 @@ command Runtime에는 실제 셸 스크립트를, native Runtime(codex·claude·
   Git 계정·저장소 신원이 바뀐 오류(`git_account_changed`·`repository_identity_changed`·`git_host_removed`)는
   [Forge 도구](references/forge.md#git-오류)의 처리에 따른다. 그 처리가 정한 새 Workspace의 `prepare`는 우회가 아니다.
 - 사용자가 중지를 요청하면 `run_cancel`, 재시도를 요청하면 `run_retry`(현재 `profileRevision` 필요)를 쓴다.
-  공간 정리는 사용자가 요청한 경우에만 `workspace_suspend`·`workspace_close`를 쓴다. 일반 턴 완료나 PR 생성 때문에 닫지 않는다.
+  공간 정리는 사용자가 요청한 경우에만 `workspace_suspend`·`workspace_close`를 쓴다. 일반 턴 완료나 PR/MR 생성 때문에 닫지 않는다.
 
 ## 검증·게시·전달
 
-Run의 checks, native 작업에서 직접 실행한 검사와 GitHub CI는 별개의 근거다.
-checks가 없다고 GitHub 검사가 없다고 하지 않는다. CI는 GitHub 읽기 도구로 해당 SHA의 실제 실행 기록을 확인한다.
+Run의 checks, native 작업에서 직접 실행한 검사와 Git 호스트의 CI(GitHub Actions·GitLab CI/CD pipeline)는 별개의 근거다.
+checks가 없다고 Git 호스트의 검사가 없다고 하지 않는다. CI는 그 호스트의 읽기 도구(GitHub MCP·GitLab MCP)로 해당 SHA의 실제 실행 기록을 확인한다.
+그 호스트를 읽는 도구가 없으면 CI 결과를 확인하지 못했다고 보고한다.
 
-코딩 요청은 사용자가 제한하지 않으면 새 작업 브랜치의 구현·검증·커밋·푸시·PR까지 포함한다.
+코딩 요청은 사용자가 제한하지 않으면 새 작업 브랜치의 구현·검증·커밋·푸시·PR/MR까지 포함한다.
 [Git 게시와 확인](references/git-actions.md)을 읽고 review → commit → push → pull-request 실행으로 추가 질문 없이 진행한다.
 Git 단계는 task에 넣지 않는다. native Runtime은 Git 메타데이터를 쓸 수 없으므로 task는 파일 작업과 검사까지만 맡긴다.
 task가 끝나면 부모가 같은 Workspace에서 `run_submit`(`input.kind="git"`)으로 각 단계를 낸다. task의 `succeeded`는 게시 완료가 아니다.
-task 결과에 커밋 실패가 있어도 멈추지 않는다. 변경이 작업 트리에 있으면 `review`부터 이어 가고, PR 링크를 확인한 뒤 완료를 보고한다.
+task 결과에 커밋 실패가 있어도 멈추지 않는다. 변경이 작업 트리에 있으면 `review`부터 이어 가고, PR/MR 링크를 확인한 뒤 완료를 보고한다.
 조회·진단만 요청한 작업이나 Git-free 파일 처리에는 이 게시 범위를 추가하지 않는다.
 보호 branch 게시·merge·tag·release·deploy는 별도 사용자 요청이 필요하고, Forge 콘솔에서 Workspace 소유자가 승인해야 실행된다.
 모델은 승인할 수 없다. 실패·거절·결과 불명인 게시를 자동으로 반복하지 않는다.
-실제 변경, 검증 근거, 미완료 작업과 반환된 Workspace·PR·승인 링크를 전달한다.
+실제 변경, 검증 근거, 미완료 작업과 반환된 Workspace·PR/MR·승인 링크를 전달한다.

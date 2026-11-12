@@ -10,8 +10,8 @@ Forge가 코드를, Runway가 리소스와 배포를 소유한다. 실제 진행
 | 순서 | 누가 | 무엇을 | 확인 |
 |---|---|---|---|
 | 1. 준비 | 사용자 | Studio 프로필 → Git 계정(`/profile/git`)에서 Git 호스트 연결(Forge와 Runway가 이 계정으로 저장소를 읽는다), Forge `/settings`에서 저장소 생성을 허용하는 profile 선택 | `git_connections`의 host `status`, `profile_get` |
-| 2. 저장소·코드 | Helper/Agent | `repository_create`, `run_submit`(Git `prepare` → 작업 → 검사 → push → PR). 코드에는 `application.yaml`(v4), `PORT`를 듣고 pipeline의 architecture로 빌드되는 `Dockerfile`, health 경로가 있어야 한다 | Run 결과가 Chat으로 돌아온다 |
-| 3. merge | 사용자 | `run_submit`의 Git `merge`는 보호된 작업이다. 소유자가 접수 후 50분 안에 Forge `/git?approval=<id>`에서 커밋된 변경과 PR 링크를 확인하고 승인한다. Forge는 저장소의 기본 브랜치로만 병합한다. Workspace의 기준 브랜치가 기본 브랜치가 아니면 `merge`가 `git_action_unsupported`로 거절되므로 사용자가 Git 호스트에서 PR을 병합한다 | `git_approval_get` |
+| 2. 저장소·코드 | Helper/Agent | `repository_create`, `run_submit`(Git `prepare` → 작업 → 검사 → push → PR/MR). 코드에는 `application.yaml`(v4), `PORT`를 듣고 pipeline의 architecture로 빌드되는 `Dockerfile`, health 경로가 있어야 한다 | Run 결과가 Chat으로 돌아온다 |
+| 3. merge | 사용자 | `run_submit`의 Git `merge`는 보호된 작업이다. 소유자가 접수 후 50분 안에 Forge `/git?approval=<id>`에서 커밋된 변경과 PR/MR 링크를 확인하고 승인한다. Forge는 저장소의 기본 브랜치로만 병합한다. Workspace의 기준 브랜치가 기본 브랜치가 아니면 `merge`가 `git_action_unsupported`로 거절되므로 사용자가 Git 호스트에서 PR/MR을 병합한다 | `git_approval_get` |
 | 4. 선언·리소스 | Helper/Agent | 병합된 브랜치의 `application.yaml`로 `project_apply`. 새 Project를 만들 때 Runway가 호출한 사용자의 Git 계정으로 저장소를 볼 수 있는지 확인한다. 새 Project가 `default`가 아닌 pipeline을 쓰면 `pipeline_list`에서 고른 이름을 `pipeline`으로 넘긴다. 앱에 필요한 리소스는 단계마다 `resource_create`로 만든다 | `project_apply` 결과의 단계별 리소스 상태와 secret 링크 |
 | 5. secret | 사용자 | Runway secret 링크에서 값 입력 | `project_status`에서 그 단계의 `missingSecrets`가 비어 있음 |
 | 6. 첫 단계 배포 | Helper/Agent | pipeline의 첫 단계(기본 `dev`)에 `deploy(environment="dev", ref=<병합된 브랜치>)`로 Release를 build해 배포. `ref`를 생략하면 `main`이다. Runway가 호출한 사용자의 Git 계정으로 저장소를 읽는다. 생성 중인 리소스는 Deployment가 기다린다 | 결과가 Chat으로 돌아온다. `https://<slug>-dev.<domain>` |
@@ -19,7 +19,7 @@ Forge가 코드를, Runway가 리소스와 배포를 소유한다. 실제 진행
 
 Runway의 호출이 `git_connection_required`로 거절되면 오류 메시지의 Studio 연결 링크를 사용자에게 주고, 사용자가 연결한 뒤 다시 호출한다. [delivery](delivery.md#오류)
 push로 배포하려면 사용자가 요청할 때 `push_enable`로 Project의 push 배포를 켠다. 켜지 않은 Project는 merge 뒤 `deploy`로 배포한다.
-앱 선언(`application.yaml`) 변경은 PR → merge → `project_apply` → 다시 배포 순서다. 단계별 크기·trigger·주소 형식·pipeline은 파일이 아니라 `project_configure`로 바꾼다.
+앱 선언(`application.yaml`) 변경은 PR/MR → merge → `project_apply` → 다시 배포 순서다. 단계별 크기·trigger·주소 형식·pipeline은 파일이 아니라 `project_configure`로 바꾼다.
 배포된 서비스가 있는 Project는 pipeline을 바꿀 수 없다(`pipeline_locked`). [delivery](delivery.md#pipeline-변경)의 절차로 서비스를 먼저 삭제한다.
 서비스·리소스·Project 삭제는 `service_remove`·`resource_delete`·`project_delete`로 요청하고 Studio가 사람의 승인을 받는다. 삭제 도구가 없으면 Runway 콘솔에서 사용자가 한다.
 
@@ -50,7 +50,7 @@ push로 배포하려면 사용자가 요청할 때 `push_enable`로 Project의 p
 2. Agent를 만든다: `mcpList`에 `agent-forge`, Skill `workspace-task`와 필요한 engineering Skill(`implement-feature`, `fix-issue`, `code-review` 등).
    긴 작업이 많으므로 `maxTurn`을 늘린다.
 3. 배포까지 하려면 `agent-runway`와 `app-delivery`도 연결한다.
-4. 첫 작업으로 작은 요청(README 수정 PR 등)을 보내 Git 호스트 연결과 profile을 확인하게 한다.
+4. 첫 작업으로 작은 요청(README 수정 PR/MR 등)을 보내 Git 호스트 연결과 profile을 확인하게 한다.
 
 ## 메신저 봇 Agent
 

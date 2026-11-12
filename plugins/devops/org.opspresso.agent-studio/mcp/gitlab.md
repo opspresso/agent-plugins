@@ -52,7 +52,8 @@ appears only when GitLab Duo Agent Platform is available.
 | CI investigation | list_pipelines, get_pipeline, get_job | Read the pipeline, failing job and a bounded log; omit save_pipeline for investigation-only use |
 | Remote feedback | save_note, save_work_item | Post only the requested comment or update |
 | Merge | accept_merge_request | Only on an explicit request; respect protected branches and approval rules |
-| Publication of Sandbox files | Forge `run_submit` Git actions | Forge works on a GitLab host that the user connected in Agent Studio (Profile → Git accounts): `pull-request` opens or updates a merge request and `merge` merges it into the project's default branch when the Workspace's base branch is that default branch. `release`, `deploy` and repository creation are GitHub only. Do not substitute add_commit, add_branch or save_merge_request for reviewed Sandbox publication |
+| Publication of Sandbox files | Forge `run_submit` Git actions | Forge works on a GitLab host that the user connected in Agent Studio (Profile → Git accounts): `pull-request` opens or updates a merge request and `merge` merges it into the project's default branch when the Workspace's base branch is that default branch. `release` and `deploy` are GitHub only. Do not substitute add_commit, add_branch or save_merge_request for reviewed Sandbox publication |
+| New project | Forge `repository_namespaces`, `repository_create` | Only on an explicit request. Forge creates the project with the user's connected account on the host's `origin`, as `<namespace>/<project>` (user name or full group path). When the user did not name the namespace exactly, list the namespaces with `repository_namespaces` and let the user choose. Private unless the user asks for public |
 
 These names come from the official server; use the actually discovered schemas. Do not send
 secrets from job logs into prompts or public comments. Do not broaden account permissions merely

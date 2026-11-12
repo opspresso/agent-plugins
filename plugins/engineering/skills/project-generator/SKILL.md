@@ -35,33 +35,48 @@ CLI·명령행 도구를 만든다는 뜻과 command Runtime에서 이미 작성
 profile의 저장소 규칙이 이름을 허용해도 원격 저장소가 존재하거나 clone 가능하다는 뜻은 아니다. 새 저장소 생성이
 요청됐으면 파일 작업 전에 아래 순서를 완료한다.
 
-1. 요청한 owner/name과 GitHub 연결을 확인한다. Forge에서는 `git_connections`의 `hosts`에서 `origin`이 `https://github.com`인
-   host의 `status`와 `account`를 읽는다. `status`가 `connected`가 아니면 그 host의 `connectUrl`을 사용자에게 주고,
-   사용자가 Agent Studio에서 연결한 뒤 이어간다. 연결을 피하려고 다른 계정·token·생성 도구를 쓰지 않는다.
-   Forge는 GitHub에만 저장소를 만든다. GitLab 프로젝트는 사용자가 GitLab에서 만든다.
-2. 생성에 쓸 Workspace profile이 그 이름을 허용하는지 확인한다. `repositoryMode`가 `new`이면 유효한 모든 이름,
-   `selected`는 `repositories`, `owners`는 그 owner의 이름, `all`은 모든 이름을 허용한다. 허용되지 않으면
+Forge는 GitHub(github.com·GitHub Enterprise Server)에는 저장소를, GitLab(GitLab.com·self-managed GitLab)에는 프로젝트를 같은 절차로 만든다.
+
+1. 요청한 저장소의 Git 호스트와 연결을 확인한다. Forge에서는 `git_connections`의 `hosts`에서 그 host의 `origin`·`provider`·`status`·`account`를 읽는다.
+   요청이 host를 이름으로 정하지 않으면 경로와 연결된 host로 정한다(예: 하위 group 경로는 GitLab이다). 그래도 후보가 둘 이상이면
+   어느 host인지 묻는다. host 주소를 짐작하지 않는다.
+   `status`가 `connected`가 아니면 그 host의 `connectUrl`을 사용자에게 주고, 사용자가 Agent Studio에서 연결한 뒤 이어간다.
+   연결을 피하려고 다른 계정·token·생성 도구를 쓰지 않는다.
+2. 저장소를 만들 namespace를 확인한다. namespace는 GitHub의 계정·조직(owner), GitLab의 사용자 이름이나 하위 group을 포함한 group 경로(예: `apps/demo`)다.
+   - Forge `repository_namespaces`(`origin`, 선택 `search`)로 연결한 계정이 그 host에서 저장소를 만들 수 있는 namespace를 조회한다. 아무것도 만들지 않는 읽기 도구다.
+   - 사용자가 지정한 namespace가 목록의 `path`에 있으면 그 값을 쓴다. 사용자가 정하지 않았으면 목록을 보여 주고 사용자가 고르게 한다.
+   - 지정한 namespace가 목록에 없고 `complete`가 `true`이면 그 namespace에는 만들 수 없다. 경로가 비슷한 항목(예: `app/demo` → `apps/demo`)을
+     제시하고 사용자가 확인한 뒤 진행한다. 확인 전에는 아무것도 만들지 않는다.
+   - `complete`가 `false`이면 `note`가 이유를 알리며, 목록에 없는 namespace도 쓸 수 있다. 사용자가 지정한 경로로 요청하고 Git 호스트의 판정을 따른다.
+3. 생성에 쓸 Workspace profile이 그 이름을 허용하는지 확인한다. 이름은 github.com이 `owner/name`, 다른 host가 `<host>/<path>`다.
+   `repositoryMode`가 `new`이면 유효한 모든 이름, `selected`는 `repositories`의 이름, `owners`는 `repositories`의 이름과 `repositoryOwners`의 owner에 속한 이름
+   (GitLab은 `<host>/<최상위 group>` 아래 모든 하위 group), `all`은 모든 이름을 허용한다. 허용되지 않으면
    profile 소유자가 Forge 콘솔에서 profile을 바꿔야 한다고 알린다. 다른 이름의 저장소를 만들거나 profile을 임의로 넓히지 않는다.
-3. 제공된 조회 도구로 같은 이름의 저장소를 확인한다.
+4. 제공된 조회 도구로 같은 이름의 저장소를 확인한다.
    404는 비공개 저장소 접근 거절일 수도 있다. 다른 이름·fork·공개 전환으로 우회하지 않는다.
-4. Forge `repository_create`에 `origin: "https://github.com"`, `profileId`, `profileRevision`, `repository: "owner/name"`,
-   선택 `description`, `private`, `requestKey`를 보낸다. 공개 범위는 사용자 요청을 따르고 정해지지 않았으면 `private: true`다. Agent Runway로 배포할 앱도 같다. Runway는 공개·비공개 저장소를 모두 요청한 사용자의 Git 계정으로 읽는다.
+5. Forge `repository_create`에 `origin`(1단계의 host), `profileId`, `profileRevision`, `repository`, 선택 `description`(350자 이하), `private`, `requestKey`를 보낸다.
+   `repository`는 `<namespace>/<이름>`이다(GitHub `owner/name`, GitLab `apps/demo/name`). 앞의 `<host>/`는 붙여도 된다.
+   공개 범위는 사용자 요청을 따르고 정해지지 않았으면 `private: true`다. Agent Runway로 배포할 앱도 같다. Runway는 공개·비공개 저장소를 모두 요청한 사용자의 Git 계정으로 읽는다.
    - 오류 `git_connection_required`와 503은 영수증을 남기지 않는다. `git_connection_required`이면 오류의 `connectUrl`을 사용자에게 주고
      사용자가 연결한 뒤에, 503이면 `retryAfterSeconds` 뒤에 같은 `requestKey`로 다시 요청한다.
-   - `status:"created"`이면 Forge가 초기 commit을 만들었다. 저장소를 따로 등록하지 않는다. 영수증의 `result.origin`·`result.repository`를
+   - `status:"created"`이면 Forge가 기본 브랜치에 README 초기 commit을 만들었다. 저장소를 따로 등록하지 않는다. 영수증의 `result.origin`·`result.repository`를
      Git `prepare`의 `origin`·`repository`로 쓴다. `baseBranch`를 생략하면 `prepare`가 `result.defaultBranch`에서 시작한다.
+     `result.repository`는 github.com이 `owner/name`, 다른 host가 `<host>/<path>`이며 Agent Runway의 저장소 식별자와 같다.
+   - `registrationStatus`가 `registered`이면 profile이 그 저장소를 허용한다. `not_registered`이면 `registrationError`가 원인을 알린다.
    - `created`인데 `allowed:false`이면 현재 profile이 그 저장소를 허용하지 않는다. 다시 만들지 않는다.
      영수증의 `error`(`registrationError`와 같은 원인)를 사용자에게 전하고, profile 소유자가 profile의 `repositories`에 추가해야 한다고 알린다.
-   - `failed`는 생성이 거절된 것이다. 영수증의 `error`로 원인을 확인한다.
+   - `failed`는 생성이 거절된 것이다. 영수증의 `error`로 원인을 확인한다. namespace가 없거나 그 계정이 만들 수 없으면 `error`가
+     비슷한 경로의 namespace를 붙인다. 사용자에게 어느 namespace인지 확인한 뒤 고친 입력과 새 `requestKey`로 다시 요청한다.
+     같은 `requestKey`로 입력을 바꾸면 `repository_creation_conflict`(409)다.
    - `unknown`이거나 응답을 잃었으면 생성을 반복하지 않는다. `repository_lookup_request`·`repository_get`으로 영수증을 읽는다.
      `requiresUserDecision`이면 사용자가 대상을 확인한다. 대상이 존재해도 이 요청이 만들었다는 증거가 아니다.
      사용자의 저장소로 확인되면 그 저장소를 `prepare`에 지정한다. `repositoryMode`가 `new`인 profile은 이 저장소를 허용하지 않으므로
      profile 소유자가 `repositories`에 추가해야 한다.
-   - Forge 생성 기능이 없으면 해당 환경의 실제 저장소 권한 범위에서 제공된 GitHub 생성 도구로 초기화할 수 있다.
+   - Forge 생성 기능이 없으면 해당 환경의 실제 저장소 권한 범위에서 제공된 Git 호스트 생성 도구(GitHub·GitLab MCP)로 초기화할 수 있다.
      그 저장소도 profile의 저장소 규칙이 허용해야 `prepare`된다. `new`는 Forge가 만든 저장소와 `repositories`의 저장소만 허용한다.
-5. 기존 저장소가 비어 있으면 clone할 branch가 없다. 첫 commit을 만드는 지원 경로와 요청 범위를 확인하고
+6. 기존 저장소가 비어 있으면 clone할 branch가 없다. 첫 commit을 만드는 지원 경로와 요청 범위를 확인하고
    초기화한다. 존재하는 파일을 덮거나 Git 보호 경계를 우회하지 않는다.
-6. 준비된 저장소의 `origin`·`repository`로 Git `prepare`를 실행한다. `baseBranch`는 사용자가 브랜치를 지정했을 때만 보낸다.
+7. 준비된 저장소의 `origin`·`repository`로 Git `prepare`를 실행한다. `baseBranch`는 사용자가 브랜치를 지정했을 때만 보낸다.
    생략하면 저장소의 기본 branch에서 시작하고, 결과의 `gitResult.baseBranch`가 실제로 쓴 branch다. 실패하면 네트워크·권한·빈 저장소·없는 branch를
    구분하고 확인된 원인을 고친 뒤 같은 Workspace에서 다시 준비한다. 새 Workspace 생성으로 해결하지 않는다.
    `git_repository_not_found`는 연결된 계정이 그 저장소를 볼 수 없다는 뜻이다. 다시 연결하라고 하지 않고 저장소 이름과 그 계정의 권한을 확인한다.
@@ -80,5 +95,5 @@ profile의 저장소 규칙이 이름을 허용해도 원격 저장소가 존재
 다운로드 Artifact는 다르며, 실제 제공된 전달 도구가 없으면 Workspace 링크를 제공한다.
 내부 파일명은 상대 경로를 코드로 표시하고 `/workspace/...`를 다운로드 링크로 만들지 않는다.
 호스트 앱에서 저장소를 지정한 프로젝트 생성은 사용자가 제한하지 않으면 새 작업 브랜치에서 구현·검증 후
-`workspace-task`의 Git 게시 절차로 커밋·푸시·PR까지 추가 승인 없이 완료한다.
+`workspace-task`의 Git 게시 절차로 커밋·푸시·PR/MR까지 추가 승인 없이 완료한다.
 Git-free 결과물에는 원격 게시를 추가하지 않는다. 기본 브랜치 반영·태그·릴리즈·배포는 별도 요청과 확인을 따른다.

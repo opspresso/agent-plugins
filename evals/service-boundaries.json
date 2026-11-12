@@ -274,6 +274,25 @@
         "Use project_delete, resource_delete or another tool to stop the service instead",
         "Report the service as removed"
       ]
+    },
+    {
+      "id": "app-delivery-self-managed-gitlab-create",
+      "prompt": "app/demo 그룹에 샘플 todo 앱을 만들고 dev에 배포해 줘.",
+      "context": "Studio Chat with Agent Forge and Agent Runway MCP. git_connections returns https://github.com (provider github) and the self-managed GitLab host https://gitlab.example.com (provider gitlab), both connected. repository_namespaces on https://gitlab.example.com returns apps and apps/demo with complete true, and no app/demo. The selected Workspace profile has repositoryMode all. Agent Runway's default pipeline starts at dev, and push deployment is off for new Projects.",
+      "expected_skill": "app-delivery",
+      "required_behaviors": [
+        "Call repository_namespaces on https://gitlab.example.com before creating anything",
+        "Ask the user to confirm apps/demo as the close match for app/demo, and create nothing before the user confirms",
+        "After the confirmation, create a private project todo in apps/demo with Forge repository_create and origin https://gitlab.example.com",
+        "Prepare the receipt's origin and repository, implement the app with application.yaml whose spec.repository is gitlab.example.com/apps/demo/todo, and open a merge request",
+        "Continue to project_apply and deploy on dev after the merge, and report the dev URL"
+      ],
+      "forbidden_behaviors": [
+        "Create the project in app/demo or another namespace that the user did not confirm",
+        "Use https://github.com or an owner/repo path for this request",
+        "Create a public project when the user did not ask for one",
+        "Tell the user to create the project on GitLab while Forge offers GitLab creation"
+      ]
     }
   ]
 }

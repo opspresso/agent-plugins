@@ -12,7 +12,8 @@ Sandbox는 Forge 내부의 일시 실행 자원이다.
 2. Agent에 Agent Forge 도구 항목을 연결한다. Studio는 MCP 요청마다 현재 사용자에게 위임한 단기 토큰을 보낸다.
    실행 도구에는 Agent 실행이 가능한 사용자 등급이 필요하다.
 3. 사용자는 Forge 콘솔에서 작업 공간 프로필(실행 방식·중앙 모델·저장소 규칙·검사·배포 workflow)을 만들고 기본 프로필을 선택한다.
-4. 사용자는 Agent Studio의 프로필 → Git 계정(`/profile/git`)에서 작업할 Git 호스트(GitHub·GitLab)를 한 번 연결한다.
+4. 사용자는 Agent Studio의 프로필 → Git 계정(`/profile/git`)에서 작업할 Git 호스트를 한 번 연결한다.
+   Git 호스트는 GitHub(github.com·GitHub Enterprise Server)와 GitLab(GitLab.com·self-managed GitLab)이며, 운영자가 Studio에 등록한 호스트만 보인다.
    Forge 콘솔에는 계정 연결과 저장소 등록 기능이 없다. Forge 콘솔의 Git 호스트 탭은 연결 상태를 보여 주고 Studio의 연결 주소로 안내한다.
    Studio 도구의 Forge 상세 화면에 설정·이력 링크가 있다.
 
@@ -30,10 +31,10 @@ Agent는 그 주소를 사용자에게 전달한다.
 
 > 작업 공간과 Sandbox에서 코드·파일·데이터 작업을 수행하는 공용 Agent다.
 > PR 리뷰, Issue 수정, 기능 구현, 리팩토링, 의존성 업그레이드, CI 실패 조사, 보안 수정과 프로젝트 생성을 지원한다.
-> 구현·수정 작업은 검증과 작업 브랜치 PR까지 제공한다. merge·tag·릴리즈·배포는 요청된 범위에서 조율한다.
+> 구현·수정 작업은 검증과 작업 브랜치 PR/MR까지 제공한다. merge·tag·릴리즈·배포는 요청된 범위에서 조율한다.
 
 시스템 프롬프트는 [workspace-agent.md](prompts/workspace-agent.md)를 그대로 사용한다.
-코딩 요청의 기본 완료 범위는 새 작업 브랜치의 구현·검증·커밋·push·PR이다.
+코딩 요청의 기본 완료 범위는 새 작업 브랜치의 구현·검증·커밋·push·PR/MR이다.
 기본 브랜치 반영·tag·릴리즈·배포는 별도 사용자 요청과 확인을 따른다. 조회·리뷰나 게시 제한 요청은 그 범위를 지킨다.
 작업별 상세 지침과 Git 예제는 연결 Skill에서 읽는다. 시스템 프롬프트에 특정 계정·저장소·Issue를 넣지 않는다.
 
@@ -69,7 +70,7 @@ create_repository, create_branch, push_files, create_pull_request, merge_pull_re
 Issue·PR 읽기, 파일·커밋·릴리즈 읽기와 검색을 연결하고 CI 조사에는 Actions의
 actions_list, actions_get, get_job_logs 읽기 도구를 연결한다. workflow 실행/재실행 도구는 조사에 필요하지 않다.
 새 저장소 생성에는 Forge `repository_create`를 사용하고 계정·저장소 조회를 위해 get_me와 조회 도구를
-연결한다. 생성 전에 프로필의 저장소 규칙이 그 이름을 허용하는지 확인하고, 생성 결과의 `result.origin`·`result.repository`로
+연결한다. 사용자가 owner를 정확히 정하지 않았으면 Forge `repository_namespaces`로 만들 수 있는 곳을 조회해 사용자가 고르게 한다. 생성 전에 프로필의 저장소 규칙이 그 이름을 허용하는지 확인하고, 생성 결과의 `result.origin`·`result.repository`로
 Git `prepare`를 실행한다. `baseBranch`를 생략하면 `prepare`가 `result.defaultBranch`에서 시작한다. 이름이 허용 목록에 있다는 이유로 저장소가 있다고 판단하지 않는다.
 리뷰·Issue 피드백 게시까지 필요한 별도 프로필은 요청 범위에 맞는 쓰기 도구만 명시적으로 연결한다.
 읽기 전용 기본 프로필은 해당 게시를 지원한다고 약속하지 않는다.
@@ -86,7 +87,7 @@ Git `prepare`를 실행한다. `baseBranch`를 생략하면 `prepare`가 `result
 - PR 리뷰·CI 조사만으로 충분한 작업에는 작업 공간을 만들지 않는다. 재현이 필요하면 실제 HEAD를 확인한다.
 - 저장소는 Git `prepare`(`origin`, `repository`, 선택 `baseBranch`)로 `agent/` 작업 브랜치에 준비한다. `baseBranch`를 생략하면 저장소의 기본 브랜치에서 시작한다.
   선택 `sourceRevision`으로 준비한 작업 공간은 그 커밋을 읽기만 한다. 실행되는 Git 단계는 `review`뿐이고,
-  커밋·push·PR·보호 작업은 접수할 때 `git_action_unsupported`로 거절된다. 게시할 작업은 `sourceRevision` 없이 준비한다.
+  커밋·push·PR/MR·보호 작업은 접수할 때 `git_action_unsupported`로 거절된다. 게시할 작업은 `sourceRevision` 없이 준비한다.
   작업 공간은 `prepare`한 Git 계정과 저장소를 보관한다. 연결 계정이나 저장소의 식별 값이 바뀌면 Forge가 그 작업 공간의 Git 작업을
   `git_account_changed`·`repository_identity_changed`로 거절한다.
 - Git-free 프로젝트 생성은 가능하다. 게시할 프로젝트는 생성 전에 저장소가 프로필 규칙에 맞는지 확인한다.
@@ -98,9 +99,9 @@ Git `prepare`를 실행한다. `baseBranch`를 생략하면 `prepare`가 `result
   그 결과도 같은 방식으로 전달된다. 실패·거절·결과 불명인 동작을 자동 반복하지 않는다.
   Forge는 저장소의 기본 브랜치로만 병합한다. 기본 브랜치는 Git 호스트가 알려 준 값이며 `main`이 아니어도 된다.
   기준 브랜치가 기본 브랜치가 아닌 작업 공간의 `merge`는 접수할 때 `git_action_unsupported`로 거절되며,
-  그 PR은 사용자가 Git 호스트에서 병합한다. 배포 workflow도 기본 브랜치(`ref`)에서만 실행한다.
+  그 PR/MR은 사용자가 Git 호스트에서 병합한다. 배포 workflow도 기본 브랜치(`ref`)에서만 실행한다.
   CI 완료를 기다렸다가 자동으로 재개하는 기능은 없다.
-- Run checks, 직접 실행한 검사와 GitHub CI를 구분한다. Git 게시·CI·릴리즈·배포도 서로 다른 결과다.
+- Run checks, 직접 실행한 검사와 Git 호스트의 CI(GitHub Actions·GitLab CI/CD)를 구분한다. Git 게시·CI·릴리즈·배포도 서로 다른 결과다.
 
 ## GitHub Webhook
 

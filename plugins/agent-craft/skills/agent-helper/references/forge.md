@@ -14,7 +14,9 @@
 - **Workspace profile**: runtime·모델·검사(test/lint/build)·유휴 시간·허용 저장소 규칙(`repositoryMode`: `all`·`selected`·`owners`·`new`)을
   저장한 사용자 설정. revision이 있으며 생성·제출 때 `profileId`와 `profileRevision`을 함께 보낸다. 기본 profile은 자동 적용되지 않는다.
   새 profile의 `repositoryMode` 기본값은 `all`이며 연결한 Git 계정이 접근할 수 있는 모든 저장소를 허용한다. 나머지 값은 profile의 목록으로 저장소를 제한한다.
-- **Git 호스트 연결**: 사용자가 Agent Studio의 프로필 → Git 계정(`/profile/git`)에서 Git 호스트(GitHub·GitLab)마다 한 번 연결한다.
+- **Git 호스트 연결**: 사용자가 Agent Studio의 프로필 → Git 계정(`/profile/git`)에서 Git 호스트마다 한 번 연결한다.
+  Git 호스트는 GitHub(github.com·GitHub Enterprise Server)와 GitLab(GitLab.com·self-managed GitLab)이다. `provider`가 `github`이고
+  `origin`이 `https://github.com`이 아니면 GitHub Enterprise Server다. GitHub 저장소 경로는 `owner/repo`, GitLab은 `group/subgroup/project`처럼 group 경로 전체다.
   Forge는 Git credential과 저장소 목록을 갖지 않으며, 저장소를 Forge에 등록하지 않는다. `git_connections`는 host마다
   `origin`·`status`(`connected`·`not_connected`·`reconnect_required`)·`account`·`connectUrl`을 준다. `connectUrl`이 사용자가 연결하는 Studio 주소다.
 - **Git 단계**: `prepare`(Git 호스트 `origin`·저장소 경로 `repository`·작업 branch, 선택 base branch)·`review`·`commit`·`push`(`agent/` branch만)·`pull-request`는 요청 범위에서 실행한다.
@@ -30,12 +32,12 @@
 
 | 영역 | 도구 | 주의 |
 |---|---|---|
-| 조회 | `profile_list`, `profile_get`, `profile_models`, `model_channels`, `workspace_list`, `workspace_get`, `run_list`, `run_get`, `run_result`, `run_events`, `run_usage`, `git_connections`, `git_approval_get`, `repository_get` | 읽기 전용 |
+| 조회 | `profile_list`, `profile_get`, `profile_models`, `model_channels`, `workspace_list`, `workspace_get`, `run_list`, `run_get`, `run_result`, `run_events`, `run_usage`, `git_connections`, `git_approval_get`, `repository_get`, `repository_namespaces` | 읽기 전용. `repository_namespaces`(`origin`, 선택 `search`)는 연결한 계정이 그 Git 호스트에서 저장소를 만들 수 있는 namespace를 준다 |
 | 응답 유실 복구 | `workspace_lookup_request`, `run_lookup_request`, `repository_lookup_request`, `workspace_deletion` | 같은 `requestKey`로 조회한다. 삭제 결과는 `workspace_deletion`으로 확인한다 |
 | profile | `profile_save`, `profile_select`, `profile_delete` | 저장은 revision 비교로 충돌을 거절한다. `profile_delete`(`profileId`, `expectedRevision`)는 사용자가 영구 삭제를 요청할 때만 쓴다. 소유자만 삭제하며 되돌릴 수 없다 |
 | Workspace | `workspace_create`, `workspace_suspend`, `workspace_resume`, `workspace_close`, `workspace_delete` | 닫기·삭제는 되돌릴 수 없다. 삭제는 닫은 뒤 `expectedRevision`과 함께 한다 |
 | 실행 | `run_submit`, `run_cancel`, `run_retry` | `run_submit`은 접수다. 결과는 원래 Chat으로 돌아온다. `run_retry`는 사용자가 명시적으로 요청할 때만 |
-| 저장소 | `repository_create` | 접수형 작업. GitHub 저장소만 만든다(`origin`은 `https://github.com`). 결과가 `unknown`이면 다시 만들지 않는다 |
+| 저장소 | `repository_create` | 접수형 작업. `origin`(`git_connections`의 host)에 GitHub 저장소나 GitLab 프로젝트를 만든다. namespace를 짐작하지 않고, 사용자가 정확히 정하지 않았으면 `repository_namespaces`로 고르게 한다. 결과가 `unknown`이면 다시 만들지 않는다 |
 
 승인 도구는 MCP에 없다. Git 호스트 계정을 연결하거나 저장소를 등록하는 도구도 없다.
 
@@ -52,7 +54,7 @@ Forge 콘솔은 페이지마다 전체 문서를 새로 불러온다.
 
 콘솔 전용 작업: 보호된 Git 작업 승인·거절(원래 소유자의 콘솔 세션만 가능).
 `publish-protected`·`merge`·`tag`의 승인 화면은 Workspace branch가 커밋한 변경(`prepare` 기준 커밋부터 승인할 HEAD까지의 diff)을 보여 준다.
-`merge`의 승인 화면에는 Git 호스트의 PR을 여는 **PR 열기** 링크가 있다. `release`·`deploy`의 승인 화면은 diff 대신 승인 대상을 설명한다.
+`merge`의 승인 화면에는 Git 호스트의 PR/MR을 여는 **PR 열기** 링크가 있다. `release`·`deploy`의 승인 화면은 diff 대신 승인 대상을 설명한다.
 Git 호스트 계정 연결·해제는 Forge 콘솔에서 하지 않는다. Git 호스트 탭은 연결 상태를 보여 주고 Studio의 연결 주소로 안내한다.
 
 ## 처음 설정
@@ -72,6 +74,7 @@ Git 호스트 계정 연결·해제는 Forge 콘솔에서 하지 않는다. Git 
 | `git_connection_required` (409, Run `errorCode`) | 사용자가 그 Git 호스트를 Studio에서 연결하지 않았거나 다시 연결해야 한다. 오류나 Run의 `connectUrl`을 링크로 준다. 사용자가 연결한 뒤 다시 제출한다 |
 | `git_repository_not_found` (404) | 저장소가 없거나, 이름이 바뀌었거나, 연결한 계정이 볼 수 없다. 다시 연결하게 하지 않는다. 저장소 이름과 그 계정의 권한을 확인한다 |
 | `invalid_repository` (400) | `origin`이 이 설치의 Git 호스트가 아니거나 저장소 경로 형식이 틀렸다(GitHub는 `owner/repo`, GitLab은 두 마디 이상). Forge는 Git 호스트 연결보다 먼저 이것을 검사한다. `git_connections`의 host `origin`과 경로를 확인한다 |
+| 저장소 생성 `failed`(namespace) | 영수증의 `error`가 namespace(GitHub owner, GitLab 사용자 이름·group 경로)가 없거나 그 계정이 만들 수 없다고 알리고, 비슷한 경로의 namespace가 있으면 붙인다. 사용자에게 어느 namespace인지 확인한 뒤 새 `requestKey`로 다시 요청한다. 같은 키로 입력을 바꾸면 `repository_creation_conflict`(409)다 |
 | `git_account_changed` (403) | Studio에 연결된 Git 계정이 그 Workspace를 `prepare`한 계정과 다르다. 원래 계정을 Studio에서 다시 연결하거나 새 Workspace에서 `prepare`한다 |
 | `repository_identity_changed` (403) | Workspace 저장소의 저장소 ID·공개 범위·주소가 바뀌었다. 대상을 확인하고 새 Workspace에서 `prepare`한다 |
 | `git_host_removed` (409) | 운영자가 그 Git 호스트를 설치에서 제거했다. 현재 Git 호스트의 저장소로 새 Workspace에서 `prepare`한다 |
