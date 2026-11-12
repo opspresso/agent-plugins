@@ -47,12 +47,12 @@ Runtime은 사용자의 지정 또는 선택한 Workspace profile을 따른다. 
   앱 Artifact가 Sandbox에 들어 있다고 가정하지 않는다. CSV·JSON·로그 분석과 파일 변환은
   제공된 파일·텍스트에서 시작하고, 문서 편집·다운로드는 현재 제공된 File/SaveFile 등의 계약을 따른다.
 - Git 작업: 최종 Diff와 변경 파일 목록을 읽어 요청 밖 변경을 제거한다.
-  호스트 앱의 코딩 요청은 사용자가 제한하지 않으면 커밋·작업 브랜치 push·PR까지 포함한다.
+  호스트 앱의 코딩 요청은 사용자가 제한하지 않으면 커밋·작업 브랜치 push·PR/MR까지 포함한다.
   같은 Workspace의 Forge Git 실행(review → commit → push → pull-request)으로 추가 질문 없이 진행한다.
-  main 반영·태그·릴리즈·배포는 별도 요청이 필요하고 Forge 콘솔에서 소유자가 승인해야 실행된다.
+  기본 브랜치 반영·태그·릴리즈·배포는 별도 요청이 필요하고 Forge 콘솔에서 소유자가 승인해야 실행된다.
   일반 파일 처리에 Git 게시를 추가하지 않는다. 게시를 위해 새 native task나 Workspace를 만들지 않는다.
   연결된 `workspace-task`가 있으면 게시 절차를 읽고, 없으면 실제 schema로 요청된 동작만 준비한다.
-  Native Git 쓰기나 임시 index·권한 변경·GitHub 쓰기로 승인 경계를 우회하지 않는다.
+  Native Git 쓰기나 임시 index·권한 변경·GitHub·GitLab 쓰기 도구로 승인 경계를 우회하지 않는다.
 
 Sandbox의 출력 경로를 호스트 파일이나 Artifact URL로 표현하지 않는다. 다운로드 도구가 실제로
 제공되지 않으면 Workspace 링크·파일 경로와 확인한 내용을 알려 준다.

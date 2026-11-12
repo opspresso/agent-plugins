@@ -33,7 +33,7 @@ env:
 | --- | --- | --- | --- |
 | `apiVersion`, `kind` | 예 | `agent.opspresso.com/v4`, `Application` | |
 | `spec.name` | 예 | Project slug. `^[a-z][a-z0-9-]{1,30}[a-z0-9]$`이고 설치의 환경 이름으로 끝날 수 없다(예: `-dev`, `-prod`). `agent-`·`addon-`·`delivery-`·`kube-`로 시작하는 이름과 `istio`·`argocd`·`default`·`system`은 쓸 수 없다. Project가 있으면 그 slug와 같아야 한다 | |
-| `spec.repository` | 예 | `<host>/<path>`. `owner/repo`는 GitHub다. 적용하는 저장소와 같아야 한다 | |
+| `spec.repository` | 예 | `<host>/<path>`(예: `github.com/owner/repo`, GitHub Enterprise Server `github.example.com/owner/repo`, self-managed GitLab `gitlab.example.com/group/subgroup/app`). host가 없는 `owner/repo`는 github.com만 뜻한다. 적용하는 저장소와 같아야 한다 | |
 | `spec.owner` | 예 | Project 소유자의 Studio subject. 아래 [소유자](#소유자)를 따른다 | |
 | `spec.description` | 아니요 | 200자 이하 | |
 | `runtime.port` | 예 | 1024~65535. 플랫폼이 `PORT`로도 넘긴다 | |
@@ -59,7 +59,7 @@ env:
 
 | 설정 | 정하는 곳 |
 | --- | --- |
-| 환경과 승격 순서, cloud, target type, architecture | Project의 pipeline. 새 Project는 `project_ensure`·`project_apply`의 `pipeline`, 기존 Project는 `project_configure`의 `pipeline` |
+| 환경과 승격 순서, cloud, target type, architecture | Project의 pipeline. 새 Project는 `project_ensure`·`project_apply`의 `pipeline`, 기존 Project는 `project_configure`의 `pipeline`(배포된 서비스가 없을 때만, [pipeline 변경](../SKILL.md#pipeline-변경)) |
 | 복제 수·CPU·memory·instance type | pipeline의 단계별 크기(`small`·`medium`·`large`). Project 값은 `project_configure`의 `sizes` |
 | 배포를 시작하는 push | pipeline의 trigger. Project 값은 `project_configure`의 `trigger`. push 배포를 켠 Project(`push_enable`)만 push로 배포한다 |
 | 앱 주소 | 단계의 위치. 마지막 단계는 `<slug>.<도메인>`, 그 밖의 단계는 `<slug>-<env>.<도메인>`이다. 마지막 단계에도 환경 이름을 붙이려면 `project_configure`의 `suffixEveryStage` |

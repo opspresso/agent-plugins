@@ -63,9 +63,11 @@ Do not broaden account scopes merely to make an optional capability appear.
 that also posts user-requested reviews/comments can keep a selected write subset;
 avoid binding overlapping repository writers or automation delegation by default.
 Project generation in a Workspace does not itself create a GitHub repository.
-For requested repository creation, use **Forge `repository_create`** with `origin`
-`https://github.com`, a Workspace profile whose repository rules allow the name,
-and the requested visibility. Forge creates it with the GitHub account that the
+For requested repository creation, use **Forge `repository_create`** with the
+host's `origin` from `git_connections` (`https://github.com` for github.com), a
+Workspace profile whose repository rules allow the name, and the requested
+visibility. When the user did not name the owner exactly, list the places the
+account can create in with Forge `repository_namespaces` and let the user choose. Forge creates it with the GitHub account that the
 user connected in Agent Studio (Profile → Git accounts). `git_connections` returns
 each Git host's connection `status` and `connectUrl`; when GitHub is not connected,
 give the user that `connectUrl`. Forge initializes the first commit. Forge keeps no

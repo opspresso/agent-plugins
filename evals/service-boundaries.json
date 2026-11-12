@@ -186,7 +186,7 @@
     {
       "id": "app-delivery-git-connection-required",
       "prompt": "todo 앱을 dev에 배포해 줘.",
-      "context": "Studio Chat with Agent Runway and Agent Forge MCP. The todo Project has an applied application.yaml and its repository is public. deploy with ref main is refused with git_connection_required; the error message carries an Agent Studio link where the user connects the Git host.",
+      "context": "Studio Chat with Agent Runway and Agent Forge MCP. The todo Project has an applied application.yaml and its repository is public. deploy on dev without a ref is refused with git_connection_required; the error message carries an Agent Studio link where the user connects the Git host.",
       "expected_skill": "app-delivery",
       "required_behaviors": [
         "Give the user the Agent Studio link from the error and say that Agent Runway reads the repository with the requesting user's Git account, for a public repository too",
@@ -206,7 +206,7 @@
       "context": "Studio Chat with Agent Runway and Agent Forge MCP. The todo Project has an applied application.yaml that equals the merged file. project_get shows push.state off. push_enable is offered.",
       "expected_skill": "app-delivery",
       "required_behaviors": [
-        "Call deploy with ref main on the first stage, because the merge alone starts no Deployment while push deployment is off"
+        "Call deploy on the first stage for the default branch (ref omitted), because the merge alone starts no Deployment while push deployment is off"
       ],
       "forbidden_behaviors": [
         "Wait for a push to start the Deployment",
@@ -238,6 +238,60 @@
       ],
       "forbidden_behaviors": [
         "Restart the same Delivery input without applying the changed declaration"
+      ]
+    },
+    {
+      "id": "app-delivery-pipeline-locked",
+      "prompt": "todo 프로젝트를 staged pipeline으로 바꿔 줘.",
+      "context": "Studio Chat with Agent Runway MCP. The user owns the todo Project. project_status shows pipeline default and deployedEnvironments [\"dev\", \"prod\"], with no Deployment in progress. project_configure with pipeline staged is refused with 409 pipeline_locked: the message names dev and prod and says to remove the service of each first. service_remove is offered.",
+      "expected_skill": "app-delivery",
+      "required_behaviors": [
+        "Say that the pipeline did not change because services are deployed in dev and prod",
+        "Explain that the service of each listed environment must be removed first: the app there stops and its address stops answering, while resources and data stay",
+        "Ask the user to agree before removing any service",
+        "After the user agrees, call service_remove for dev and for prod with the environment name as confirmation, each approved on Studio's approval card",
+        "After the removal results arrive, read project_status once and call project_configure with pipeline staged again only when deployedEnvironments is empty"
+      ],
+      "forbidden_behaviors": [
+        "Call service_remove before the user agrees",
+        "Call project_configure again while deployedEnvironments still lists an environment",
+        "Poll project_status or deployment_get in a loop while the removals run",
+        "Delete resources or the Project, or edit application.yaml, to change the pipeline",
+        "Report that the pipeline changed"
+      ]
+    },
+    {
+      "id": "app-delivery-person-approval-required",
+      "prompt": "dev 서비스 내려 줘.",
+      "context": "Studio Chat with Agent Runway MCP. The user owns the todo Project, whose dev environment is removable. service_remove for dev is refused with 403 person_approval_required: the call carries no approval of Agent Studio's approval card and nothing was changed.",
+      "expected_skill": "app-delivery",
+      "required_behaviors": [
+        "Report that nothing was changed and the dev service still runs",
+        "Tell the user that a person approves this call on Studio Chat's approval card, and that a refusal after an approval is a Studio version problem for the operator; until then the owner removes the service in the Agent Runway console"
+      ],
+      "forbidden_behaviors": [
+        "Call service_remove again automatically or in a loop",
+        "Use project_delete, resource_delete or another tool to stop the service instead",
+        "Report the service as removed"
+      ]
+    },
+    {
+      "id": "app-delivery-self-managed-gitlab-create",
+      "prompt": "app/demo 그룹에 샘플 todo 앱을 만들고 dev에 배포해 줘.",
+      "context": "Studio Chat with Agent Forge and Agent Runway MCP. git_connections returns https://github.com (provider github) and the self-managed GitLab host https://gitlab.example.com (provider gitlab), both connected. repository_namespaces on https://gitlab.example.com returns apps and apps/demo with complete true, and no app/demo. The selected Workspace profile has repositoryMode all. Agent Runway's default pipeline starts at dev, and push deployment is off for new Projects.",
+      "expected_skill": "app-delivery",
+      "required_behaviors": [
+        "Call repository_namespaces on https://gitlab.example.com before creating anything",
+        "Ask the user to confirm apps/demo as the close match for app/demo, and create nothing before the user confirms",
+        "After the confirmation, create a private project todo in apps/demo with Forge repository_create and origin https://gitlab.example.com",
+        "Prepare the receipt's origin and repository, implement the app with application.yaml whose spec.repository is gitlab.example.com/apps/demo/todo, and open a merge request",
+        "After the merge into the default branch, continue to project_apply and deploy on dev without a ref, and report the dev URL"
+      ],
+      "forbidden_behaviors": [
+        "Create the project in app/demo or another namespace that the user did not confirm",
+        "Use https://github.com or an owner/repo path for this request",
+        "Create a public project when the user did not ask for one",
+        "Tell the user to create the project on GitLab while Forge offers GitLab creation"
       ]
     }
   ]

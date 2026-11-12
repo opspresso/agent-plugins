@@ -43,6 +43,8 @@
 | 배포 실패 | Runway | `deployment_get`의 `errorCode`와 `deployment_logs`. [delivery](delivery.md#오류) |
 | `environment_not_ready` | Runway | 오류 메시지의 원인을 따른다. 값 없는 secret은 입력 링크를 주고, `failed` 리소스는 다시 만든다. [delivery](delivery.md#오류) |
 | `pipeline_required`, `environment_not_in_pipeline`, `release_outdated` | Runway | pipeline을 고르지 않았거나 Project의 pipeline과 맞지 않는 요청이다. `pipeline_list`와 `project_status`의 `pipeline`을 확인한다. [delivery](delivery.md#오류) |
+| pipeline을 바꿀 수 없음(`pipeline_locked`) | Runway | 배포된 서비스가 있다. `project_status`의 `deployedEnvironments`를 확인하고 [delivery](delivery.md#pipeline-변경)의 절차를 따른다 |
+| `person_approval_required` (403) | Runway | 사람이 승인해야 하는 호출이 승인 표시 없이 왔다. 반복하지 않는다. [delivery](delivery.md#오류) |
 | 문서 처리 멈춤·실패 | Knowledge | [knowledge](knowledge.md#오류) |
 | 녹음 작업 결과 불명 | Knowledge | `audio_request_status`로 영수증 확인. 다시 제출하지 않는다 |
 | 기억 검색이 안 맞음 | Memory | [memory](memory.md#오류) |

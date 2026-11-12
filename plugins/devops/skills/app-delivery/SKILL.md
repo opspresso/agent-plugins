@@ -12,7 +12,7 @@ metadata:
 # 앱 전달
 
 사용자가 요청한 앱을 실행 중인 서비스로 만든다. 저장소·코드·`application.yaml`·리소스·배포·응답하는 URL이
-모두 확인될 때 완료다. PR이나 이미지 push만으로 완료라고 하지 않는다.
+모두 확인될 때 완료다. PR/MR이나 이미지 push만으로 완료라고 하지 않는다.
 
 필요한 연결: Agent Runway MCP(`pipeline_list`, `project_apply`, `resource_create`, `deploy`, `promote` 등)와 Agent Forge MCP(Workspace·Git).
 둘 중 하나가 없으면 할 수 있는 작업까지만 진행하고, 없는 연결과 남은 작업을 알린다.
@@ -35,7 +35,8 @@ metadata:
 ## 1. 요구사항, 이름, pipeline
 
 1. 앱의 목적·핵심 기능·데이터·외부 API와 배포할 환경을 확인한다. 정해진 부분은 묻지 않는다.
-2. 저장소 owner를 정한다. 사용자가 정하지 않았으면 Agent 지침이 정한 기본 owner를 쓰고, 그것도 없으면 묻는다.
+2. 저장소의 Git 호스트와 owner(GitHub owner, GitLab 사용자 이름이나 group 경로)를 정한다. 사용자가 정하지 않았으면 Agent 지침이 정한
+   기본값을 쓰고, 그것도 없으면 묻는다. 새 저장소의 owner는 짐작하지 않는다([2. 저장소와 코드](#2-저장소와-코드)).
 3. 이름(slug)을 정한다. `^[a-z][a-z0-9-]{1,30}[a-z0-9]$`이고 설치의 환경 이름으로 끝날 수 없다(예: `-dev`, `-prod`).
    `agent-`·`addon-`·`delivery-`·`kube-`로 시작하는 이름과 `istio`·`argocd`·`default`·`system`은 쓸 수 없다.
    저장소 이름과 같게 하면 추적이 쉽다. 주소는 Project pipeline의 마지막 단계가 `https://<slug>.<도메인>`, 그 밖의 단계가 `https://<slug>-<env>.<도메인>`이다.
@@ -70,20 +71,27 @@ Agent Runway는 한 사용자의 Git 계정으로 저장소를 읽는다. 요청
 push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계정으로 읽는다([push 배포](#push-배포)).
 공개 저장소와 비공개 저장소의 절차가 같다. Runway에는 저장소를 연결하거나 등록하는 단계가 없고, Runway는 deploy key를 만들지 않는다.
 사용자는 저장소가 있는 Git 호스트를 Agent Studio의 프로필 → Git 계정에서 한 번 연결한다.
+Git 호스트는 GitHub(github.com·GitHub Enterprise Server)와 GitLab(GitLab.com·self-managed GitLab)이다.
+`repository`는 `<host>/<path>`다(예: `github.com/owner/todo`, `github.example.com/owner/todo`, `gitlab.example.com/apps/demo/todo`).
+host가 없는 `owner/repo`는 github.com만 뜻하므로 다른 호스트의 저장소에는 host를 쓴다. GitLab은 group 경로 전체를 쓴다.
+host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
 
-- **Git 계정이 필요한 호출**: 새 Project를 만드는 `project_ensure`·`project_apply`와 `ref`를 보내는 `deploy`다.
+- **Git 계정이 필요한 호출**: 새 Project를 만드는 `project_ensure`·`project_apply`와 `release` 없이 호출하는 `deploy`(`ref`를 보내거나 생략)다.
   호출한 사용자가 그 Git 호스트를 연결했고, 연결한 계정이 저장소를 읽을 수 있어야 한다.
 - **Git 계정이 필요 없는 호출**: 이미 있는 Project의 `project_ensure`·`project_apply`, `release`를 보내는 `deploy`, `promote`, `rollback`, 배포 승인이다.
-- `ref`를 보낸 `deploy`는 응답하기 전에 저장소를 읽고 `ref`를 commit으로 확정한다. 아래 code로 거절되면 Deployment는 만들어지지 않았다.
+- `release` 없는 `deploy`는 응답하기 전에 저장소를 읽고 `ref`를 commit으로 확정한다. `ref`를 생략하면 Git 호스트가 알려 주는
+  저장소의 기본 브랜치를 쓴다. 아래 code로 거절되면 Deployment는 만들어지지 않았다.
 
 | code | 뜻 | 행동 |
 |---|---|---|
 | `git_connection_required` | 사용자가 그 Git 호스트를 연결하지 않았거나 다시 연결해야 한다 | 오류 메시지에 있는 Agent Studio 연결 링크(`connectUrl`)를 사용자에게 준다. 사용자가 연결한 뒤 같은 호출을 다시 한다 |
 | `repository_access_denied` | 연결한 Git 계정이 저장소를 볼 수 없다. `push_enable`에서는 저장소의 webhook을 관리하는 역할이 없다는 뜻일 수도 있다 | 다시 연결하게 하지 않는다. 저장소 이름과 그 계정의 저장소 권한을 사용자와 확인한다 |
-| `ref_not_found` | 저장소에 그 branch·tag·commit이 없다 | `ref`를 확인해 고친 뒤 다시 호출한다 |
+| `ref_not_found` | 저장소에 그 branch·tag·commit이 없다. `ref`를 생략했으면 저장소에 기본 브랜치가 없다(커밋 없는 저장소) | `ref`를 확인해 고친 뒤 다시 호출한다. 기본 브랜치가 없으면 첫 커밋을 만든 뒤 배포한다 |
+| `invalid_ref` | `ref` 형식이 틀렸다. `ref`를 생략했으면 저장소의 기본 브랜치 이름이 Runway의 `ref` 규칙에 맞지 않는다 | 형식을 고친다. 기본 브랜치 이름 때문이면 배포할 tag나 commit SHA를 `ref`로 보낸다 |
 | `source_too_large` | 그 commit의 소스 아카이브가 설치의 한도를 넘는다 | 사용자에게 알린다. 저장소를 줄이거나 운영자가 한도를 올려야 한다 |
+| `source_busy` | Runway가 한 번에 읽는 소스 아카이브 수가 한도에 있거나, 같은 Project의 다른 소스 아카이브를 읽는 중이다 | 메시지가 알려 주는 시간(10초) 뒤에 같은 호출을 다시 한다 |
 | `git_host_removed` | Agent Studio가 그 Git 호스트를 더 이상 Git 호스트로 두지 않는다 | 사용자에게 알린다. 운영자가 Agent Studio에 그 호스트를 다시 등록해야 한다 |
-| `invalid_repository` | 새 Project의 저장소가 이 설치의 Git 호스트에 있지 않거나, 저장소 주소가 `<host>/<path>` 형식이 아니다 | 메시지가 알려 주는 Git 호스트와 저장소 주소를 사용자와 확인한다 |
+| `invalid_repository` | 새 Project의 저장소가 이 설치의 Git 호스트에 있지 않거나, 저장소 주소가 그 호스트의 `<host>/<path>` 형식이 아니다(GitHub는 정확히 `owner/repo`, port가 있는 주소는 받지 않는다) | 메시지가 알려 주는 Git 호스트와 저장소 주소를 사용자와 확인한다 |
 
 ## 기존 저장소의 Project 만들기
 
@@ -106,7 +114,7 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
      PostgreSQL 리소스(보통 `pool-postgres`)를 계획한다. 앱이 실행될 모든 단계에 같은 이름·template으로 만든다.
      리소스를 피하려고 어느 단계에서든 앱 기능을 끄는 값(예: `REDIS_ENABLED: "false"`)을 넣지 않고, 그런 선택지를 묻지도 않는다.
    사용자가 추가를 요청했으면 초안과 리소스 계획을 보여 주고 바로 진행하며, 요청하지 않았을 때만 `AskUser`로 묻는다.
-   묻는 경우의 예: "application.yaml이 없습니다. 아래 내용으로 만들어 추가할까요?" 진행하면 [2. 저장소와 코드](#2-저장소와-코드)의 PR 절차로 추가한다.
+   묻는 경우의 예: "application.yaml이 없습니다. 아래 내용으로 만들어 추가할까요?" 진행하면 [2. 저장소와 코드](#2-저장소와-코드)의 PR/MR 절차로 추가한다.
    `Dockerfile`이나 health 경로가 없으면 같은 질문에 함께 포함한다.
 4. 병합되면 [3. 선언 적용과 리소스](#3-선언-적용과-리소스)로 `project_apply`와 `resource_create`까지 진행한다.
    배포는 사용자가 요청했을 때만 한다. 요청이 없으면 `AskUser`로 첫 단계 배포 여부를 묻는다.
@@ -115,8 +123,19 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
 
 ## 2. 저장소와 코드
 
-1. 새 저장소는 연결된 `project-generator` 절차로 Forge `repository_create`를 실행한다. 공개 범위는 사용자 요청을 따르고,
-   정해지지 않았으면 `private: true`다. Runway는 공개·비공개 저장소를 같은 방법으로 읽으므로 배포 때문에 공개로 만들지 않는다.
+1. 새 저장소는 Forge `repository_create`로 만든다. 연결된 `project-generator`가 있으면 그 원격 준비 절차도 따른다.
+   GitHub(github.com·GitHub Enterprise Server) 저장소와 GitLab(GitLab.com·self-managed GitLab) 프로젝트는 같은 절차다.
+   - `origin`은 저장소를 만들 host의 `git_connections` `origin`이다. 그 host의 `status`가 `connected`가 아니면 `connectUrl`을 사용자에게 준다.
+   - 만들기 전에 `repository_namespaces`(`origin`)로 연결한 계정이 저장소를 만들 수 있는 namespace(GitHub 계정·조직, GitLab 사용자 이름·group 경로)를 확인한다.
+     사용자가 지정한 namespace가 목록의 `path`에 있으면 그대로 쓴다. 없고 `complete`가 `true`이면 만들지 않는다.
+     경로가 비슷한 항목(예: `app/demo` → `apps/demo`)을 보여 주고, 사용자가 고른 namespace로 만든다. 사용자가 확인하기 전에는 아무것도 만들지 않는다.
+     `complete`가 `false`이면 목록에 없는 namespace도 쓸 수 있다. 사용자가 지정한 경로로 요청하고 Git 호스트의 판정을 따른다.
+   - `repository`는 `<namespace>/<이름>`이다(예: GitHub `owner/todo`, GitLab `apps/demo/todo`). 공개 범위는 사용자 요청을 따르고,
+     정해지지 않았으면 `private: true`다. Runway는 공개·비공개 저장소를 같은 방법으로 읽으므로 배포 때문에 공개로 만들지 않는다.
+   - 영수증이 `failed`이면 `error`가 원인을 알린다. namespace가 없거나 만들 권한이 없으면 문장이 비슷한 namespace를 붙인다.
+     어느 것인지 사용자에게 확인한 뒤 새 `requestKey`로 다시 요청한다. `unknown`이면 다시 만들지 않고 `repository_get`으로 영수증을 읽는다.
+   - `created`이면 영수증의 `result.origin`·`result.repository`로 Git `prepare`를 한다. `result.repository`는 github.com이 `owner/repo`,
+     다른 host가 `<host>/<path>`(예: `gitlab.example.com/apps/demo/todo`)이며 Runway의 `repository`와 `spec.repository`에 그대로 쓸 수 있다.
    기존 저장소의 공개 범위를 임의로 바꾸지 않는다.
 2. 앱이 DB·버킷을 쓰면 코드를 쓰기 전에 sandbox 환경(기본 `dev`)의 리소스를 만든다. `project_ensure`(`repository`, `default`가 아니면 `pipeline`)로
    Project를 만들고 `resource_create`(`project`, `environment`, `template`, `name`, `idempotencyKey`)를 호출한 뒤 `resource_get`으로 `ready`를 한 번 확인한다.
@@ -135,16 +154,18 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
    넣으므로 migration과 DB 연동을 실제 DB로 확인한다. 이 확인은 Forge에서만 가능하다. Runway의 test 스텝에는 DB가 없다.
 5. task가 끝나면 부모가 `run_submit`의 Git `review` Run을 내고, diff의 `application.yaml` 전체를 `application_validate`로 다시 검사한다.
    거부되면 커밋하지 않고 오류 필드를 고치는 task를 낸 뒤 `review`부터 다시 한다.
-6. 부모가 Git `commit`·`push`·`pull-request` Run으로 PR을 만든다. Git 작업을 task에 넣지 않는다. native Runtime은 커밋할 수 없다.
+6. 부모가 Git `commit`·`push`·`pull-request` Run으로 PR/MR을 만든다. Git 작업을 task에 넣지 않는다. native Runtime은 커밋할 수 없다.
    `pull-request`는 승인을 만들지 않는다.
-7. PR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approvalUrl`을 반환한다.
+7. PR/MR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approvalUrl`을 반환한다.
    그 링크를 답변에 그대로 넣어 사용자에게 준다(`WaitForServiceWork`로 턴을 끝낼 때도 그 메시지에 넣는다). 병합 Run이 `succeeded`인지 확인한 뒤 3절로 간다. 승인 없이 다른 경로로 병합하지 않는다.
-   Forge는 `main`으로만 병합한다. Workspace의 기준 브랜치가 `main`이 아니면 `merge`가 `git_action_unsupported`로 거절되고 승인은 만들어지지 않는다.
-   이때는 사용자가 Git 호스트에서 그 PR을 병합해야 한다고 알리고, 병합된 뒤 3절로 간다.
+   Forge는 저장소의 기본 브랜치(`main`이 아닐 수 있다)로만 병합한다.
+   Workspace의 기준 브랜치가 기본 브랜치가 아니면 `merge`가 `git_action_unsupported`로 거절되고 승인은 만들어지지 않는다.
+   `baseBranch` 없이 준비한 Workspace는 기본 브랜치에서 시작하므로 이 이유로 거절되지 않는다.
+   이때는 사용자가 Git 호스트에서 그 PR/MR을 병합해야 한다고 알리고, 병합된 뒤 3절로 간다.
 
 ## 3. 선언 적용과 리소스
 
-1. 배포할 revision(기본 병합된 main)의 `application.yaml` 내용을 그대로 `project_apply`에 넘긴다(`repository`, `application`).
+1. 배포할 revision(기본: 저장소의 기본 브랜치. Forge가 병합한 PR/MR이 들어가는 브랜치다)의 `application.yaml` 내용을 그대로 `project_apply`에 넘긴다(`repository`, `application`).
    새 Project를 `default`가 아닌 pipeline으로 만들 때만 `pipeline`을 함께 넘긴다. 기존 Project에는 `pipeline`을 넘기지 않는다.
    Project의 pipeline과 다른 이름을 넘기면 `pipeline_mismatch`로 실패한다.
    새 Project를 만드는 `project_apply`는 호출한 사용자의 Git 계정이 저장소를 읽을 수 있는지 확인한다([저장소 접근](#저장소-접근)).
@@ -162,7 +183,7 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
    Deployment는 리소스를 만들지 않는다. 리소스가 `failed`이면 원인을 보고한다.
 4. `missingSecrets`가 있으면 각 항목의 `url`(또는 `secret_request`가 준 링크)을 사용자에게 준다. 값은 Chat으로 받지 않는다.
    사용자가 입력했다고 하면 `project_status`에서 그 단계의 `missingSecrets`가 비었는지 확인한다.
-5. `invalid_application`이면 오류의 필드를 고쳐 2절의 PR로 다시 반영한다. 이전 apiVersion의 파일은 거부되며, 메시지가 고칠 내용을 알려 준다.
+5. `invalid_application`이면 오류의 필드를 고쳐 2절의 PR/MR로 다시 반영한다. 이전 apiVersion의 파일은 거부되며, 메시지가 고칠 내용을 알려 준다.
 
 ## 4. 배포와 승격
 
@@ -170,8 +191,11 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
 `pipeline.stages`가 승격 순서와 크기를, `environments[]`의 `position`·`next`·`approval`·`deployBlockers`·`promoteBlockers`가 단계별 상태를 준다.
 기본 설치의 `default` pipeline은 `dev`(승인 없음) → `prod`(소유자 승인)이다.
 
-1. 첫 단계(`position`이 `0`인 환경)에 `deploy`(`project`, `environment`, `ref`, `idempotencyKey`)를 호출한다. 기본 ref는 `main`이다.
-   Agent Runway가 호출한 사용자의 Git 계정으로 저장소를 읽고, ref를 pipeline의 architecture로 build해 Release(`r<n>`)를 만들고 배포한다.
+1. 첫 단계(`position`이 `0`인 환경)에 `deploy`(`project`, `environment`, 선택 `ref`, `idempotencyKey`)를 호출한다.
+   저장소의 기본 브랜치를 배포하면 `ref`를 생략한다. Runway가 Git 호스트에서 기본 브랜치를 읽어 build하며, 이름이 `main`이 아니어도 된다.
+   Forge가 병합한 PR/MR은 기본 브랜치에 들어가므로 병합 뒤의 첫 배포는 `ref` 없이 호출한다. 다른 branch·tag·commit을 배포할 때만 `ref`를 보낸다.
+   응답의 `ref`·`commit`이 실제로 build한 branch와 commit이다.
+   Agent Runway가 호출한 사용자의 Git 계정으로 저장소를 읽고, 그 commit을 pipeline의 architecture로 build해 Release(`r<n>`)를 만들고 배포한다.
    Git 계정이나 `ref` 때문에 거절되면 [저장소 접근](#저장소-접근)의 code별 행동에 따른다.
    push 배포를 켠 Project(`project_get`의 `push.state`가 `on`)는 trigger(`project_status`의 `pipeline.trigger`)와 맞는 push를
    Runway가 첫 단계에 배포한다. 그래서 병합 직후의 `deploy`가 `deployment_in_progress`일 수 있다. 이때는 새로 요청하지 않고 `project_status`의 그 단계 `inProgress.deploymentId`를
@@ -226,13 +250,17 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
     이 허용은 push 배포를 끄거나 그 사용자가 Agent Studio의 프로필 → Git 계정에서 위임을 폐기할 때까지 유지된다. 호출하기 전에 사용자에게 이 내용을 알린다.
   - Studio Chat은 호출마다 사람의 승인 카드를 보여 주고, 승인된 호출만 실행한다. 승인할 사람이 없는 실행에는 `push_enable` 도구가 없다.
     도구가 없으면 Project 소유자나 Studio 관리자가 Agent Runway 콘솔의 Project 설정(`/projects/<slug>/settings`)에서 켜야 한다고 안내한다.
+  - Runway는 승인 표시가 없는 호출을 아무것도 바꾸지 않고 `person_approval_required`로 거절한다. [사람의 승인](#사람의-승인)에 따른다.
+  - `push_busy`는 같은 Project의 다른 push 배포 변경(켜기·끄기·Project 삭제의 끄기)이 진행 중이라는 뜻이다. Runway는 기다리지 않고 거절한다.
+    메시지가 알려 주는 시간(5초) 뒤에 다시 호출한다. `push_enable`을 다시 호출하면 승인 카드도 다시 뜬다.
   - Project 소유자나 Studio 관리자만 켤 수 있다(`owner_required`). 켜는 사용자의 Git 계정은 저장소의 webhook을 관리하는 역할이어야 한다:
-    GitHub 저장소는 `admin`, GitLab 프로젝트는 Maintainer 이상이다. 아니면 `repository_access_denied`다.
+    GitHub(github.com·GitHub Enterprise Server) 저장소는 `admin`, GitLab 프로젝트는 Maintainer 이상이다. 아니면 `repository_access_denied`다.
   - `git_connection_required`·`git_host_removed`는 [저장소 접근](#저장소-접근)에 따른다. `policy_refused`는 Agent Studio가 그 사용자에게 Git 위임을 주지 않는다는 뜻이다.
     사용자 등급이 허용하지 않거나, 그 Git 계정의 위임이 한도에 찼다. 한도에 찼으면 사용자가 프로필 → Git 계정에서 위임을 폐기한다.
     `identity_unavailable`은 메시지가 알려 주는 시간 뒤에 다시 호출한다. `source_refused`는 Git 호스트가 webhook을 거절한 것이며 메시지가 이유를 준다.
   - 다시 호출하면 webhook secret과 위임을 새로 만들고, 그 뒤의 push는 다시 켠 사용자의 권한으로 읽는다. 중간에 실패한 켜기도 다시 호출하면 끝난다.
 - **끄기**: 사용자가 요청하면 `push_disable`(`project`)을 호출한다. 소유자나 Studio 관리자만 끌 수 있고(`owner_required`), 끄는 데에는 Git 계정이 필요 없다.
+  `push_busy`이면 켜기와 같이 5초 뒤에 다시 호출한다.
   응답의 `remoteCleanup`이 `skipped`이면 저장소에 webhook이 남았고, `delegationRevoked`가 `false`이면 Agent Studio에 Git 위임이 남았다.
   두 경우 모두 push 배포는 꺼졌다. 응답의 `message`가 남은 것과 다음 행동을 알려 주므로 사용자에게 그대로 전한다.
   남은 위임은 push 배포를 켠 사용자가 Agent Studio의 프로필 → Git 계정에서 폐기한다. `push_disable`을 다시 호출해도 그 위임은 폐기되지 않는다.
@@ -250,9 +278,9 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
 ## 5. 운영과 변경
 
 - **값 변경과 재시작**: Variable 값을 바꾸면 다시 배포해야 앱이 새 값을 읽는다. 그 환경에서 실행 중인 Release를 `deploy`(`release`)로 다시 배포한다.
-- **앱 선언 변경**(port·health·command·build·test·`secrets`·`env`): `application.yaml`을 고치는 PR → 병합 → `project_apply` → 배포·승격 순서로 바꾼다.
+- **앱 선언 변경**(port·health·command·build·test·`secrets`·`env`): `application.yaml`을 고치는 PR/MR → 병합 → `project_apply` → 배포·승격 순서로 바꾼다.
   GitOps 저장소의 배포 값 파일을 직접 고치지 않는다.
-- **크기·trigger·주소·pipeline 변경**: 파일 PR이 아니라 `project_configure`(`project`와 바꿀 필드)로 바꾼다. 다음 Deployment부터 적용된다.
+- **크기·trigger·주소·pipeline 변경**: 파일 PR/MR이 아니라 `project_configure`(`project`와 바꿀 필드)로 바꾼다. 다음 Deployment부터 적용된다.
   Project 소유자나 Studio 관리자만 호출할 수 있다(`owner_required`). 호출 전에 `project_status`의 `pipeline`을 읽는다.
   `stages[].overridden`과 `trigger.overridden`이 Project가 직접 정한 값을 표시한다.
   - `sizes`: 환경 이름별 크기다(예: `{prod: large}`). map 전체를 교체하므로, 자기 값을 유지할 단계를 모두 함께 넘긴다.
@@ -263,9 +291,10 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
   - `suffixEveryStage`: `true`이면 마지막 단계의 주소도 `<slug>-<env>.<도메인>`이 된다. `false` 또는 `null`은 기본값으로 되돌려
     마지막 단계가 다시 `<slug>.<도메인>`을 쓴다. 현재 값은 `pipeline.suffixEveryStage`다. 실행 중인 서비스는 다음 Deployment까지
     기존 주소(`environments[].current.url`)를 유지하므로, 주소를 바꾸려면 그 단계에 다시 배포한다.
-  - `pipeline`: `pipeline_list`의 이름이다. 생략하면 유지한다. cloud나 target type이 다른 pipeline은 Project에 서비스·리소스·Variable이
-    남아 있으면 `project_in_use`로 거부된다. 새 pipeline에 맞지 않는 Project 값(단계가 아닌 환경의 크기 등)은 제거된다.
+  - `pipeline`: `pipeline_list`의 이름이다. 생략하면 유지한다. 배포된 서비스가 있는 Project는 다른 pipeline으로 바꿀 수 없다.
+    [pipeline 변경](#pipeline-변경)의 절차를 따른다. 새 pipeline에 맞지 않는 Project 값(단계가 아닌 환경의 크기 등)은 제거된다.
   - 생략한 필드는 그대로 유지된다. `invalid_pipeline`이면 메시지가 위반을 모두 알려 준다.
+  - `sizes`·`trigger`·`installScript`·`suffixEveryStage`는 서비스가 배포돼 있어도 바꿀 수 있다.
 - **환경마다 다른 값**: 비밀이 아닌 값도 환경마다 다르면 `env`가 아니라 Variable로 둔다. 소유자가 Agent Runway 콘솔의
   Project 환경 변수 화면(`/projects/<slug>/variables`)에서 입력한다. 그 이름은 `application.yaml`의 `env`와 `secrets`에 쓰지 않는다.
   적용한 `env`에 있는 이름은 콘솔에서 입력할 때 `variable_declared`(409)로 거부된다.
@@ -276,9 +305,43 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
   삭제는 먼저 Project의 push 배포를 끈다. 응답의 `remoteCleanup`이 `skipped`이거나 `delegationRevoked`가 `false`이면 `message`의 내용도 전한다([push 배포](#push-배포)).
   서비스 하나만 내리면 `service_remove`, 리소스 하나만 지우면 `resource_delete`를 쓴다. 둘 다 승인 뒤 실행된다.
   `service_remove`의 대상이 있는지는 `project_status`의 `environments[].removable`이 알려 준다. 실행 중인 서비스가 없어도
-  실패한 배포가 앱을 남겼을 수 있으면 `true`다.
+  실패한 배포가 앱을 남겼을 수 있으면 `true`다. 세 삭제 도구는 [사람의 승인](#사람의-승인)을 거친다.
+
+### pipeline 변경
+
+배포된 서비스가 있는 Project는 다른 pipeline으로 바꿀 수 없다. cloud와 target type이 같은 pipeline도 같다.
+`project_configure`가 `pipeline_locked`로 거절하고, 메시지가 그 환경을 나열한다.
+배포된 서비스는 실행 중인 서비스, 실패한 배포가 남겼을 수 있는 서비스(`removable: true`), 끝나지 않은 Deployment(서비스 삭제 포함)다.
+리소스와 Variable은 해당하지 않는다. `project_status`의 `deployedEnvironments`가 그 환경을 승격 순서로 나열한다.
+
+1. `project_status`를 읽는다. `deployedEnvironments`가 비어 있으면 `project_configure`(`project`, `pipeline`)를 호출한다.
+2. 비어 있지 않거나 `project_configure`가 `pipeline_locked`로 거절되면 pipeline을 바꾸지 않는다.
+   나열된 환경마다 서비스를 먼저 삭제해야 한다고 사용자에게 알린다. 삭제하면 그 환경의 앱이 멈추고 주소가 응답하지 않는다.
+   리소스와 데이터는 남고, 새 pipeline으로 다시 배포하면 앱이 돌아온다. 사용자의 동의 없이 서비스를 삭제하지 않는다.
+3. 사용자가 동의하면 환경마다 `service_remove`(`project`, `environment`, `confirmation`: 환경 이름, `idempotencyKey`)를 호출한다.
+   호출마다 [사람의 승인](#사람의-승인)을 거친다.
+   진행 중인 Deployment가 있는 환경은 그 Deployment가 끝나거나 소유자가 승인 대기를 거절한 뒤에 삭제한다.
+   그 전의 `service_remove`는 `deployment_in_progress`, 그 환경에 배포된 적이 없으면 `not_deployed`다.
+4. 삭제 Deployment도 Studio가 끝까지 따라가 결과를 Chat에 전달한다. 반복 조회하지 않는다.
+   모든 삭제가 끝나면 `project_status`를 한 번 읽어 `deployedEnvironments`가 비었는지 확인한다. 삭제가 실패한 환경은 원인을 보고한다.
+5. 비었으면 `project_configure`를 다시 호출한다. cloud나 target type이 다른 pipeline은 Project에 리소스·Variable도 없어야 한다.
+   남아 있으면 `project_in_use`이며 메시지가 그 환경을 나열한다.
+6. 앱을 다시 실행하려면 새 pipeline의 첫 단계에 다시 배포한다([4. 배포와 승격](#4-배포와-승격)). 사용자가 배포를 요청하지 않았으면 배포할지 묻는다.
+
+pipeline 변경과 배포 요청이 겹치면 먼저 저장된 쪽이 이긴다. 배포가 먼저 저장되면 `project_configure`가 `pipeline_locked`로,
+변경이 먼저 끝나면 그 배포 요청이 `project_changed`로 거절된다. `project_changed`이면 `project_status`를 다시 읽고 다시 요청한다.
+
+### 사람의 승인
+
+`push_enable`·`service_remove`·`resource_delete`·`project_delete`는 사람이 호출마다 승인한다.
+Studio Chat이 호출 전에 승인 카드를 보여 주고, 사용자가 승인한 호출만 실행한다. 사용자가 거절한 호출은 반복하지 않는다.
+
+- `person_approval_required`(403)는 승인 표시 없이 호출됐다는 뜻이다. Runway는 아무것도 읽거나 바꾸지 않았다.
+- 같은 호출을 자동으로 반복하지 않는다. Studio Chat의 승인 카드에서 사용자가 그 호출을 승인해야 한다고 알린다.
+- 사용자가 승인했는데도 이 code가 오면 Studio가 승인 표시를 보내지 않는 버전이다. 운영자에게 알리고,
+  그동안은 Project 소유자나 Studio 관리자가 Agent Runway 콘솔에서 직접 해야 한다고 안내한다.
 
 ## 보고
 
-진행한 작업마다 확인한 사실만 보고한다: 저장소와 PR, pipeline 이름, 적용한 선언의 SHA, 단계별 리소스 상태, Release 이름, Deployment ID·상태·URL.
+진행한 작업마다 확인한 사실만 보고한다: 저장소와 PR/MR, pipeline 이름, 적용한 선언의 SHA, 단계별 리소스 상태, Release 이름, Deployment ID·상태·URL.
 승인을 기다리는 작업과 사용자가 할 일(승인, secret 입력, Git 호스트 연결)을 분리해 알린다.

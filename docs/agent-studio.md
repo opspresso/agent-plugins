@@ -22,7 +22,7 @@ contracts before changing a plugin's tool instructions or connection settings.
 | `agent-memory` | Long-term memories and short-term task handoffs | Bind the exact service URL, current caller and `recall`/`remember`/`handoff_*` scopes |
 | `agent-knowledge` | Documents, RAG, knowledge graph, recordings, transcription, meeting notes, audio profiles and job history | Bind its Tools entry; audio runs through Agent Knowledge MCP tools with the user's audio profile |
 | `agent-forge` | Workspaces, Sandbox execution, native sessions, checkpoints, Workspace profiles, Git steps, protected-action approvals and run history | Bind its Tools entry; coding work runs through Forge MCP tools with the user's Workspace profile |
-| `agent-runway` | App Projects, resources, Variables, `application.yaml`, builds, deployments, push deployment and prod approvals | Bind its Tools entry; app delivery and deletion run through Runway MCP tools. Runway reads a repository with the Git account that the requesting user connected in Studio and has no repository connection step. Secret values go through `secret_request` links, owner approval through the Deployment's `approvalUrl`, and Studio asks the user to approve each deletion call and each `push_enable` call |
+| `agent-runway` | App Projects, resources, Variables, `application.yaml`, builds, deployments, push deployment and prod approvals | Bind its Tools entry; app delivery and deletion run through Runway MCP tools. Runway reads a repository with the Git account that the requesting user connected in Studio and has no repository connection step. Secret values go through `secret_request` links, owner approval through the Deployment's `approvalUrl`, and Studio asks the user to approve each deletion call and each `push_enable` call; Runway refuses such a call without that approval (`person_approval_required`) |
 
 ### Service-owned tools
 
@@ -282,7 +282,8 @@ Bind the Agent Forge Tools entry and the workspace-task and sandbox-task skills.
 The operator configures the Forge service, its Sandbox provider, worker and model gateway.
 Each user creates a Workspace profile (runtime, central model, repository rules,
 checks and deployment workflows) and selects a default in the Forge console.
-Each user connects a Git host (GitHub or GitLab) once in Agent Studio, under
+Each user connects a Git host (github.com, GitHub Enterprise Server, GitLab.com or
+self-managed GitLab, as the operator registers it in Studio) once in Agent Studio, under
 Profile → Git accounts (`/profile/git`). Forge stores no Git credential and no
 repository list, and no repository is registered with Forge.
 The plugin grants none of these permissions.
@@ -314,9 +315,13 @@ publication, merge, tags, releases and deployment workflow dispatch require a
 separate request and the Workspace owner's approval in the Forge console; MCP has
 no approval tool. The approval page shows the committed change from the `prepare`
 base commit to the approved HEAD and, for a merge, a link to the pull request.
-Forge merges into `main` only: it refuses a merge on a Workspace whose base branch
-is not `main` with `git_action_unsupported` before it creates an approval, and the
-user merges that pull request on the Git host. Tags bind to the reviewed HEAD;
+Forge merges into the repository's default branch only, which the Git host reports
+and which need not be `main`. It refuses a merge on a Workspace whose base branch
+is not the default branch with `git_action_unsupported` before it creates an
+approval, and the user merges that pull request on the Git host. A deployment
+workflow runs on the default branch only. A Workspace prepared with
+`sourceRevision` is read-only: Forge refuses every Git step except `review` there.
+Tags bind to the reviewed HEAD;
 releases bind to an existing tag and its exact commit. General agent descriptions and system prompts identify
 capabilities; account, repository, branch and requested file changes belong in
 each user's task input.

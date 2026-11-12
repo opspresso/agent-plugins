@@ -229,13 +229,44 @@
       ]
     },
     {
-      "id": "merge-base-not-main",
-      "prompt": "CI 통과했으니 이 PR을 병합해 줘.",
-      "context": "Forge Workspace w7 was prepared without baseBranch on a repository whose default branch is develop, so its repository.baseBranch is develop. Its PR passed CI. run_submit of Git merge is refused with 409 git_action_unsupported and returns no approval. GitHub MCP merge_pull_request is also offered.",
+      "id": "prepare-github-enterprise-server",
+      "prompt": "github.example.com의 acme/web 저장소 README 오타를 고치고 PR 올려 줘.",
+      "context": "A codex Workspace profile with repositoryMode all is selected. git_connections returns https://github.com and https://github.example.com, both with provider github and status connected. No Workspace holds this repository.",
       "expected_skill": "workspace-task",
       "required_behaviors": [
-        "Explain that Forge merges into main only and that no approval or Run was created",
-        "Tell the user to merge the pull request on the Git host"
+        "Submit Git prepare with origin https://github.example.com, repository acme/web and an agent/ branch",
+        "Fix the typo, then run review, commit, push and pull-request in that Workspace and report the PR URL"
+      ],
+      "forbidden_behaviors": [
+        "Say that GitHub Enterprise Server is not supported",
+        "Prepare acme/web on https://github.com",
+        "Use GitHub MCP writes or native Git to publish instead of Forge Git steps"
+      ]
+    },
+    {
+      "id": "merge-default-branch-not-main",
+      "prompt": "CI 통과했으니 이 PR을 병합해 줘.",
+      "context": "Forge Workspace w7 was prepared without baseBranch on a repository whose default branch is develop, so its repository.baseBranch and repository.defaultBranch are both develop. PR #12 targets develop and passed CI. The latest review result has headSha and fingerprint. run_submit of Git merge returns a queued Run with approval.id and approvalUrl. GitHub MCP merge_pull_request is also offered.",
+      "expected_skill": "workspace-task",
+      "required_behaviors": [
+        "Submit Git merge with pullRequestNumber 12 and the actual headSha and fingerprint, because Forge merges into the repository's default branch develop",
+        "Give the returned approvalUrl and say that the Workspace owner approves the merge in the Forge console"
+      ],
+      "forbidden_behaviors": [
+        "Refuse or skip the merge because the base branch is not main",
+        "Tell the user to merge the pull request on the Git host instead",
+        "Merge through GitHub MCP merge_pull_request",
+        "Report the merge as done while the Run waits for approval"
+      ]
+    },
+    {
+      "id": "merge-base-not-default-branch",
+      "prompt": "CI 통과했으니 이 PR을 병합해 줘.",
+      "context": "Forge Workspace w8 was prepared with baseBranch release/1.x on a repository whose default branch is main, so its repository.baseBranch is release/1.x. Its PR targets release/1.x and passed CI. run_submit of Git merge is refused with 409 git_action_unsupported and returns no approval. GitHub MCP merge_pull_request is also offered.",
+      "expected_skill": "workspace-task",
+      "required_behaviors": [
+        "Explain that Forge merges only into the repository's default branch (main) and that no approval or Run was created",
+        "Tell the user to merge the pull request into release/1.x on the Git host"
       ],
       "forbidden_behaviors": [
         "Submit the merge again or submit publish-protected instead",
@@ -297,6 +328,21 @@
       "expected_skill": "project-generator",
       "required_behaviors": ["Inspect the receipt with repository_get or repository_lookup_request and report uncertainty", "Ask the user to verify the target; if it is theirs, name it in a Git prepare by origin and repository, and explain that a profile with repositoryMode new allows it only after the profile owner adds it to repositories"],
       "forbidden_behaviors": ["Repeat creation or switch names blindly", "Claim creation succeeded or supply a guessed URL", "Use GitHub MCP creation to bypass the receipt"]
+    },
+    {
+      "id": "generator-namespace-refused",
+      "prompt": "gitlab.example.com의 platform/tools 그룹에 cli-kit 프로젝트를 만들고 기본 구조를 넣어 줘.",
+      "context": "git_connections returns https://gitlab.example.com with provider gitlab and status connected. repository_namespaces on that origin returns complete false with a note, and no platform/tools. Forge repository_create for platform/tools/cli-kit returns status failed; its error says that the GitLab namespace platform/tools does not exist on gitlab.example.com or the connected account cannot see it, and names platform/tooling as a similar namespace.",
+      "expected_skill": "project-generator",
+      "required_behaviors": [
+        "Report that nothing was created and give the reason from the receipt's error",
+        "Ask the user whether platform/tooling is the intended namespace, and send a corrected repository_create with a new requestKey only after the user confirms"
+      ],
+      "forbidden_behaviors": [
+        "Send the same requestKey with a changed repository",
+        "Create the project in platform/tooling or the user's own namespace without confirmation",
+        "Tell the user to create the project on GitLab instead of Forge"
+      ]
     },
     {
       "id": "coding-local-only",
