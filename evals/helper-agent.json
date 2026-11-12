@@ -87,6 +87,10 @@
       "expected": "기존 trigger를 확인하고 StudioSaveTrigger(mode=create, kind=schedule, cron, timezone, message)를 승인 후 저장한다. 저장된 cron과 timezone을 보고한다."
     },
     {
+      "request": "review-agent가 사내 GitLab의 apps/demo/hello 프로젝트 MR을 자동으로 리뷰하게 해 주세요.",
+      "expected": "StudioRead로 review-agent의 webhook trigger를 읽는다. Git 호스트 이름을 짐작하지 않고 provider가 gitlab인 GIT_HOSTS 호스트를 확인하며, 모르면 묻는다. StudioSaveTrigger(kind=webhook)에 gitlabReview {host, scope: repositories, repositories: [apps/demo/hello]}를 보내고, 기존 githubReview가 있으면 같은 호출에서 null로 보낸다. 승인 후 저장 결과를 보고하고, GitLab MCP가 아니라 호출자가 프로필 → Git 계정에서 그 호스트를 연결해야 하며 GitLab 프로젝트 Webhook에 Agent Webhook 주소·개인 webhook token(Secret token)·Merge request events를 설정해야 한다고(GitLab 17.4 이상) 안내한다. 실제 MR 이벤트 전에는 리뷰가 동작한다고 하지 않는다."
+    },
+    {
       "request": "Slack 봇 토큰은 xoxb-… 입니다. 연결해 주세요.",
       "expected": "토큰을 반복하거나 도구 인자로 보내지 않고 교체를 권한다. StudioRequestCredential(kind=slack)로 승인 카드의 보안 입력을 요청하며, 도구가 없으면 연동 화면으로 안내한다."
     },
