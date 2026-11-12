@@ -82,6 +82,7 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
 | `repository_access_denied` | 연결한 Git 계정이 저장소를 볼 수 없다. `push_enable`에서는 저장소의 webhook을 관리하는 역할이 없다는 뜻일 수도 있다 | 다시 연결하게 하지 않는다. 저장소 이름과 그 계정의 저장소 권한을 사용자와 확인한다 |
 | `ref_not_found` | 저장소에 그 branch·tag·commit이 없다 | `ref`를 확인해 고친 뒤 다시 호출한다 |
 | `source_too_large` | 그 commit의 소스 아카이브가 설치의 한도를 넘는다 | 사용자에게 알린다. 저장소를 줄이거나 운영자가 한도를 올려야 한다 |
+| `source_busy` | Runway가 한 번에 읽는 소스 아카이브 수가 한도에 있거나, 같은 Project의 다른 소스 아카이브를 읽는 중이다 | 메시지가 알려 주는 시간(10초) 뒤에 같은 호출을 다시 한다 |
 | `git_host_removed` | Agent Studio가 그 Git 호스트를 더 이상 Git 호스트로 두지 않는다 | 사용자에게 알린다. 운영자가 Agent Studio에 그 호스트를 다시 등록해야 한다 |
 | `invalid_repository` | 새 Project의 저장소가 이 설치의 Git 호스트에 있지 않거나, 저장소 주소가 `<host>/<path>` 형식이 아니다 | 메시지가 알려 주는 Git 호스트와 저장소 주소를 사용자와 확인한다 |
 
@@ -229,6 +230,9 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
     이 허용은 push 배포를 끄거나 그 사용자가 Agent Studio의 프로필 → Git 계정에서 위임을 폐기할 때까지 유지된다. 호출하기 전에 사용자에게 이 내용을 알린다.
   - Studio Chat은 호출마다 사람의 승인 카드를 보여 주고, 승인된 호출만 실행한다. 승인할 사람이 없는 실행에는 `push_enable` 도구가 없다.
     도구가 없으면 Project 소유자나 Studio 관리자가 Agent Runway 콘솔의 Project 설정(`/projects/<slug>/settings`)에서 켜야 한다고 안내한다.
+  - Runway는 승인 표시가 없는 호출을 아무것도 바꾸지 않고 `person_approval_required`로 거절한다. [사람의 승인](#사람의-승인)에 따른다.
+  - `push_busy`는 같은 Project의 다른 push 배포 변경(켜기·끄기·Project 삭제의 끄기)이 진행 중이라는 뜻이다. Runway는 기다리지 않고 거절한다.
+    메시지가 알려 주는 시간(5초) 뒤에 다시 호출한다. `push_enable`을 다시 호출하면 승인 카드도 다시 뜬다.
   - Project 소유자나 Studio 관리자만 켤 수 있다(`owner_required`). 켜는 사용자의 Git 계정은 저장소의 webhook을 관리하는 역할이어야 한다:
     GitHub 저장소는 `admin`, GitLab 프로젝트는 Maintainer 이상이다. 아니면 `repository_access_denied`다.
   - `git_connection_required`·`git_host_removed`는 [저장소 접근](#저장소-접근)에 따른다. `policy_refused`는 Agent Studio가 그 사용자에게 Git 위임을 주지 않는다는 뜻이다.
@@ -236,6 +240,7 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
     `identity_unavailable`은 메시지가 알려 주는 시간 뒤에 다시 호출한다. `source_refused`는 Git 호스트가 webhook을 거절한 것이며 메시지가 이유를 준다.
   - 다시 호출하면 webhook secret과 위임을 새로 만들고, 그 뒤의 push는 다시 켠 사용자의 권한으로 읽는다. 중간에 실패한 켜기도 다시 호출하면 끝난다.
 - **끄기**: 사용자가 요청하면 `push_disable`(`project`)을 호출한다. 소유자나 Studio 관리자만 끌 수 있고(`owner_required`), 끄는 데에는 Git 계정이 필요 없다.
+  `push_busy`이면 켜기와 같이 5초 뒤에 다시 호출한다.
   응답의 `remoteCleanup`이 `skipped`이면 저장소에 webhook이 남았고, `delegationRevoked`가 `false`이면 Agent Studio에 Git 위임이 남았다.
   두 경우 모두 push 배포는 꺼졌다. 응답의 `message`가 남은 것과 다음 행동을 알려 주므로 사용자에게 그대로 전한다.
   남은 위임은 push 배포를 켠 사용자가 Agent Studio의 프로필 → Git 계정에서 폐기한다. `push_disable`을 다시 호출해도 그 위임은 폐기되지 않는다.
@@ -266,9 +271,10 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
   - `suffixEveryStage`: `true`이면 마지막 단계의 주소도 `<slug>-<env>.<도메인>`이 된다. `false` 또는 `null`은 기본값으로 되돌려
     마지막 단계가 다시 `<slug>.<도메인>`을 쓴다. 현재 값은 `pipeline.suffixEveryStage`다. 실행 중인 서비스는 다음 Deployment까지
     기존 주소(`environments[].current.url`)를 유지하므로, 주소를 바꾸려면 그 단계에 다시 배포한다.
-  - `pipeline`: `pipeline_list`의 이름이다. 생략하면 유지한다. cloud나 target type이 다른 pipeline은 Project에 서비스·리소스·Variable이
-    남아 있으면 `project_in_use`로 거부된다. 새 pipeline에 맞지 않는 Project 값(단계가 아닌 환경의 크기 등)은 제거된다.
+  - `pipeline`: `pipeline_list`의 이름이다. 생략하면 유지한다. 배포된 서비스가 있는 Project는 다른 pipeline으로 바꿀 수 없다.
+    [pipeline 변경](#pipeline-변경)의 절차를 따른다. 새 pipeline에 맞지 않는 Project 값(단계가 아닌 환경의 크기 등)은 제거된다.
   - 생략한 필드는 그대로 유지된다. `invalid_pipeline`이면 메시지가 위반을 모두 알려 준다.
+  - `sizes`·`trigger`·`installScript`·`suffixEveryStage`는 서비스가 배포돼 있어도 바꿀 수 있다.
 - **환경마다 다른 값**: 비밀이 아닌 값도 환경마다 다르면 `env`가 아니라 Variable로 둔다. 소유자가 Agent Runway 콘솔의
   Project 환경 변수 화면(`/projects/<slug>/variables`)에서 입력한다. 그 이름은 `application.yaml`의 `env`와 `secrets`에 쓰지 않는다.
   적용한 `env`에 있는 이름은 콘솔에서 입력할 때 `variable_declared`(409)로 거부된다.
@@ -279,7 +285,41 @@ push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계�
   삭제는 먼저 Project의 push 배포를 끈다. 응답의 `remoteCleanup`이 `skipped`이거나 `delegationRevoked`가 `false`이면 `message`의 내용도 전한다([push 배포](#push-배포)).
   서비스 하나만 내리면 `service_remove`, 리소스 하나만 지우면 `resource_delete`를 쓴다. 둘 다 승인 뒤 실행된다.
   `service_remove`의 대상이 있는지는 `project_status`의 `environments[].removable`이 알려 준다. 실행 중인 서비스가 없어도
-  실패한 배포가 앱을 남겼을 수 있으면 `true`다.
+  실패한 배포가 앱을 남겼을 수 있으면 `true`다. 세 삭제 도구는 [사람의 승인](#사람의-승인)을 거친다.
+
+### pipeline 변경
+
+배포된 서비스가 있는 Project는 다른 pipeline으로 바꿀 수 없다. cloud와 target type이 같은 pipeline도 같다.
+`project_configure`가 `pipeline_locked`로 거절하고, 메시지가 그 환경을 나열한다.
+배포된 서비스는 실행 중인 서비스, 실패한 배포가 남겼을 수 있는 서비스(`removable: true`), 끝나지 않은 Deployment(서비스 삭제 포함)다.
+리소스와 Variable은 해당하지 않는다. `project_status`의 `deployedEnvironments`가 그 환경을 승격 순서로 나열한다.
+
+1. `project_status`를 읽는다. `deployedEnvironments`가 비어 있으면 `project_configure`(`project`, `pipeline`)를 호출한다.
+2. 비어 있지 않거나 `project_configure`가 `pipeline_locked`로 거절되면 pipeline을 바꾸지 않는다.
+   나열된 환경마다 서비스를 먼저 삭제해야 한다고 사용자에게 알린다. 삭제하면 그 환경의 앱이 멈추고 주소가 응답하지 않는다.
+   리소스와 데이터는 남고, 새 pipeline으로 다시 배포하면 앱이 돌아온다. 사용자의 동의 없이 서비스를 삭제하지 않는다.
+3. 사용자가 동의하면 환경마다 `service_remove`(`project`, `environment`, `confirmation`: 환경 이름, `idempotencyKey`)를 호출한다.
+   호출마다 [사람의 승인](#사람의-승인)을 거친다.
+   진행 중인 Deployment가 있는 환경은 그 Deployment가 끝나거나 소유자가 승인 대기를 거절한 뒤에 삭제한다.
+   그 전의 `service_remove`는 `deployment_in_progress`, 그 환경에 배포된 적이 없으면 `not_deployed`다.
+4. 삭제 Deployment도 Studio가 끝까지 따라가 결과를 Chat에 전달한다. 반복 조회하지 않는다.
+   모든 삭제가 끝나면 `project_status`를 한 번 읽어 `deployedEnvironments`가 비었는지 확인한다. 삭제가 실패한 환경은 원인을 보고한다.
+5. 비었으면 `project_configure`를 다시 호출한다. cloud나 target type이 다른 pipeline은 Project에 리소스·Variable도 없어야 한다.
+   남아 있으면 `project_in_use`이며 메시지가 그 환경을 나열한다.
+6. 앱을 다시 실행하려면 새 pipeline의 첫 단계에 다시 배포한다([4. 배포와 승격](#4-배포와-승격)). 사용자가 배포를 요청하지 않았으면 배포할지 묻는다.
+
+pipeline 변경과 배포 요청이 겹치면 먼저 저장된 쪽이 이긴다. 배포가 먼저 저장되면 `project_configure`가 `pipeline_locked`로,
+변경이 먼저 끝나면 그 배포 요청이 `project_changed`로 거절된다. `project_changed`이면 `project_status`를 다시 읽고 다시 요청한다.
+
+### 사람의 승인
+
+`push_enable`·`service_remove`·`resource_delete`·`project_delete`는 사람이 호출마다 승인한다.
+Studio Chat이 호출 전에 승인 카드를 보여 주고, 사용자가 승인한 호출만 실행한다. 사용자가 거절한 호출은 반복하지 않는다.
+
+- `person_approval_required`(403)는 승인 표시 없이 호출됐다는 뜻이다. Runway는 아무것도 읽거나 바꾸지 않았다.
+- 같은 호출을 자동으로 반복하지 않는다. Studio Chat의 승인 카드에서 사용자가 그 호출을 승인해야 한다고 알린다.
+- 사용자가 승인했는데도 이 code가 오면 Studio가 승인 표시를 보내지 않는 버전이다. 운영자에게 알리고,
+  그동안은 Project 소유자나 Studio 관리자가 Agent Runway 콘솔에서 직접 해야 한다고 안내한다.
 
 ## 보고
 

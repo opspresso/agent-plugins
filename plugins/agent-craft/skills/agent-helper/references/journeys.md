@@ -20,6 +20,7 @@ Forge가 코드를, Runway가 리소스와 배포를 소유한다. 실제 진행
 Runway의 호출이 `git_connection_required`로 거절되면 오류 메시지의 Studio 연결 링크를 사용자에게 주고, 사용자가 연결한 뒤 다시 호출한다. [delivery](delivery.md#오류)
 push로 배포하려면 사용자가 요청할 때 `push_enable`로 Project의 push 배포를 켠다. 켜지 않은 Project는 merge 뒤 `deploy`로 배포한다.
 앱 선언(`application.yaml`) 변경은 PR → merge → `project_apply` → 다시 배포 순서다. 단계별 크기·trigger·주소 형식·pipeline은 파일이 아니라 `project_configure`로 바꾼다.
+배포된 서비스가 있는 Project는 pipeline을 바꿀 수 없다(`pipeline_locked`). [delivery](delivery.md#pipeline-변경)의 절차로 서비스를 먼저 삭제한다.
 서비스·리소스·Project 삭제는 `service_remove`·`resource_delete`·`project_delete`로 요청하고 Studio가 사람의 승인을 받는다. 삭제 도구가 없으면 Runway 콘솔에서 사용자가 한다.
 
 ## 녹음에서 회의록까지
