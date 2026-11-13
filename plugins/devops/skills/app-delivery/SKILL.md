@@ -316,8 +316,10 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
   - 생략한 필드는 그대로 유지된다. `invalid_pipeline`이면 메시지가 위반을 모두 알려 준다.
   - `sizes`·`trigger`·`installScript`·`suffixEveryStage`는 서비스가 배포돼 있어도 바꿀 수 있다.
 - **환경마다 다른 값**: 비밀이 아닌 값도 환경마다 다르면 `env`가 아니라 Variable로 둔다. Agent가 `variables_set`(`project`, `environment`, `values`, `idempotencyKey`)으로
-  설정한다. `idempotencyKey`는 요청마다 새로 만든다. 응답을 잃었을 때만 같은 키와 값으로 다시 보낸다. 값을 바꿀 때는 새 키를 쓴다.
+  설정한다. `idempotencyKey`는 요청마다 새로 만든다. 응답을 잃었을 때만 같은 키와 값으로 다시 보낸다.
+  같은 키에 다른 값을 보내면 그 Variable은 바뀌지 않고 `failed[]`의 `idempotency_conflict`가 된다(모든 Variable이 그렇다면 409 `idempotency_conflict`). 값을 바꿀 때는 새 키를 쓴다.
   소유자·관리자만 호출할 수 있고 값은 반환되지 않는다. 결과의 `applied[]`는 쓴 Variable이고 `failed[]`는 쓰지 못한 Variable과 `code`다. `failed[]`가 있으면 그 이름만 새 키로 다시 보내거나 `code`에 따라 처리한다.
+  호출이 `internal_error` 같은 오류로 끝나면 같은 키와 같은 값으로 한 번 다시 보낸다. 이미 쓴 Variable은 재생(`replayed: true`)되고 나머지만 쓴다.
   앱은 다음 배포부터 값을 받는다. 소유자가 콘솔(`/projects/<slug>/variables`)에서 입력해도 된다. 그 이름은 `application.yaml`의 `env`와 `secrets`에 쓰지 않는다.
   다음은 `variable_is_secret`으로 거절된다: 선언한 `secrets`의 이름, 환경의 secret, 자격 증명 형태의 이름(`…_TOKEN`, `…_KEY`, `…_PASSWORD`, `…_WEBHOOK`, `DATABASE_URL` 등), 자격 증명 형태의 값(token, JWT, webhook URL, 비밀번호가 든 URL, 개인 키, 긴 무작위 문자열). 거절되면 메시지의 링크를 사용자에게 주고, 값을 Chat에 다시 쓰거나 붙여 넣으라고 하지 않는다.
   적용한 `env`에 있는 이름은 `variable_declared`, 리소스가 주는 이름은 `variable_conflict`다.
