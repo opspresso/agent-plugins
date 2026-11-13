@@ -59,10 +59,11 @@ env:
 
 | 설정 | 정하는 곳 |
 | --- | --- |
-| 환경과 승격 순서, cloud, target type, architecture | Project의 pipeline. 새 Project는 `project_ensure`·`project_apply`의 `pipeline`, 기존 Project는 `project_configure`의 `pipeline`(배포된 서비스가 없을 때만, [pipeline 변경](../SKILL.md#pipeline-변경)) |
+| 환경과 승격 순서 | Project의 pipeline들. 새 Project는 `project_ensure`·`project_apply`의 `pipelines`, 기존 Project는 `project_configure`의 `pipelines`([런타임과 pipeline 변경](../SKILL.md#런타임과-pipeline-변경)) |
+| cloud, target type, architecture | Project의 런타임. 새 Project는 `project_ensure`·`project_apply`의 `runtime`(생략한 항목은 첫 단계의 환경이 정한다), 기존 Project는 `project_configure`의 `runtime` |
 | 복제 수·CPU·memory·instance type | pipeline의 단계별 크기(`small`·`medium`·`large`). Project 값은 `project_configure`의 `sizes` |
-| 배포를 시작하는 push | pipeline의 trigger. Project 값은 `project_configure`의 `trigger`. push 배포를 켠 Project(`push_enable`)만 push로 배포한다 |
-| 앱 주소 | 단계의 위치. 마지막 단계는 `<slug>.<도메인>`, 그 밖의 단계는 `<slug>-<env>.<도메인>`이다. 마지막 단계에도 환경 이름을 붙이려면 `project_configure`의 `suffixEveryStage` |
+| 배포를 시작하는 push | pipeline의 trigger. Project 값은 `project_configure`의 `pipelines` 항목 `{name, trigger}`. push 배포를 켠 Project(`push_enable`)만 push로 배포한다 |
+| 앱 주소 | Project의 주소 규칙. 한 단계가 `<slug>.<도메인>`, 그 밖의 환경이 `<slug>-<env>.<도메인>`이다. 그 단계는 `project_configure`의 `host`로 정한다([앱 주소](../SKILL.md#앱-주소)) |
 | 리소스(DB·cache·bucket) | 단계마다 `resource_create` |
 | 환경마다 다른 값 | 그 환경의 Variable. 비밀 값은 `secrets`에 이름을 선언하고 소유자가 `secretsUrl` 링크 하나에서 입력한다. 비밀이 아닌 값은 Agent가 `variables_set`(요청마다 새 `idempotencyKey`, 결과 `applied[]`·`failed[]`)으로 설정하거나 소유자가 콘솔의 Project 환경 변수 화면(`/projects/<slug>/variables`)에서 입력한다. 비밀이 아닌 Variable의 이름은 `env`와 `secrets`에 쓰지 않는다. 적용한 `env`에 있는 이름은 콘솔에서 입력할 때 `variable_declared`(409)로 거부된다 |
 
@@ -102,7 +103,7 @@ env:
 
 ## 컨테이너 조건
 
-- 이미지는 Project pipeline의 architecture 하나(`linux/amd64` 또는 `linux/arm64`)로 빌드된다. `project_status`의 `pipeline.architecture`로 확인하고,
+- 이미지는 Project 런타임의 architecture 하나(`linux/amd64` 또는 `linux/arm64`)로 빌드된다. `project_status`의 `runtime.architecture`로 확인하고,
   그 architecture를 지원하지 않는 base image나 바이너리를 쓰지 않는다.
 - 빌드는 배포할 commit의 소스 아카이브로 한다. 아카이브에는 `.git` 디렉터리, submodule의 내용, Git LFS 객체,
   `.gitattributes`가 `export-ignore`로 뺀 경로가 없다. 빌드가 이 파일들에 의존하지 않게 한다.
