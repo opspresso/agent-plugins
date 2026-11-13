@@ -50,7 +50,7 @@
   tag trigger pipeline의 첫 단계는 trigger와 맞는 태그(또는 그 태그로 build한 Release)만 받는다. 그 단계에서 실행 중인 Release를 다시 배포하는 재시작은 승격 조건을 보지 않는다.
 - **앱 주소**: Project의 한 단계가 `https://<slug>.<domain>`(환경 이름 없는 주소), 그 밖의 환경이 `https://<slug>-<env>.<domain>`이다.
   `project_status`의 `host`가 규칙을 준다: `bare`(그 단계), `chosenBy`(`auto`·`person`·`agent`), `fixed`, `suggestion`, `moves[]`.
-  Project가 정하지 않으면(`auto`) 이름이 `prd`·`prod`·`production`인 마지막 단계, 없으면 마지막 pipeline의 마지막 단계이고, 그 주소로 처음 배포할 때 고정된다.
+  Project가 정하지 않으면(`auto`) 이름이 `prd`·`prod`·`production`인 마지막 단계, 없으면 `sandbox` 환경이 아닌 마지막 단계(그것도 없으면 없음)이고, 그 주소로 처음 배포할 때 고정된다.
   사람은 콘솔 설정 탭에서, Agent는 `project_configure`의 `host`(`{bare: <환경> | none | auto}`)로 고른다. 실행 중인 서비스의 그 주소를 다른 환경으로 옮기는 Agent 호출은 사람의 승인이 필요하다(`person_approval_required`).
   실행 중인 서비스는 그 환경의 다음 배포까지 기존 주소를 유지한다. `environments[].host`가 다음 배포의 주소, `runningHost`가 실행 중인 주소다.
 

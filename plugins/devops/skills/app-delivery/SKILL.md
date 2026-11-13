@@ -374,7 +374,7 @@ Project의 한 단계가 `https://<slug>.<도메인>`(환경 이름 없는 주�
 | `suggestion` | Agent Runway 규칙이 지금 고를 다른 단계. 없으면 `null`이다. 주소를 옮기지는 않는다 |
 | `moves[]` | 다음 배포에서 주소가 바뀌는 실행 중인 서비스 `{environment, from, to}`다. `from`·`to`는 전체 host 이름(예: `todo.apps.rovr.dev`)이고, 배열이 실행할 순서다 |
 
-- **Agent Runway 규칙**(`auto`): 이름이 `prd`·`prod`·`production`인 단계 중 Project 단계 순서(`order`)의 마지막 것을 고른다. 없으면 마지막 pipeline의 마지막 단계다.
+- **Agent Runway 규칙**(`auto`): 이름이 `prd`·`prod`·`production`인 단계 중 Project 단계 순서(`order`)의 마지막 것을 고른다. 없으면 `sandbox` 환경이 아닌 마지막 단계이고, 그것도 없으면 없다. 그래서 sandbox 단계(보통 `dev`)만 있는 Project의 dev 주소는 `<slug>-dev.<도메인>`이고, `<slug>.<도메인>`은 나중에 추가할 운영 단계가 받는다.
   저장된 뒤에는 pipeline이나 환경을 더해도 주소가 옮겨지지 않는다. 규칙이 다른 단계를 고르게 되면 `suggestion`이 알려 준다.
 - **고르기**: `project_configure`의 `host`로 정한다. `{bare: <환경>}`은 그 단계(Project pipeline의 단계여야 한다), `{bare: none}`은 모든 환경에 환경 이름을 붙인다.
   `{bare: auto}`와 `null`은 Agent Runway 규칙으로 돌아간다. 사용자가 공개 주소를 받을 환경을 정했으면 그 환경으로 정한다.
