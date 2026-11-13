@@ -222,7 +222,9 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
 2. 다음 단계는 `promote`(`project`, `from`, `idempotencyKey`)로 같은 Release를 배포한다. `from` 단계의 `next`가 배포될 단계다.
    다시 build하지 않으므로 앞 단계에서 검증한 이미지가 그대로 간다.
    - 첫 단계가 아닌 단계에 `deploy`로 ref를 보내면 `release_not_promoted`다. 마지막 단계에서 `promote`하면 `no_next_environment`다.
-   - `approval: owner` 환경은 `awaiting_approval`과 `approvalUrl`을 반환한다. 링크를 사용자에게 주고 소유자가 Agent Runway 콘솔에서 승인하게 한다.
+   - `approval: owner` 환경은 `awaiting_approval`을 반환한다. Studio Chat에는 `deploy`·`promote`·`rollback` 결과의 배포 화면이 보인다.
+     소유자에게 그 화면의 **승인하고 시작**·**거절**을 누르고 Studio 승인 카드에서 확인하라고 안내한다. 모델은 승인하지 않는다.
+     화면이 없는 surface(Slack·Telegram·Teams·API)에서만 `approvalUrl`을 주고 소유자가 Agent Runway 콘솔에서 승인하게 한다.
      승인 요청은 24시간 뒤 만료된다. 소유자가 Studio의 승인 카드에서 그 호출을 직접 승인했으면 Runway가 소유자 승인으로 받아 기다리지 않고 진행한다.
 3. Studio가 Deployment를 따라가다 끝나면 결과를 Chat에 전달하고 대화를 이어 준다. 같은 Deployment를 기다리며
    `deployment_get`을 반복 호출하지 않는다. 사용자가 진행 상황을 물으면 한 번 조회해 스텝(`step`)을 알린다.

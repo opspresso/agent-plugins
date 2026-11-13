@@ -15,7 +15,7 @@ Forge가 코드를, Runway가 리소스와 배포를 소유한다. 실제 진행
 | 4. 선언·리소스 | Helper/Agent | 기본 브랜치(병합한 PR/MR이 들어간 브랜치)의 `application.yaml`로 `project_apply`. 새 Project를 만들 때 Runway가 호출한 사용자의 Git 계정으로 저장소를 볼 수 있는지 확인한다. 새 Project가 `default`가 아닌 pipeline을 쓰면 `pipeline_list`에서 고른 이름을 `pipeline`으로 넘긴다. 앱에 필요한 리소스는 단계마다 `resource_create`로 만든다 | `project_apply` 결과의 단계별 리소스 상태와 secret 링크 |
 | 5. secret | 사용자 | Runway secret 링크에서 값 입력 | `project_status`에서 그 단계의 `missingSecrets`가 비어 있음 |
 | 6. 첫 단계 배포 | Helper/Agent | pipeline의 첫 단계(기본 `dev`)에 `deploy(environment="dev")`로 저장소의 기본 브랜치를 build해 Release를 배포. `ref`를 생략하면 Runway가 Git 호스트에서 기본 브랜치를 읽으며, 다른 branch·tag·commit만 `ref`로 지정한다. Runway가 호출한 사용자의 Git 계정으로 저장소를 읽는다. 생성 중인 리소스는 Deployment가 기다린다 | 결과가 Chat으로 돌아온다. `https://<slug>-dev.<domain>` |
-| 7. 다음 단계 배포 | Helper/Agent → 사용자 | `promote(from="dev")`로 dev에서 성공한 Release를 pipeline의 다음 단계(기본 `prod`)에 배포. `approval: owner` 환경은 소유자가 24시간 안에 `approvalUrl`에서 승인 | `deployment_get`, `project_status` |
+| 7. 다음 단계 배포 | Helper/Agent → 사용자 | `promote(from="dev")`로 dev에서 성공한 Release를 pipeline의 다음 단계(기본 `prod`)에 배포. `approval: owner` 환경은 소유자가 24시간 안에 Chat의 배포 화면(화면이 없으면 `approvalUrl`)에서 승인 | `deployment_get`, `project_status` |
 
 Runway의 호출이 `git_connection_required`로 거절되면 오류 메시지의 Studio 연결 링크를 사용자에게 주고, 사용자가 연결한 뒤 다시 호출한다. [delivery](delivery.md#오류)
 push로 배포하려면 사용자가 요청할 때 `push_enable`로 Project의 push 배포를 켠다. 켜지 않은 Project는 merge 뒤 `deploy`로 배포한다.
