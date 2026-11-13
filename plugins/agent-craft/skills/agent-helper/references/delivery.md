@@ -63,7 +63,7 @@
 | `project_ensure`, `project_apply` | Project 생성, `application.yaml` 적용 | 리소스를 만들지 않는다. `pipeline`은 새 Project에만 쓴다. 새 Project를 만들 때는 호출한 사용자의 Git 계정이 저장소를 볼 수 있어야 한다. `project_apply`는 단계마다 리소스 상태와 값이 없는 secret의 입력 링크를 돌려준다 |
 | `project_configure` | Project의 pipeline, 단계별 크기(`sizes`), `trigger`, `installScript`, 마지막 단계 주소에 환경 이름 붙이기(`suffixEveryStage`) 변경 | 소유자나 Studio 관리자만. 생략한 필드는 유지, `null`은 제거, `sizes`는 map 전체 교체. 다음 Deployment부터 적용된다. `deployedEnvironments`가 비어 있지 않으면 다른 `pipeline`은 `pipeline_locked`로 거절된다 |
 | `resource_create` | 템플릿(`template`)과 `parameters`로 환경 하나에 리소스 생성 | 접수형. `pending → ready | failed`. 단계마다 따로 호출한다 |
-| `deploy`, `promote`, `rollback` | ref를 첫 단계에 배포, 같은 Release를 다음 단계로 승격, 직전 Release로 되돌리기 | 접수형. `idempotencyKey` 필수. 결과는 원래 Chat으로 돌아온다. `approval: owner` 환경은 소유자 승인 대기. `release` 없는 `deploy`는 응답하기 전에 호출한 사용자의 Git 계정으로 저장소를 읽는다. `ref`를 생략하면 저장소의 기본 브랜치를 build한다 |
+| `deploy`, `promote`, `rollback` | ref를 첫 단계에 배포, 같은 Release를 다음 단계로 승격, 직전 Release로 되돌리기 | 접수형. `idempotencyKey` 필수. 결과는 원래 Chat으로 돌아온다. `approval: owner` 환경은 소유자 승인 대기이고, 결과의 배포 화면에 승인·거절 버튼이 있다. `release` 없는 `deploy`는 응답하기 전에 호출한 사용자의 Git 계정으로 저장소를 읽는다. `ref`를 생략하면 저장소의 기본 브랜치를 build한다 |
 | `push_enable`, `push_disable` | Project의 push 배포 켜기·끄기 | 소유자나 Studio 관리자만. `push_enable`은 사용자가 push 배포를 요청할 때만 호출한다. Studio가 호출마다 사람의 승인을 받고, 승인할 사람이 없는 실행에는 도구가 없다. 승인 표시가 없는 호출은 Runway가 `person_approval_required`로 거절한다. 켜는 사용자의 Git 계정이 저장소의 webhook을 관리하는 역할(GitHub `admin`, GitLab Maintainer 이상)이어야 한다. `push_disable`은 Git 계정 없이 끈다. 응답의 `remoteCleanup`이 `skipped`이면 저장소에 webhook이, `delegationRevoked`가 `false`이면 Studio에 Git 위임이 남았다. `message`가 다음 행동을 알려 주므로 그대로 전한다 |
 | `secret_request` | secret 입력 콘솔 링크 | 읽기 전용이라 승인 없이 실행된다. 링크만 돌려준다. 값은 묻지 않는다 |
 | `service_remove`, `resource_delete`, `project_delete`, `project_deletion_get` | 환경 하나의 서비스 중지, 리소스 하나 삭제, Project 삭제와 그 진행 조회 | `runway:delete` 권한이 있을 때만 보인다. 소유자나 Studio 관리자만. 정확한 `confirmation`(환경 이름·리소스 이름·slug)이 필요하고 Studio가 호출마다 사람의 승인을 받는다. 승인 표시가 없는 호출은 Runway가 `person_approval_required`로 거절한다. 되돌릴 수 없다 |
@@ -118,7 +118,7 @@ sandbox 환경(기본 `dev`) Variable에는 Sandbox 예약 이름을 쓰지 않�
 Git 호스트와 Git 계정 연결은 Runway 콘솔에 없다. 사용자가 Agent Studio의 프로필 → Git 계정(`/profile/git`)에서 계정을 연결한다.
 push 배포는 설정 탭이나 `push_enable`·`push_disable`로 켜고 끈다. 켜면 Runway가 저장소에 push webhook을 만들고 push마다 켠 사용자의 Git 권한으로 저장소를 읽는다.
 이 허용은 push 배포를 끄거나 그 사용자가 Studio의 프로필 → Git 계정에서 위임을 폐기할 때까지 유지된다.
-`approval: owner` 환경의 배포 승인·거절은 소유자만 한다(Studio 관리자도 불가). 소유자는 Runway 콘솔의 승인 링크에서 승인하거나, Studio Chat의 승인 카드에서 그 호출을 승인한다. 소유자가 콘솔에서 시작한 배포는 승인이 필요 없다.
+`approval: owner` 환경의 배포 승인·거절은 소유자만 한다(Studio 관리자도 불가). Studio Chat에서는 `deploy`·`promote`·`rollback` 결과의 배포 화면에서 **승인하고 시작**·**거절**을 누르고 Studio 승인 카드에서 확인한다. 화면이 없는 surface에서는 Runway 콘솔의 승인 링크(`approvalUrl`)에서 결정한다. 소유자가 Studio 승인 카드에서 배포 호출 자체를 승인했거나 콘솔에서 시작한 배포는 기다리지 않는다.
 삭제 도구가 없는 실행에서는 서비스·리소스·Project 삭제도 콘솔에서 한다(이름 재입력).
 
 ## 오류
