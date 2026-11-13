@@ -27,10 +27,10 @@
 
 저장소를 등록하거나 Git 호스트 계정을 연결하는 도구는 없다.
 
-`profile_save`·`profile_select`는 사용자가 profile 저장·선택을 명시적으로 요청한 경우에만 쓴다.
-`profile_organization_default`는 Studio 관리자에게만 보이며, 사용자가 조직 기본 프로필의 지정·해제를 명시적으로 요청한 경우에만 쓴다.
+`profile_save`·`profile_select`는 사용자가 profile 저장·선택을 명시적으로 요청한 경우에만 쓴다. `profile_save`는 `scope:user` profile만 다룬다.
+조직 프로필(`scope:organization`)의 생성·수정·범위 변경·삭제와 조직 기본 프로필 지정은 Studio 관리자가 Forge 콘솔에서 한다. MCP로 요청하면 `console_required`로 거절된다.
 `profile_delete`는 사용자가 profile의 영구 삭제를 명시적으로 요청한 경우에만 쓴다. 소유자만 삭제할 수 있고 되돌릴 수 없다.
-삭제하거나 `scope:user`로 바꾸면 그 profile을 기본으로 선택한 사용자의 선택과 조직 기본 프로필 지정이 해제된다. 닫은 Workspace와 끝난 Run은 수락한 설정을 유지한다.
+profile을 삭제하거나 Forge 콘솔에서 `scope:user`로 바꾸면 그 profile을 기본으로 선택한 사용자의 선택과 조직 기본 프로필 지정이 해제된다. 닫은 Workspace와 끝난 Run은 수락한 설정을 유지한다.
 응답을 잃으면 `profile_get`을 읽는다. `profile_not_found`이면 삭제된 것이다.
 `workspace_delete`는 영구 삭제 요청에만 쓴다. closed Workspace와 관측한 `expectedRevision`이 필요하다.
 
@@ -98,10 +98,10 @@ Run 상태는 `queued`, `running`, `succeeded`, `failed`, `cancelled`, `interrup
 | code | 행동 |
 |---|---|
 | `profile_revision_conflict` | `profile_get`으로 현재 revision을 다시 읽는다 |
-| `profile_in_use` | 삭제하려는 profile을 닫지 않은 Workspace나 끝나지 않은 Run이 쓴다. `error`가 본인 Workspace 수, 다른 사용자의 Workspace 수, 끝나지 않은 Run 수를 알린다. 사용자가 요청하면 본인 Workspace를 `workspace_close`로 닫고, Run이 끝난 뒤 다시 삭제한다. 다른 사용자의 Workspace가 쓰면 소유자가 먼저 profile을 `scope:user`로 저장해야 한다고 알린다 |
+| `profile_in_use` | 삭제하려는 profile을 닫지 않은 Workspace나 끝나지 않은 Run이 쓴다. `error`가 본인 Workspace 수, 다른 사용자의 Workspace 수, 끝나지 않은 Run 수를 알린다. 사용자가 요청하면 본인 Workspace를 `workspace_close`로 닫고, Run이 끝난 뒤 다시 삭제한다. 다른 사용자의 Workspace가 쓰면 Studio 관리자가 Forge 콘솔에서 profile을 `scope:user`로 바꿔야 한다고 알린다(MCP로는 `console_required`) |
 | `profile_required`, `profile_input_conflict` | profile 쌍을 함께 보내거나 충돌 입력을 뺀다 |
 | `profile_runtime_mismatch` | 기존 Workspace의 Runtime·profile을 유지하거나 새 Workspace를 만든다 |
-| `organization_admin_required` | 조직 프로필 저장·변경·삭제와 조직 기본 프로필은 Studio 관리자만 바꿀 수 있다고 안내한다 |
+| `console_required` | 조직 프로필의 생성·수정·범위 변경·삭제와 조직 기본 프로필은 MCP로 바꿀 수 없다. 오류의 `consoleUrl`(Forge 콘솔 설정)을 전달하고 Studio 관리자가 콘솔에서 하도록 안내한다. 다시 시도하지 않는다 |
 | `interactive_approval_required` | 승인은 화면의 버튼과 Studio 승인 카드 또는 Forge 콘솔에서만 한다. 모델은 승인을 결정하지 않는다 |
 | `profile_repository_forbidden` | profile의 저장소 규칙이 그 저장소를 허용하지 않는다. profile 소유자가 Forge 콘솔 설정에서 규칙을 바꿔야 한다고 안내한다 |
 | `timeout_exceeds_authorization` | 오류의 만료 시각 전에 끝나도록 `timeoutMs`를 줄인다 |
