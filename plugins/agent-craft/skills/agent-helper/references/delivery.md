@@ -28,7 +28,7 @@
   `ref`를 생략한 `deploy`는 Git 호스트가 알려 주는 저장소의 기본 브랜치(`main`이 아닐 수 있다)를 build한다.
   Release를 지정한 `deploy`, `promote`, `rollback`, 승인에는 필요 없다.
 - **push 배포**: Project마다 켜고 끈다. 켠 Project만 trigger와 맞는 push를 그 pipeline의 첫 단계에 배포하고, 켜지 않은 Project는 요청으로만 배포한다.
-  push가 여러 pipeline의 trigger와 맞으면 맞는 pipeline마다 첫 단계에 배포하고 Release 하나를 함께 쓴다.
+  push가 여러 pipeline의 trigger와 맞으면 맞는 pipeline마다 첫 단계에 배포하고, pipeline마다 자기 Release를 build한다.
   `project_get`·`project_list`의 `push.state`가 상태다. `off`는 꺼짐, `on`은 켜짐, `delegation_invalid`는 켠 사용자의 Git 위임이 Studio에 없어
   push 배포가 모두 `push_delegation_invalid`로 실패하는 상태다. `delegation_invalid`이면 소유자나 Studio 관리자가 다시 켠다.
 - **리소스**: 운영자가 관리하는 **리소스 템플릿**으로 만든다. `resource_catalog`가 지금 쓸 수 있는 템플릿(`template` 이름, 종류, 좁힌 `parameters`,
