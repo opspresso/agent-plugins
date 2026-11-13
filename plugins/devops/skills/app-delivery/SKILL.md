@@ -381,10 +381,11 @@ Project의 한 단계가 `https://<slug>.<도메인>`(환경 이름 없는 주�
   `{bare: auto}`와 `null`은 Agent Runway 규칙으로 돌아간다. 사용자가 공개 주소를 받을 환경을 정했으면 그 환경으로 정한다.
   사용자가 Agent에게 맡기면 사용자가 공개할 환경을 고르고, `suggestion`이 있으면 그 단계를 먼저 검토한다.
   pipeline을 바꾼 뒤 `suggestion`이 생기면 사용자에게 알리고 옮길지 묻는다. 사용자의 동의 없이 옮기지 않는다.
-- **실행 중인 서비스의 주소 옮기기**: 환경 이름 없는 주소로 실행 중이거나 배포 중인 서비스가 있는데 다른 환경을 고르는 호출은 사람의 승인이 필요하다.
-  승인 표시가 없으면 Runway가 아무것도 바꾸지 않고 `person_approval_required`(403)로 거절한다. 호출하기 전에 사용자에게 다음을 알린다:
-  옛 주소는 그 환경의 다음 배포부터 응답하지 않는다. 브라우저의 cookie·localStorage, OAuth redirect URI, 외부 webhook이 옛 주소에 묶여 있을 수 있다.
-  Studio는 Agent 설정 `approvalTools`에 `project_configure`가 있을 때만 이 호출에 승인 카드를 보인다. 승인 카드 없이 거절되면, Agent 관리자가 `approvalTools`에 `project_configure`를 넣거나 Project 소유자나 Studio 관리자가 Agent Runway 콘솔의 설정 탭(`/projects/<slug>/settings`)에서 바꾸게 안내한다.
+- **실행 중인 서비스의 주소 옮기기**: 환경 이름 없는 주소로 실행 중이거나 배포 중인 서비스가 있으면 `host_move`(`{project, bare}`)로 옮긴다.
+  `project_configure`의 `host`는 이 이동을 `person_approval_required`(403)로 거절한다. Studio는 `host_move` 호출마다 사람의 승인 카드를 보인다.
+  호출하기 전에 사용자에게 다음을 알린다: 어느 주소를 어느 환경에서 어느 환경으로 옮기는지,
+  옛 주소는 그 환경의 다음 배포부터 응답하지 않는다는 것, 브라우저의 cookie·localStorage, OAuth redirect URI, 외부 webhook이 옛 주소에 묶여 있을 수 있다는 것.
+  사용자가 이미 옮기기로 했으면(예: `AskUser`에서 동의) 다시 묻지 않고 `host_move`를 호출한다. 승인 카드가 마지막 확인이다.
 - **적용 시점**: 바뀐 주소는 각 환경의 다음 `deploy`·`promote`부터 적용된다. 실행 중인 서비스는 그때까지 주소를 유지한다.
   주소를 내놓는 환경을 먼저 다시 배포한다. 예: `prod`에서 `stg`로 옮기면 `prod`에 한 번 다시 배포해 `<slug>-prod`로 옮긴 뒤 `stg`에 배포한다.
   순서를 지키지 않으면 `host_conflict`다. `host.moves`가 그 순서를 준다.
@@ -401,7 +402,7 @@ Project의 한 단계가 `https://<slug>.<도메인>`(환경 이름 없는 주�
 | `pipeline_conflict` | 두 pipeline이 같은 환경을 단계로 가진다 | 같은 환경을 갖지 않는 pipeline을 고른다 |
 | `pipeline_incompatible` | 단계의 환경이 런타임 type의 target을 갖지 않거나, 그 target이 런타임 architecture를 실행하지 않는다 | 다른 pipeline이나 런타임을 고른다. 환경의 target은 관리자가 더한다 |
 | `pipeline_required` | `pipelines`가 비었다 | pipeline을 하나 이상 넘긴다 |
-| `person_approval_required` | 실행 중인 서비스가 쓰는 환경 이름 없는 주소를 다른 환경으로 옮긴다 | [앱 주소](#앱-주소)를 따른다 |
+| `person_approval_required` | `project_configure`가 실행 중인 서비스가 쓰는 환경 이름 없는 주소를 다른 환경으로 옮긴다 | `host_move`로 옮긴다([앱 주소](#앱-주소)) |
 
 `pipeline_locked`일 때의 절차:
 
@@ -423,8 +424,7 @@ Project의 한 단계가 `https://<slug>.<도메인>`(환경 이름 없는 주�
 
 ### 사람의 승인
 
-`push_enable`·`service_remove`·`resource_delete`·`project_delete`는 사람이 호출마다 승인한다.
-실행 중인 서비스의 환경 이름 없는 주소를 옮기는 `project_configure`도 사람의 승인이 필요하다([앱 주소](#앱-주소)).
+`push_enable`·`service_remove`·`resource_delete`·`project_delete`·`host_move`는 사람이 호출마다 승인한다([앱 주소](#앱-주소)).
 Studio Chat이 호출 전에 승인 카드를 보여 주고, 사용자가 승인한 호출만 실행한다. 사용자가 거절한 호출은 반복하지 않는다.
 
 - `person_approval_required`(403)는 승인 표시 없이 호출됐다는 뜻이다. Runway는 아무것도 읽거나 바꾸지 않았다.
