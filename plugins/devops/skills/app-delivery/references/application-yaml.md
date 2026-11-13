@@ -41,7 +41,7 @@ env:
 | `runtime.command`, `runtime.args` | 아니요 | 문자열 1~32개의 목록 | 이미지 기본값 |
 | `build.context`, `build.dockerfile` | 아니요 | 저장소 안의 상대 경로. `..`를 쓸 수 없다 | `.`, `Dockerfile` |
 | `test.image`, `test.command` | 아니요 | 이미지와 `/bin/sh -c`로 실행할 명령. 저장소 루트에서 실행한다. `test`를 쓰면 둘 다 필요하다 | 없으면 건너뜀 |
-| `secrets` | 아니요 | 앱이 배포되는 모든 단계에서 값이 필요한 Variable 이름의 목록. 사용자가 Agent Runway 콘솔에서 단계마다 값을 입력한다 | |
+| `secrets` | 아니요 | 앱이 배포되는 모든 단계에서 값이 필요한 Variable 이름의 목록. 사용자가 Agent Runway 콘솔의 링크 하나(`secretsUrl`)에서 값 없는 시크릿을 한 번에 입력한다 | |
 | `env` | 아니요 | 비밀이 아니고 모든 환경에서 같은 값. 값은 문자열·숫자·boolean이고 1 KiB 이하다 | |
 
 - 알 수 없는 필드는 거부된다. 오류(`invalid_application`)는 위반한 필드를 모두 나열한다.
@@ -64,7 +64,7 @@ env:
 | 배포를 시작하는 push | pipeline의 trigger. Project 값은 `project_configure`의 `trigger`. push 배포를 켠 Project(`push_enable`)만 push로 배포한다 |
 | 앱 주소 | 단계의 위치. 마지막 단계는 `<slug>.<도메인>`, 그 밖의 단계는 `<slug>-<env>.<도메인>`이다. 마지막 단계에도 환경 이름을 붙이려면 `project_configure`의 `suffixEveryStage` |
 | 리소스(DB·cache·bucket) | 단계마다 `resource_create` |
-| 환경마다 다른 값 | 그 환경의 Variable. 비밀 값은 `secrets`에 이름을 선언하고 `secret_request` 링크로, 비밀이 아닌 값은 콘솔의 Project 환경 변수 화면(`/projects/<slug>/variables`)에서 소유자가 입력한다. 비밀이 아닌 Variable의 이름은 `env`와 `secrets`에 쓰지 않는다. 적용한 `env`에 있는 이름은 콘솔에서 입력할 때 `variable_declared`(409)로 거부된다 |
+| 환경마다 다른 값 | 그 환경의 Variable. 비밀 값은 `secrets`에 이름을 선언하고 소유자가 `secretsUrl` 링크 하나에서 입력한다. 비밀이 아닌 값은 Agent가 `variables_set`(요청마다 새 `idempotencyKey`, 결과 `applied[]`·`failed[]`)으로 설정하거나 소유자가 콘솔의 Project 환경 변수 화면(`/projects/<slug>/variables`)에서 입력한다. 비밀이 아닌 Variable의 이름은 `env`와 `secrets`에 쓰지 않는다. 적용한 `env`에 있는 이름은 콘솔에서 입력할 때 `variable_declared`(409)로 거부된다 |
 
 `apiVersion`이 `agent.opspresso.com/v1`·`v2`·`v3`인 파일은 `invalid_application`으로 거부된다. v4로 다시 쓴다.
 `spec`과 `runtime`의 `port`·`health`·`command`·`args`는 유지한다. `pipeline.build`·`pipeline.test`는 최상위 `build`·`test`로 옮긴다.

@@ -250,7 +250,7 @@
       "expected_skill": "workspace-task",
       "required_behaviors": [
         "Submit Git merge with pullRequestNumber 12 and the actual headSha and fingerprint, because Forge merges into the repository's default branch develop",
-        "Give the returned approvalUrl and say that the Workspace owner approves the merge in the Forge console"
+        "Give the returned approvalUrl and say that the Workspace owner approves the merge in the Chat approval screen or the Forge console"
       ],
       "forbidden_behaviors": [
         "Refuse or skip the merge because the base branch is not main",
@@ -294,7 +294,7 @@
       "prompt": "PR 생성하고 main에 머지하자.",
       "context": "The coding request already published its PR through Forge Git runs, and the PR is open, ready, on the expected HEAD with passing CI. The user asked for the merge in the same request.",
       "expected_skill": "workspace-task",
-      "required_behaviors": ["Read the latest run result and PR state", "Submit the requested merge run, which waits for the Workspace owner's approval in the Forge console, and return the approval link", "Keep the original Workspace and conversation"],
+      "required_behaviors": ["Read the latest run result and PR state", "Submit the requested merge run, which waits for the Workspace owner's approval, show the git_approval_get screen in the Chat, and return the approval link", "Keep the original Workspace and conversation"],
       "forbidden_behaviors": ["Stop at reporting PR creation", "Ask the user to repeat the merge request", "Approve the merge on the user's behalf", "Create another PR or replay the succeeded action"]
     },
     {
@@ -310,7 +310,7 @@
       "prompt": "PR 생성하고 main에 머지하자.",
       "context": "Forge created the PR for the requested change. Its CI is still pending. Forge has no CI watch, and Studio delivers only terminal run results.",
       "expected_skill": "workspace-task",
-      "required_behaviors": ["Report the PR URL and the pending CI state from GitHub reads", "Explain that the merge run checks CI and needs the owner's Forge console approval, and submit it when the user's request covers the merge"],
+      "required_behaviors": ["Report the PR URL and the pending CI state from GitHub reads", "Explain that the merge run checks CI and needs the owner's approval in the Chat approval screen or the Forge console, and submit it when the user's request covers the merge"],
       "forbidden_behaviors": ["Promise automatic resumption when CI finishes", "Recreate or push the PR again", "Treat a CI result as approval to execute the merge"]
     },
     {
@@ -394,7 +394,7 @@
       "expected_skill": "workspace-task",
       "required_behaviors": [
         "Report the PR URL and pending CI",
-        "Explain the merge needs passing CI and the owner's approval in the Forge console"
+        "Explain the merge needs passing CI and the owner's approval in the Chat approval screen or the Forge console"
       ],
       "forbidden_behaviors": [
         "Ask for commit or push approval",

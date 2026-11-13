@@ -14,7 +14,7 @@ metadata:
 사용자가 요청한 앱을 실행 중인 서비스로 만든다. 저장소·코드·`application.yaml`·리소스·배포·응답하는 URL이
 모두 확인될 때 완료다. PR/MR이나 이미지 push만으로 완료라고 하지 않는다.
 
-필요한 연결: Agent Runway MCP(`pipeline_list`, `project_apply`, `resource_create`, `deploy`, `promote` 등)와 Agent Forge MCP(Workspace·Git).
+필요한 연결: Agent Runway MCP(`repository_inspect`, `pipeline_list`, `project_apply`, `resource_create`, `variables_set`, `deploy`, `promote` 등)와 Agent Forge MCP(Workspace·Git).
 둘 중 하나가 없으면 할 수 있는 작업까지만 진행하고, 없는 연결과 남은 작업을 알린다.
 사용자는 저장소가 있는 Git 호스트를 Agent Studio의 프로필 → Git 계정에서 연결해야 한다([저장소 접근](#저장소-접근)).
 
@@ -32,11 +32,18 @@ metadata:
 - **`application.yaml`**: 앱의 빌드·테스트·실행 방법과 `secrets`·`env`만 선언한다. 환경·리소스·크기·trigger·cloud·target type·architecture는
   파일에 없다. 이 값들은 pipeline, `project_configure`, `resource_create`가 정한다.
 
+## 질문
+
+사용자에게 물을 것은 모아서 `AskUser` **한 번**으로 묻는다. 질문마다 `questions[]`의 항목 하나(`id`, `question`, `kind`, `options`, `default`)로 넣고,
+도구가 확인한 값과 근거(예: "Node 24 (package.json engines) · port 8080 (Dockerfile EXPOSE)")와 `application.yaml` 초안은 `context`에 넣는다.
+도구와 저장소로 확인할 수 있는 값(언어·버전·포트·health 경로·테스트 명령·환경 변수 이름·namespace 후보·pipeline)은 묻지 않는다.
+요청이 이미 정한 작업(예: "만들어서 dev에 배포해")은 다시 확인하지 않는다. 물을 것이 없으면 묻지 않고 진행한다.
+
 ## 1. 요구사항, 이름, pipeline
 
 1. 앱의 목적·핵심 기능·데이터·외부 API와 배포할 환경을 확인한다. 정해진 부분은 묻지 않는다.
-2. 저장소의 Git 호스트와 owner(GitHub owner, GitLab 사용자 이름이나 group 경로)를 정한다. 사용자가 정하지 않았으면 Agent 지침이 정한
-   기본값을 쓰고, 그것도 없으면 묻는다. 새 저장소의 owner는 짐작하지 않는다([2. 저장소와 코드](#2-저장소와-코드)).
+2. 저장소의 Git 호스트와 owner(GitHub owner, GitLab 사용자 이름이나 group 경로)를 정한다. 사용자가 정하지 않았으면 `repository_namespaces`로
+   연결 계정이 저장소를 만들 수 있는 namespace를 읽고, 하나뿐이면 그것을 쓰고 여럿이면 [질문](#질문)에 넣는다. 새 저장소의 owner는 짐작하지 않는다([2. 저장소와 코드](#2-저장소와-코드)).
 3. 이름(slug)을 정한다. `^[a-z][a-z0-9-]{1,30}[a-z0-9]$`이고 설치의 환경 이름으로 끝날 수 없다(예: `-dev`, `-prod`).
    `agent-`·`addon-`·`delivery-`·`kube-`로 시작하는 이름과 `istio`·`argocd`·`default`·`system`은 쓸 수 없다.
    저장소 이름과 같게 하면 추적이 쉽다. 주소는 Project pipeline의 마지막 단계가 `https://<slug>.<도메인>`, 그 밖의 단계가 `https://<slug>-<env>.<도메인>`이다.
@@ -102,20 +109,30 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
 1. Forge `git_connections`로 저장소가 있는 Git 호스트의 연결 상태를 확인한다. 그 host의 `status`가 `connected`가 아닐 때만
    host의 `connectUrl`을 사용자에게 주고, 사용자가 Agent Studio에서 연결한 뒤 이어간다. Runway도 이 연결로 저장소를 읽는다.
    저장소를 Forge나 Runway에 등록하는 단계는 없다. Forge Git `prepare`에는 그 host의 `origin`과 저장소 경로(`repository`)를 보낸다.
-2. 기본 branch의 `application.yaml`, `Dockerfile`, health 경로를 확인한다. 사용자에게 파일을 만들라고 하지 않는다.
+2. Agent Runway `repository_inspect`(`repository`, 저장소에 Project가 있으면 `project`)를 한 번 호출한다. Runway가 사용자의 Git 계정으로 기본 브랜치를 읽고
+   언어·버전·포트·health·테스트 명령·환경 변수(secret/env)·필요한 리소스와 `application.yaml` 초안(`application`), Dockerfile 초안(`dockerfile`),
+   질문(`questions`), 없는 파일(`missing`)을 준다. 파일을 직접 읽어 짐작하지 않는다. 사용자에게 파일을 만들라고 하지 않는다.
+   결과의 `directories`에 앱이 여럿이면 배포할 앱의 `directory`로 다시 호출한다.
+   `git_connection_required`·`repository_access_denied`·`ref_not_found`·`source_too_large`·`source_busy`는 [저장소 접근](#저장소-접근)에 따른다.
+   분석은 사용자당 한 번에 하나만 실행된다. `source_busy`는 `Retry-After` 뒤에 다시 호출하고, 그사이 다른 분석을 시작하지 않는다.
+   `inspection_too_complex`(422)이면 `directories`에서 배포할 앱의 `directory`로 다시 호출한다. `limits.*Omitted`가 0이 아니면 결과가 잘린 것이므로 그 앱의 `directory`로 다시 분석한다.
+   `detected.variables[].value`는 예시 파일(`.env.example` 등)의 기본값만 담는다. 커밋된 `.env`의 값은 읽지 않으므로, 값이 없는 이름은 질문 답이나 `variables_set`으로 채운다.
 3. `application.yaml`이 없으면 [pipeline 선택](#pipeline-선택)으로 pipeline을 정하고 `project_ensure`(`repository`, `default`가 아니면 `pipeline`)로
    Project를 확인한 뒤 `project_status`로 pipeline과 단계를 읽는다. `slug`는 넘기지 않는다.
    Agent Runway가 저장소 이름으로 정하고, 그 slug가 예약돼 있으면 다음 접미사(`-2`, `-3` …)를 고른다. 삭제된 Project의 slug도 영구히 예약된다.
-   저장소에서 언어·포트·테스트 명령과 앱이 기본 설정으로 연결하는 백엔드를 읽어 `application.yaml` 초안과 리소스 계획을 만든다.
-   - 초안: `spec.name`에는 응답의 `project.slug`, `spec.owner`에는 `project.owner.subject`를 그대로 쓴다. 자리표시자를 남기지 않는다.
-     환경·리소스·크기·trigger는 쓰지 않는다.
-   - 리소스 계획: 코드가 읽는 Variable 이름에 맞춰 리소스 이름과 template을 정한다. Variable은 `<리소스 이름>_<class 키>`이므로, 예를 들어
-     `CACHE_VALKEY_URL`을 읽는 앱에는 `valkey` template의 리소스 `cache`를, 접두어 없는 `DATABASE_URL`을 읽는 앱에는 slug 이름의
-     PostgreSQL 리소스(보통 `pool-postgres`)를 계획한다. 앱이 실행될 모든 단계에 같은 이름·template으로 만든다.
+   초안은 `repository_inspect`의 `application.text`를 쓴다. `application.valid`가 `true`인지 확인하고, `false`면 `violations`를 고친다.
+   `spec.name`·`spec.owner`는 그대로 둔다(Project가 있으면 응답의 `project.slug`·`project.owner.subject`와 같아야 한다). 환경·리소스·크기·trigger는 쓰지 않는다.
+   - 질문: `questions[]`를 [질문](#질문)대로 `AskUser` 한 번에 모두 묻는다. 각 항목의 `id`·`text`·`kind`·`options`·`default`를 그대로 옮기고,
+     `detected`의 값과 근거, 초안은 `context`에 넣는다. `detected`에 있는 값은 묻지 않는다. 질문이 없으면 묻지 않고 진행한다.
+   - 답 반영: `field`가 가리키는 `application.yaml` 필드를 고친다. `variables.secret`에서 고른 이름은 `secrets`에 넣는다.
+     `env.<NAME>`은 모든 환경에 같은 값이면 `env`에, 환경마다 다르면 적용 뒤 `variables_set`으로 둔다. `rename.<NAME>`은 코드와 선언의 이름을 함께 바꾼다.
+     `test.enable`이 `false`면 `test`를 지운다. `dockerfile.generate`가 `true`면 `dockerfile.text`를 `dockerfile.path`에 커밋한다.
+     고친 내용은 `application_validate`로 다시 확인한다.
+   - 리소스 계획: `detected.resources[]`의 `template`과 `name`을 그대로 쓴다. 그 `name`이면 리소스의 Variable이 코드가 읽는 이름이 된다.
+     `note`가 있으면 그 안내를 따른다. `template`이 `null`이면 그 연결 값을 `secrets`로 선언한다. 앱이 실행될 모든 단계에 같은 이름·template으로 만든다.
      리소스를 피하려고 어느 단계에서든 앱 기능을 끄는 값(예: `REDIS_ENABLED: "false"`)을 넣지 않고, 그런 선택지를 묻지도 않는다.
-   사용자가 추가를 요청했으면 초안과 리소스 계획을 보여 주고 바로 진행하며, 요청하지 않았을 때만 `AskUser`로 묻는다.
-   묻는 경우의 예: "application.yaml이 없습니다. 아래 내용으로 만들어 추가할까요?" 진행하면 [2. 저장소와 코드](#2-저장소와-코드)의 PR/MR 절차로 추가한다.
-   `Dockerfile`이나 health 경로가 없으면 같은 질문에 함께 포함한다.
+   사용자가 추가를 요청했으면 질문의 답을 받은 뒤 바로 [2. 저장소와 코드](#2-저장소와-코드)의 PR/MR 절차로 추가한다. 요청하지 않았으면
+   같은 `AskUser`에 "이 내용으로 추가할까요?"(`confirm`)를 함께 넣는다. `missing`에 `health_route`가 있으면 health 경로를 추가하는 코드 변경도 같은 PR/MR에 넣는다.
 4. 병합되면 [3. 선언 적용과 리소스](#3-선언-적용과-리소스)로 `project_apply`와 `resource_create`까지 진행한다.
    배포는 사용자가 요청했을 때만 한다. 요청이 없으면 `AskUser`로 첫 단계 배포 여부를 묻는다.
 
@@ -144,6 +161,7 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
    접속 정보는 Agent Runway가 저장한다. 값은 Chat·코드·로그에 쓰지 않고 Variable 이름만 쓴다.
 3. 코드를 구현한다. 배포에 필요한 조건은 다음과 같다. 세부 규칙과 예시는 [application.yaml과 배포 조건](references/application-yaml.md)을 읽는다.
    - 저장소 루트의 `application.yaml`(`spec.owner`에 Project 소유자의 Studio subject).
+     이미 있는 저장소의 `application.yaml`을 바꾸기 전에는 `repository_inspect`로 현재 선언과 감지 결과를 읽는다.
      부모가 `application_validate`로 통과한 전체 내용을 task에 그대로 넣고, runtime이 그 내용으로 파일을 쓰게 한다. runtime은 스키마를 모르므로 직접 짓게 하지 않는다.
    - `Dockerfile`: Project pipeline의 architecture 하나(`linux/amd64` 또는 `linux/arm64`, `project_status`의 `pipeline.architecture`)로 빌드되고,
      `PORT` 환경 변수의 포트에서 HTTP를 받는다. 빌드는 commit의 소스 아카이브로 하므로 `.git`·submodule·Git LFS 객체에 의존하지 않는다.
@@ -156,8 +174,8 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
    거부되면 커밋하지 않고 오류 필드를 고치는 task를 낸 뒤 `review`부터 다시 한다.
 6. 부모가 Git `commit`·`push`·`pull-request` Run으로 PR/MR을 만든다. Git 작업을 task에 넣지 않는다. native Runtime은 커밋할 수 없다.
    `pull-request`는 승인을 만들지 않는다.
-7. PR/MR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approvalUrl`을 반환한다.
-   그 링크를 답변에 그대로 넣어 사용자에게 준다(`WaitForServiceWork`로 턴을 끝낼 때도 그 메시지에 넣는다). 병합 Run이 `succeeded`인지 확인한 뒤 3절로 간다. 승인 없이 다른 경로로 병합하지 않는다.
+7. PR/MR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approval.id`와 `approvalUrl`을 반환한다.
+   `git_approval_get` 화면을 Chat에 보여 소유자가 그 자리에서 승인하게 하고, 링크도 답변에 그대로 넣어 사용자에게 준다(`WaitForServiceWork`로 턴을 끝낼 때도 그 메시지에 넣는다). 병합 Run이 `succeeded`인지 확인한 뒤 3절로 간다. 승인 없이 다른 경로로 병합하지 않는다.
    Forge는 저장소의 기본 브랜치(`main`이 아닐 수 있다)로만 병합한다.
    Workspace의 기준 브랜치가 기본 브랜치가 아니면 `merge`가 `git_action_unsupported`로 거절되고 승인은 만들어지지 않는다.
    `baseBranch` 없이 준비한 Workspace는 기본 브랜치에서 시작하므로 이 이유로 거절되지 않는다.
@@ -181,8 +199,9 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
 3. 배포를 요청받았으면 리소스가 `ready`가 되기를 기다리지 않고 바로 [4. 배포와 승격](#4-배포와-승격)의 `deploy`를 호출한다.
    생성 중(`pending`)인 리소스는 Deployment가 `resources` 스텝에서 기다리고, Studio가 그 Deployment를 끝까지 따라간다.
    Deployment는 리소스를 만들지 않는다. 리소스가 `failed`이면 원인을 보고한다.
-4. `missingSecrets`가 있으면 각 항목의 `url`(또는 `secret_request`가 준 링크)을 사용자에게 준다. 값은 Chat으로 받지 않는다.
-   사용자가 입력했다고 하면 `project_status`에서 그 단계의 `missingSecrets`가 비었는지 확인한다.
+4. 값 없는 시크릿이 있으면 응답의 `application.secretsUrl`(모든 단계), 또는 한 단계만이면 그 환경의 `secretsUrl` **링크 하나**를 사용자에게 준다.
+   시크릿마다 링크를 주지 않는다. `secret_request`를 `variable` 없이 호출해도 같은 링크다. 값은 Chat으로 받지 않는다.
+   사용자가 입력했다고 하면 `project_status`에서 `secretsUrl`이 `null`인지 확인한다.
 5. `invalid_application`이면 오류의 필드를 고쳐 2절의 PR/MR로 다시 반영한다. 이전 apiVersion의 파일은 거부되며, 메시지가 고칠 내용을 알려 준다.
 
 ## 4. 배포와 승격
@@ -220,6 +239,7 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
    - `rejected`: 소유자가 거절했거나 승인이 만료됐다(`approval_expired`). 다시 요청할지 사용자에게 확인한다.
 5. 요청이 거부되면 오류 코드에 따라 처리한다.
    - `environment_not_ready`: 시간이 해결하지 못하는 문제다. 메시지가 원인을 알려 준다. `failed` 리소스와 값 없는 secret은 3절로 준비한다.
+     메시지 끝에 시크릿 입력 링크가 있으면 그 링크 하나를 준다.
      적용한 `application.yaml`이 없으면 `project_apply`를 먼저 한다. 환경에 pipeline의 target type·architecture를 실행할 target이 없거나
      계정 접근이 확인되지 않았으면 관리자가 고쳐야 하므로 메시지를 사용자에게 전한다.
      `deployBlockers`의 `pending` 리소스는 배포를 막지 않는다. Deployment가 기다린다.
@@ -295,9 +315,14 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
     [pipeline 변경](#pipeline-변경)의 절차를 따른다. 새 pipeline에 맞지 않는 Project 값(단계가 아닌 환경의 크기 등)은 제거된다.
   - 생략한 필드는 그대로 유지된다. `invalid_pipeline`이면 메시지가 위반을 모두 알려 준다.
   - `sizes`·`trigger`·`installScript`·`suffixEveryStage`는 서비스가 배포돼 있어도 바꿀 수 있다.
-- **환경마다 다른 값**: 비밀이 아닌 값도 환경마다 다르면 `env`가 아니라 Variable로 둔다. 소유자가 Agent Runway 콘솔의
-  Project 환경 변수 화면(`/projects/<slug>/variables`)에서 입력한다. 그 이름은 `application.yaml`의 `env`와 `secrets`에 쓰지 않는다.
-  적용한 `env`에 있는 이름은 콘솔에서 입력할 때 `variable_declared`(409)로 거부된다.
+- **환경마다 다른 값**: 비밀이 아닌 값도 환경마다 다르면 `env`가 아니라 Variable로 둔다. Agent가 `variables_set`(`project`, `environment`, `values`, `idempotencyKey`)으로
+  설정한다. `idempotencyKey`는 요청마다 새로 만든다. 응답을 잃었을 때만 같은 키와 값으로 다시 보낸다.
+  같은 키에 다른 값을 보내면 그 Variable은 바뀌지 않고 `failed[]`의 `idempotency_conflict`가 된다(모든 Variable이 그렇다면 409 `idempotency_conflict`). 값을 바꿀 때는 새 키를 쓴다.
+  소유자·관리자만 호출할 수 있고 값은 반환되지 않는다. 결과의 `applied[]`는 쓴 Variable이고 `failed[]`는 쓰지 못한 Variable과 `code`다. `failed[]`가 있으면 그 이름만 새 키로 다시 보내거나 `code`에 따라 처리한다.
+  호출이 `internal_error` 같은 오류로 끝나면 같은 키와 같은 값으로 한 번 다시 보낸다. 이미 쓴 Variable은 재생(`replayed: true`)되고 나머지만 쓴다.
+  앱은 다음 배포부터 값을 받는다. 소유자가 콘솔(`/projects/<slug>/variables`)에서 입력해도 된다. 그 이름은 `application.yaml`의 `env`와 `secrets`에 쓰지 않는다.
+  다음은 `variable_is_secret`으로 거절된다: 선언한 `secrets`의 이름, 환경의 secret, 자격 증명 형태의 이름(`…_TOKEN`, `…_KEY`, `…_PASSWORD`, `…_WEBHOOK`, `DATABASE_URL` 등), 자격 증명 형태의 값(token, JWT, webhook URL, 비밀번호가 든 URL, 개인 키, 긴 무작위 문자열). 거절되면 메시지의 링크를 사용자에게 주고, 값을 Chat에 다시 쓰거나 붙여 넣으라고 하지 않는다.
+  적용한 `env`에 있는 이름은 `variable_declared`, 리소스가 주는 이름은 `variable_conflict`다.
 - 장애 조사는 `incident-triage`를 쓴다. `eks` pipeline의 앱 namespace는 `app-<slug>-<env>`, Deployment 이름은 `app`이다.
 - Project 삭제를 요청받으면 `project_delete`(`project`, `confirmation`: slug)를 한 번 호출한다. Studio가 사람에게 승인을 받은 뒤 실행되고,
   Agent Runway가 모든 환경의 서비스를 제거한 뒤 모든 리소스와 그 데이터, Project를 차례로 지운다. 되돌릴 수 없다.
@@ -344,4 +369,4 @@ Studio Chat이 호출 전에 승인 카드를 보여 주고, 사용자가 승인
 ## 보고
 
 진행한 작업마다 확인한 사실만 보고한다: 저장소와 PR/MR, pipeline 이름, 적용한 선언의 SHA, 단계별 리소스 상태, Release 이름, Deployment ID·상태·URL.
-승인을 기다리는 작업과 사용자가 할 일(승인, secret 입력, Git 호스트 연결)을 분리해 알린다.
+승인을 기다리는 작업과 사용자가 할 일(승인, `secretsUrl`에서의 secret 입력, Git 호스트 연결)을 분리해 알린다.

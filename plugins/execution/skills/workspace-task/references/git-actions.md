@@ -72,8 +72,9 @@ PR/MR 설명 형식이 필요하고 `pr-description`이 연결됐으면 해당 S
 ## 보호 작업과 승인
 
 - 보호 작업은 사용자가 그 동작을 요청한 경우에만 제출한다. PR/MR 생성이 기본 브랜치 병합·태그·릴리즈·배포 요청을 포함하지 않는다.
-- 제출하면 Run은 `queued`에서 승인을 기다린다. 응답의 `approvalUrl`을 링크로 전달하고 Forge 콘솔에서 Workspace 소유자가 승인해야 한다고 알린다.
-  MCP에는 승인 결정 도구가 없다. `git_approval_get`은 승인 상태를 읽기만 한다.
+- 제출하면 Run은 `queued`에서 승인을 기다린다. 응답의 `approval.id`로 `git_approval_get` 화면을 Chat에 보여 준다.
+  Workspace 소유자가 화면의 **승인**·**거절**을 누르고 Studio 승인 카드에서 확인하거나, `approvalUrl`의 Forge 콘솔에서 결정한다.
+  화면 버튼이 부르는 `git_approval_decide`는 모델에게 보이지 않으며, 모델은 승인을 결정하거나 대신 요청하지 않는다.
 - `publish-protected`·`merge`·`tag`의 승인 화면은 Workspace 브랜치가 커밋한 변경을 보여 준다. `prepare` 기준 커밋(`baseSha`)부터 승인할 `headSha`까지의 diff다.
   `merge`의 승인 화면에는 Git 호스트의 PR/MR을 여는 링크도 있다. `release`·`deploy`의 승인 화면에는 diff가 없다.
   커밋하지 않은 변경은 어떤 보호 작업도 게시하지 않으며 승인 화면에도 나오지 않는다.

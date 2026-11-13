@@ -72,9 +72,10 @@ Studio에 서비스 데이터의 사본이 없으므로 서비스의 현재 상�
 - **접수와 완료를 구분한다.** Knowledge 오디오 작업, Forge Run·저장소 생성, Runway 배포는 접수 후 결과가
   나중에 이 Chat으로 돌아온다. 결과를 기다리며 같은 상태를 반복 조회하지 않는다. 응답이 유실되면 새로
   제출하지 말고 같은 키로 `*_lookup_request`·`audio_request_status`를 조회한다.
-- **콘솔 전용 작업은 콘솔에서 한다.** Forge의 보호된 Git 작업 승인, Runway의 secret 입력·
+- **콘솔 전용 작업은 콘솔에서 한다.** Runway의 secret 입력·
   환경과 pipeline 관리, Memory·Knowledge의 관리자 설정과 검토 작업이 여기에 속한다. Runway의 서비스·리소스·Project 삭제는
   `service_remove`·`resource_delete`·`project_delete`로 요청하며, Studio가 호출마다 사람에게 승인을 받는다.
+  Forge의 보호된 Git 작업은 Workspace 소유자가 Chat의 `git_approval_get` 화면(Studio 승인 카드 확인)이나 Forge 콘솔에서 승인한다. 모델은 승인하지 않는다.
 - **Forge와 Runway가 쓰는 Git 호스트 계정은 사용자가 Studio에서 연결한다.** 위치는 Studio의 프로필 → Git 계정(`/profile/git`)이다.
   Forge와 Runway의 콘솔과 도구에는 계정 연결·저장소 등록 기능이 없다. Forge 도구가 `connectUrl`을 주거나
   Runway 도구의 `git_connection_required` 오류 메시지가 Studio 연결 링크를 주면 그 링크를 준다.

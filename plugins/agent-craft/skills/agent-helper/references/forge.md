@@ -23,7 +23,7 @@
 - **Git 단계**: `prepare`(Git 호스트 `origin`·저장소 경로 `repository`·작업 branch, 선택 base branch)·`review`·`commit`·`push`(`agent/` branch만)·`pull-request`는 요청 범위에서 실행한다.
   `prepare`의 base branch(`baseBranch`)를 생략하면 저장소의 기본 branch에서 시작한다. 결과의 `gitResult.baseBranch`가 실제로 쓴 branch다.
   연결한 계정이 Git 호스트에서 읽을 수 있는 저장소는 `prepare`하고, 쓸 수 있는 저장소에 커밋·게시한다.
-  `publish-protected`·`merge`·`tag`·`release`·`deploy`는 **보호된 작업**이며 Workspace 소유자가 Forge 콘솔에서 승인해야 한다.
+  `publish-protected`·`merge`·`tag`·`release`·`deploy`는 **보호된 작업**이며 Workspace 소유자가 Chat의 `git_approval_get` 화면(Studio 승인 카드 확인)이나 Forge 콘솔에서 승인해야 한다.
   `merge`는 저장소의 기본 branch로만 병합하므로 base branch가 기본 branch인 Workspace에서만 된다. 기본 branch는 `main`이 아닐 수 있다.
   `deploy`도 기본 branch에서만 workflow를 실행한다. `sourceRevision`으로 준비한 Workspace는 읽기 전용이며 `review` 밖의 Git 단계가 거절된다.
 - **승인 상태**: `git_approval_get`의 `status`는 `pending`(결정 대기)·`approved`·`rejected`·`executing`(효과 시작)과,
@@ -56,7 +56,7 @@
 
 Forge 콘솔은 페이지마다 전체 문서를 새로 불러온다.
 
-콘솔 전용 작업: 보호된 Git 작업 승인·거절(원래 소유자의 콘솔 세션만 가능).
+보호된 Git 작업 승인·거절은 Workspace 소유자만 한다. Chat의 승인 화면 버튼(`git_approval_decide`, 모델에게 보이지 않음)과 Studio 승인 카드, 또는 Forge 콘솔에서 결정한다.
 `publish-protected`·`merge`·`tag`의 승인 화면은 Workspace branch가 커밋한 변경(`prepare` 기준 커밋부터 승인할 HEAD까지의 diff)을 보여 준다.
 `merge`의 승인 화면에는 Git 호스트의 PR/MR을 여는 **PR 열기** 링크가 있다. `release`·`deploy`의 승인 화면은 diff 대신 승인 대상을 설명한다.
 Git 호스트 계정 연결·해제는 Forge 콘솔에서 하지 않는다. Git 호스트 탭은 연결 상태를 보여 주고 Studio의 연결 주소로 안내한다.
