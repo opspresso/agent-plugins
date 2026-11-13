@@ -10,8 +10,9 @@ Sandbox는 Forge 내부의 일시 실행 자원이다.
 
 1. 설치 측에서 Studio의 Forge 연결(`FORGE_URL`, `FORGE_OIDC_CLIENT_ID`, `FORGE_ORGANIZATION_ID`)과 Forge worker·Sandbox·모델 gateway를 설정한다.
 2. Agent에 Agent Forge 도구 항목을 연결한다. Studio는 MCP 요청마다 현재 사용자에게 위임한 단기 토큰을 보낸다.
+   승인 화면의 버튼을 쓰려면 Agent Forge 도구 binding에 `git_approval_decide`를 포함한다.
    실행 도구에는 Agent 실행이 가능한 사용자 등급이 필요하다.
-3. 사용자는 Forge 콘솔에서 작업 공간 프로필(실행 방식·중앙 모델·저장소 규칙·검사·배포 workflow)을 만들고 기본 프로필을 선택한다.
+3. 사용자는 Forge 콘솔에서 작업 공간 프로필(실행 방식·중앙 모델·저장소 규칙·검사·배포 workflow)을 만들고 기본 프로필을 선택한다. 기본 선택이 없으면 Studio 관리자가 정한 조직 기본 프로필이 적용된다.
 4. 사용자는 Agent Studio의 프로필 → Git 계정(`/profile/git`)에서 작업할 Git 호스트를 한 번 연결한다.
    Git 호스트는 GitHub(github.com·GitHub Enterprise Server)와 GitLab(GitLab.com·self-managed GitLab)이며, 운영자가 Studio에 등록한 호스트만 보인다.
    Forge 콘솔에는 계정 연결과 저장소 등록 기능이 없다. Forge 콘솔의 Git 호스트 탭은 연결 상태를 보여 주고 Studio의 연결 주소로 안내한다.
@@ -23,7 +24,7 @@ Agent는 그 주소를 사용자에게 전달한다.
 
 새 프로필의 저장소 규칙(`repositoryMode`) 기본값은 `all`(연결한 Git 계정이 접근할 수 있는 모든 저장소)이다.
 `selected`, `owners`, `new`는 프로필의 목록으로 저장소를 제한한다. `new`는 목록의 저장소와 Forge가 그 프로필로 생성한 저장소만 허용한다.
-규칙은 Git 권한을 넓히지 않는다. 보호 브랜치 게시·merge·tag·릴리즈·배포는 Forge 콘솔에서 작업 공간 소유자가 승인한다.
+규칙은 Git 권한을 넓히지 않는다. 보호 브랜치 게시·merge·tag·릴리즈·배포는 작업 공간 소유자가 Forge 콘솔이나 Studio Chat의 승인 화면(승인 카드 확인)에서 승인한다.
 
 ## 설명과 시스템 프롬프트
 
@@ -95,7 +96,7 @@ Git `prepare`를 실행한다. `baseBranch`를 생략하면 `prepare`가 `result
 - CSV·JSON·로그 분석, 파일 변환, 일괄 처리와 보고서 재료 생성도 같은 공간에서 수행한다.
   Chat 첨부의 자동 mount, 공개 미리보기, 다운로드 export, 호스트 접근은 제공되지 않는 한 약속하지 않는다.
   현재 Forge 도구에는 파일 인자가 없다.
-- Studio Chat에서 접수한 Run은 terminal 결과가 원래 Chat에 한 번 전달된다. 보호된 Git 작업은 Forge 콘솔 승인 뒤 실행되고
+- Studio Chat에서 접수한 Run은 terminal 결과가 원래 Chat에 한 번 전달된다. 보호된 Git 작업은 작업 공간 소유자가 Forge 콘솔이나 Studio Chat의 승인 화면(승인 카드 확인)에서 승인한 뒤 실행되고
   그 결과도 같은 방식으로 전달된다. 실패·거절·결과 불명인 동작을 자동 반복하지 않는다.
   Forge는 저장소의 기본 브랜치로만 병합한다. 기본 브랜치는 Git 호스트가 알려 준 값이며 `main`이 아니어도 된다.
   기준 브랜치가 기본 브랜치가 아닌 작업 공간의 `merge`는 접수할 때 `git_action_unsupported`로 거절되며,

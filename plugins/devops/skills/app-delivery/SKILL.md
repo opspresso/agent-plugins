@@ -171,8 +171,8 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
    거부되면 커밋하지 않고 오류 필드를 고치는 task를 낸 뒤 `review`부터 다시 한다.
 6. 부모가 Git `commit`·`push`·`pull-request` Run으로 PR/MR을 만든다. Git 작업을 task에 넣지 않는다. native Runtime은 커밋할 수 없다.
    `pull-request`는 승인을 만들지 않는다.
-7. PR/MR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approvalUrl`을 반환한다.
-   그 링크를 답변에 그대로 넣어 사용자에게 준다(`WaitForServiceWork`로 턴을 끝낼 때도 그 메시지에 넣는다). 병합 Run이 `succeeded`인지 확인한 뒤 3절로 간다. 승인 없이 다른 경로로 병합하지 않는다.
+7. PR/MR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approval.id`와 `approvalUrl`을 반환한다.
+   `git_approval_get` 화면을 Chat에 보여 소유자가 그 자리에서 승인하게 하고, 링크도 답변에 그대로 넣어 사용자에게 준다(`WaitForServiceWork`로 턴을 끝낼 때도 그 메시지에 넣는다). 병합 Run이 `succeeded`인지 확인한 뒤 3절로 간다. 승인 없이 다른 경로로 병합하지 않는다.
    Forge는 저장소의 기본 브랜치(`main`이 아닐 수 있다)로만 병합한다.
    Workspace의 기준 브랜치가 기본 브랜치가 아니면 `merge`가 `git_action_unsupported`로 거절되고 승인은 만들어지지 않는다.
    `baseBranch` 없이 준비한 Workspace는 기본 브랜치에서 시작하므로 이 이유로 거절되지 않는다.
