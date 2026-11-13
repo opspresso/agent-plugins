@@ -370,7 +370,7 @@ Project의 한 단계가 `https://<slug>.<도메인>`(환경 이름 없는 주�
 | `chosenBy` | 고른 주체. `auto`(Agent Runway 규칙), `person`(사람이 콘솔에서 골랐다), `agent`(Agent가 `project_configure`로 골랐다) |
 | `fixed` | 선택이 저장됐는지. `auto`는 환경 이름 없는 주소로 처음 배포하는 요청이 그 환경을 저장한다 |
 | `suggestion` | Agent Runway 규칙이 지금 고를 다른 단계. 없으면 `null`이다. 주소를 옮기지는 않는다 |
-| `moves[]` | 다음 배포에서 주소가 바뀌는 실행 중인 서비스 `{environment, from, to}`다. `from`·`to`는 도메인을 뺀 이름이고, 배열이 실행할 순서다 |
+| `moves[]` | 다음 배포에서 주소가 바뀌는 실행 중인 서비스 `{environment, from, to}`다. `from`·`to`는 전체 host 이름(예: `todo.apps.rovr.dev`)이고, 배열이 실행할 순서다 |
 
 - **Agent Runway 규칙**(`auto`): 이름이 `prd`·`prod`·`production`인 단계 중 Project 단계 순서(`order`)의 마지막 것을 고른다. 없으면 마지막 pipeline의 마지막 단계다.
   저장된 뒤에는 pipeline이나 환경을 더해도 주소가 옮겨지지 않는다. 규칙이 다른 단계를 고르게 되면 `suggestion`이 알려 준다.
@@ -378,10 +378,10 @@ Project의 한 단계가 `https://<slug>.<도메인>`(환경 이름 없는 주�
   `{bare: auto}`와 `null`은 Agent Runway 규칙으로 돌아간다. 사용자가 공개 주소를 받을 환경을 정했으면 그 환경으로 정한다.
   사용자가 Agent에게 맡기면 사용자가 공개할 환경을 고르고, `suggestion`이 있으면 그 단계를 먼저 검토한다.
   pipeline을 바꾼 뒤 `suggestion`이 생기면 사용자에게 알리고 옮길지 묻는다. 사용자의 동의 없이 옮기지 않는다.
-- **실행 중인 서비스의 주소 옮기기**: 환경 이름 없는 주소로 실행 중인 서비스가 있는데 다른 환경을 고르는 호출은 사람의 승인이 필요하다.
+- **실행 중인 서비스의 주소 옮기기**: 환경 이름 없는 주소로 실행 중이거나 배포 중인 서비스가 있는데 다른 환경을 고르는 호출은 사람의 승인이 필요하다.
   승인 표시가 없으면 Runway가 아무것도 바꾸지 않고 `person_approval_required`(403)로 거절한다. 호출하기 전에 사용자에게 다음을 알린다:
   옛 주소는 그 환경의 다음 배포부터 응답하지 않는다. 브라우저의 cookie·localStorage, OAuth redirect URI, 외부 webhook이 옛 주소에 묶여 있을 수 있다.
-  Studio가 이 호출에 승인 카드를 보여 주지 않아 거절되면, Project 소유자나 Studio 관리자가 Agent Runway 콘솔의 설정 탭(`/projects/<slug>/settings`)에서 바꾸게 안내한다.
+  Studio는 Agent 설정 `approvalTools`에 `project_configure`가 있을 때만 이 호출에 승인 카드를 보인다. 승인 카드 없이 거절되면, Agent 관리자가 `approvalTools`에 `project_configure`를 넣거나 Project 소유자나 Studio 관리자가 Agent Runway 콘솔의 설정 탭(`/projects/<slug>/settings`)에서 바꾸게 안내한다.
 - **적용 시점**: 바뀐 주소는 각 환경의 다음 `deploy`·`promote`부터 적용된다. 실행 중인 서비스는 그때까지 주소를 유지한다.
   주소를 내놓는 환경을 먼저 다시 배포한다. 예: `prod`에서 `stg`로 옮기면 `prod`에 한 번 다시 배포해 `<slug>-prod`로 옮긴 뒤 `stg`에 배포한다.
   순서를 지키지 않으면 `host_conflict`다. `host.moves`가 그 순서를 준다.
