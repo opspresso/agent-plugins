@@ -234,6 +234,7 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
    - trigger의 `kind`가 `tag`인 pipeline의 첫 단계는 trigger와 맞는 태그만 `ref`로 받는다. `ref`가 없으면 `ref_required`(400),
      맞지 않는 이름이면 `ref_not_allowed`다. `release`를 보내면 그 Release의 `tag`가 trigger와 맞아야 한다.
      배포할 태그는 사용자에게 확인한다. 저장소에 그 태그가 없으면 `ref_not_found`다.
+     태그를 새로 만들면 workspace-task의 tag 규칙대로 기본 브랜치의 commit에 단다. PR/MR을 병합한 Workspace의 HEAD에 달지 않는다.
    - push 배포를 켠 Project(`project_get`의 `push.state`가 `on`)는 trigger(`project_status`의 `pipelines[].trigger`)와 맞는 push를
      Runway가 그 pipeline의 첫 단계에 배포한다. push가 여러 pipeline의 trigger와 맞으면 맞는 pipeline마다 첫 단계에 배포하고, pipeline마다 자기 Release를 build한다.
      그래서 병합 직후의 `deploy`가 `deployment_in_progress`일 수 있다. 이때는 새로 요청하지 않고 `project_status`의 그 단계 `inProgress.deploymentId`를
