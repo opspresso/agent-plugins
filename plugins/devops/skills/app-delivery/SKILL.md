@@ -227,13 +227,14 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
    Forge가 병합한 PR/MR은 기본 브랜치에 들어가므로 병합 뒤의 첫 배포는 `ref` 없이 호출한다. 다른 branch·tag·commit을 배포할 때만 `ref`를 보낸다.
    응답의 `ref`·`commit`이 실제로 build한 branch와 commit이다.
    Agent Runway가 호출한 사용자의 Git 계정으로 저장소를 읽고, 그 commit을 Project 런타임의 architecture로 build해 Release(`r<n>`)를 만들고 배포한다.
-   같은 commit을 같은 선언으로 build한 Release가 있으면 다시 build하지 않고 그 Release를 쓴다.
+   같은 pipeline에서 같은 commit을 같은 선언으로 build한 Release가 있으면 다시 build하지 않고 그 Release를 쓴다.
+   다른 pipeline이 build한 Release는 쓰지 않는다. 예: `main`이 build한 commit에 `v*` 태그를 달면 태그 pipeline이 그 commit을 다시 build한다.
    Git 계정이나 `ref` 때문에 거절되면 [저장소 접근](#저장소-접근)의 code별 행동에 따른다.
    - trigger의 `kind`가 `tag`인 pipeline의 첫 단계는 trigger와 맞는 태그만 `ref`로 받는다. `ref`가 없으면 `ref_required`(400),
      맞지 않는 이름이면 `ref_not_allowed`다. `release`를 보내면 그 Release의 `tag`가 trigger와 맞아야 한다.
      배포할 태그는 사용자에게 확인한다. 저장소에 그 태그가 없으면 `ref_not_found`다.
    - push 배포를 켠 Project(`project_get`의 `push.state`가 `on`)는 trigger(`project_status`의 `pipelines[].trigger`)와 맞는 push를
-     Runway가 그 pipeline의 첫 단계에 배포한다. push가 여러 pipeline의 trigger와 맞으면 맞는 pipeline마다 첫 단계에 배포하고 Release 하나를 함께 쓴다.
+     Runway가 그 pipeline의 첫 단계에 배포한다. push가 여러 pipeline의 trigger와 맞으면 맞는 pipeline마다 첫 단계에 배포하고, pipeline마다 자기 Release를 build한다.
      그래서 병합 직후의 `deploy`가 `deployment_in_progress`일 수 있다. 이때는 새로 요청하지 않고 `project_status`의 그 단계 `inProgress.deploymentId`를
      `deployment_get`으로 한 번 읽어 그 Deployment를 따른다. push 배포를 켜지 않은 Project는 병합만으로 배포되지 않으므로 `deploy`를 호출한다.
 2. 다음 단계는 `promote`(`project`, `from`, `idempotencyKey`)로 같은 Release를 배포한다. `from` 단계의 `next`가 배포될 단계다.
