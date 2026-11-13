@@ -114,6 +114,9 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
    질문(`questions`), 없는 파일(`missing`)을 준다. 파일을 직접 읽어 짐작하지 않는다. 사용자에게 파일을 만들라고 하지 않는다.
    결과의 `directories`에 앱이 여럿이면 배포할 앱의 `directory`로 다시 호출한다.
    `git_connection_required`·`repository_access_denied`·`ref_not_found`·`source_too_large`·`source_busy`는 [저장소 접근](#저장소-접근)에 따른다.
+   분석은 사용자당 한 번에 하나만 실행된다. `source_busy`는 `Retry-After` 뒤에 다시 호출하고, 그사이 다른 분석을 시작하지 않는다.
+   `inspection_too_complex`(422)이면 `directories`에서 배포할 앱의 `directory`로 다시 호출한다. `limits.*Omitted`가 0이 아니면 결과가 잘린 것이므로 그 앱의 `directory`로 다시 분석한다.
+   `detected.variables[].value`는 예시 파일(`.env.example` 등)의 기본값만 담는다. 커밋된 `.env`의 값은 읽지 않으므로, 값이 없는 이름은 질문 답이나 `variables_set`으로 채운다.
 3. `application.yaml`이 없으면 [pipeline 선택](#pipeline-선택)으로 pipeline을 정하고 `project_ensure`(`repository`, `default`가 아니면 `pipeline`)로
    Project를 확인한 뒤 `project_status`로 pipeline과 단계를 읽는다. `slug`는 넘기지 않는다.
    Agent Runway가 저장소 이름으로 정하고, 그 slug가 예약돼 있으면 다음 접미사(`-2`, `-3` …)를 고른다. 삭제된 Project의 slug도 영구히 예약된다.
@@ -312,10 +315,12 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
     [pipeline 변경](#pipeline-변경)의 절차를 따른다. 새 pipeline에 맞지 않는 Project 값(단계가 아닌 환경의 크기 등)은 제거된다.
   - 생략한 필드는 그대로 유지된다. `invalid_pipeline`이면 메시지가 위반을 모두 알려 준다.
   - `sizes`·`trigger`·`installScript`·`suffixEveryStage`는 서비스가 배포돼 있어도 바꿀 수 있다.
-- **환경마다 다른 값**: 비밀이 아닌 값도 환경마다 다르면 `env`가 아니라 Variable로 둔다. Agent가 `variables_set`(`project`, `environment`, `values`)으로
-  설정한다. 소유자·관리자만 호출할 수 있고 값은 반환되지 않는다. 앱은 다음 배포부터 받는다. 소유자가 콘솔(`/projects/<slug>/variables`)에서 입력해도 된다.
-  그 이름은 `application.yaml`의 `env`와 `secrets`에 쓰지 않는다. 선언한 `secrets`의 이름, 환경의 secret, 자격 증명 형태의 이름(`…_TOKEN`, `…_KEY`,
-  `DATABASE_URL` 등)은 `variable_is_secret`로 거절되므로 메시지의 링크를 사용자에게 준다. 적용한 `env`에 있는 이름은 `variable_declared`, 리소스가 주는 이름은 `variable_conflict`다.
+- **환경마다 다른 값**: 비밀이 아닌 값도 환경마다 다르면 `env`가 아니라 Variable로 둔다. Agent가 `variables_set`(`project`, `environment`, `values`, `idempotencyKey`)으로
+  설정한다. `idempotencyKey`는 요청마다 새로 만든다. 응답을 잃었을 때만 같은 키와 값으로 다시 보낸다. 값을 바꿀 때는 새 키를 쓴다.
+  소유자·관리자만 호출할 수 있고 값은 반환되지 않는다. 결과의 `applied[]`는 쓴 Variable이고 `failed[]`는 쓰지 못한 Variable과 `code`다. `failed[]`가 있으면 그 이름만 새 키로 다시 보내거나 `code`에 따라 처리한다.
+  앱은 다음 배포부터 값을 받는다. 소유자가 콘솔(`/projects/<slug>/variables`)에서 입력해도 된다. 그 이름은 `application.yaml`의 `env`와 `secrets`에 쓰지 않는다.
+  다음은 `variable_is_secret`으로 거절된다: 선언한 `secrets`의 이름, 환경의 secret, 자격 증명 형태의 이름(`…_TOKEN`, `…_KEY`, `…_PASSWORD`, `…_WEBHOOK`, `DATABASE_URL` 등), 자격 증명 형태의 값(token, JWT, webhook URL, 비밀번호가 든 URL, 개인 키, 긴 무작위 문자열). 거절되면 메시지의 링크를 사용자에게 주고, 값을 Chat에 다시 쓰거나 붙여 넣으라고 하지 않는다.
+  적용한 `env`에 있는 이름은 `variable_declared`, 리소스가 주는 이름은 `variable_conflict`다.
 - 장애 조사는 `incident-triage`를 쓴다. `eks` pipeline의 앱 namespace는 `app-<slug>-<env>`, Deployment 이름은 `app`이다.
 - Project 삭제를 요청받으면 `project_delete`(`project`, `confirmation`: slug)를 한 번 호출한다. Studio가 사람에게 승인을 받은 뒤 실행되고,
   Agent Runway가 모든 환경의 서비스를 제거한 뒤 모든 리소스와 그 데이터, Project를 차례로 지운다. 되돌릴 수 없다.
