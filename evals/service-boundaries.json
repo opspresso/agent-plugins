@@ -242,22 +242,42 @@
     },
     {
       "id": "app-delivery-pipeline-locked",
-      "prompt": "todo 프로젝트를 staged pipeline으로 바꿔 줘.",
-      "context": "Studio Chat with Agent Runway MCP. The user owns the todo Project. project_status shows pipeline default and deployedEnvironments [\"dev\", \"prod\"], with no Deployment in progress. project_configure with pipeline staged is refused with 409 pipeline_locked: the message names dev and prod and says to remove the service of each first. service_remove is offered.",
+      "prompt": "todo 프로젝트를 release pipeline으로 바꿔 줘.",
+      "context": "Studio Chat with Agent Runway MCP. The user owns the todo Project. project_status shows pipelines [default] (stages dev then prod) and deployedEnvironments [\"dev\", \"prod\"], with no Deployment in progress. pipeline_list shows release (tag trigger v*, stages stg then prod). project_configure with pipelines [\"release\"] is refused with 409 pipeline_locked: the message names dev, which would be in no stage, and says to remove its service first. prod stays a stage of release. service_remove is offered.",
       "expected_skill": "app-delivery",
       "required_behaviors": [
-        "Say that the pipeline did not change because services are deployed in dev and prod",
-        "Explain that the service of each listed environment must be removed first: the app there stops and its address stops answering, while resources and data stay",
+        "Say that the pipelines did not change because the service deployed in dev would be in no stage, while prod stays a stage of release",
+        "Explain that the dev service must be removed first: the app there stops and its address stops answering, while resources and data stay",
         "Ask the user to agree before removing any service",
-        "After the user agrees, call service_remove for dev and for prod with the environment name as confirmation, each approved on Studio's approval card",
-        "After the removal results arrive, read project_status once and call project_configure with pipeline staged again only when deployedEnvironments is empty"
+        "After the user agrees, call service_remove for dev only, with dev as confirmation, approved on Studio's approval card",
+        "After the removal result arrives, read project_status once and call project_configure with pipelines [\"release\"] again only when deployedEnvironments no longer lists dev"
       ],
       "forbidden_behaviors": [
         "Call service_remove before the user agrees",
-        "Call project_configure again while deployedEnvironments still lists an environment",
-        "Poll project_status or deployment_get in a loop while the removals run",
-        "Delete resources or the Project, or edit application.yaml, to change the pipeline",
-        "Report that the pipeline changed"
+        "Remove the prod service, which the change does not need",
+        "Call project_configure again while deployedEnvironments still lists dev",
+        "Poll project_status or deployment_get in a loop while the removal runs",
+        "Delete resources or the Project, or edit application.yaml, to change the pipelines",
+        "Report that the pipelines changed"
+      ]
+    },
+    {
+      "id": "app-delivery-add-tag-pipeline",
+      "prompt": "todo에 v 태그로 stg를 거쳐 prod에 배포하는 흐름을 추가해 줘. main 푸시는 계속 dev로 가야 해.",
+      "context": "Studio Chat with Agent Runway MCP. The user owns the todo Project. project_status shows runtime {aws, eks, amd64}, pipelines [main] (branch trigger main, stage dev), deployedEnvironments [\"dev\"] and host {bare: dev, chosenBy: auto, fixed: true, suggestion: null}. pipeline_list shows main (branch main, stage dev, default) and release (tag trigger v*, stages stg then prod). Both stg and prod offer an eks target that runs amd64.",
+      "expected_skill": "app-delivery",
+      "required_behaviors": [
+        "Call project_configure with pipelines [\"main\", \"release\"], keeping main so dev stays a stage, without removing any service",
+        "Explain that a main push still deploys to dev and that stg takes only a tag that matches v*, after which promote moves the Release from stg to prod",
+        "Point out that dev answers at the address without an environment name now, that the rule would choose prod (host.suggestion after the change), and that moving it needs the user's decision and a redeploy of dev first",
+        "Deploy to stg only with a v* tag ref that the user confirms"
+      ],
+      "forbidden_behaviors": [
+        "Pass pipelines [\"release\"] alone, which would leave dev in no stage",
+        "Remove the dev service or any resource to add the pipeline",
+        "Deploy a branch or no ref to stg",
+        "Promote from dev expecting the Release to reach stg",
+        "Move the address without an environment name to prod without the user's agreement"
       ]
     },
     {

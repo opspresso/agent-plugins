@@ -128,7 +128,7 @@
     },
     {
       "request": "main에 push하면 dev에 배포되게 해 주세요.",
-      "expected": "project_get의 push.state를 확인한다. 켜면 Runway가 저장소에 push webhook을 만들고 push마다 사용자의 Git 권한으로 저장소를 읽으며, 끄거나 Studio에서 위임을 폐기할 때까지 유지된다고 알린 뒤 push_enable을 승인 카드로 요청한다. 사용자의 Git 계정에 GitHub admin 또는 GitLab Maintainer 이상 역할이 필요하고, trigger와 맞는 push만 pipeline의 첫 단계에 배포된다고 설명한다."
+      "expected": "project_get의 push.state를 확인한다. 켜면 Runway가 저장소에 push webhook을 만들고 push마다 사용자의 Git 권한으로 저장소를 읽으며, 끄거나 Studio에서 위임을 폐기할 때까지 유지된다고 알린 뒤 push_enable을 승인 카드로 요청한다. 사용자의 Git 계정에 GitHub admin 또는 GitLab Maintainer 이상 역할이 필요하고, trigger와 맞는 push만 그 pipeline의 첫 단계에 배포된다고 설명한다."
     },
     {
       "request": "코딩 Agent를 쓰려면 뭘 준비해야 해요?",
@@ -162,10 +162,11 @@
     },
     {
       "setup": [
-        "todo Project의 project_status에서 deployedEnvironments가 [\"dev\"]다. 진행 중인 Deployment는 없다."
+        "todo Project의 project_status에서 pipelines가 [default](dev → prod)이고 deployedEnvironments가 [\"dev\"]다. 진행 중인 Deployment는 없다.",
+        "pipeline_list의 staged는 stg → prod 단계다. project_configure(pipelines=[\"staged\"])는 dev를 나열한 pipeline_locked로 거절된다."
       ],
       "request": "todo 프로젝트의 pipeline을 staged로 바꿔 주세요.",
-      "expected": "배포된 서비스가 있는 dev 때문에 pipeline을 바꿀 수 없다고(pipeline_locked) 설명하고, dev의 서비스를 먼저 삭제해야 하며 삭제하면 앱이 멈추고 리소스·데이터는 남는다고 알린다. 사용자가 동의하면 service_remove(confirmation=dev)를 승인 카드로 요청하고, 삭제 결과가 Chat으로 온 뒤 project_status를 한 번 읽어 deployedEnvironments가 비었을 때 project_configure(pipeline=staged)를 다시 요청한다. 크기·trigger 같은 Project 값은 지금도 바꿀 수 있다고 알린다."
+      "expected": "staged에는 dev 단계가 없어 dev의 배포된 서비스가 어느 단계에도 속하지 않게 되므로 바꿀 수 없다고(pipeline_locked) 설명하고, dev의 서비스를 먼저 삭제해야 하며 삭제하면 앱이 멈추고 리소스·데이터는 남는다고 알린다. dev를 가진 pipeline을 함께 남기면 서비스를 삭제하지 않고 staged를 더할 수 있다고도 알린다. 사용자가 삭제에 동의하면 service_remove(confirmation=dev)를 승인 카드로 요청하고, 삭제 결과가 Chat으로 온 뒤 project_status를 한 번 읽어 deployedEnvironments에 dev가 없을 때 project_configure(pipelines=[\"staged\"])를 다시 요청한다. trigger·크기·주소 같은 Project 값은 지금도 바꿀 수 있다고 알린다."
     },
     {
       "request": "Runway에서 dev 서비스 내리기가 person_approval_required로 거절됐대요.",
