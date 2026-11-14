@@ -38,7 +38,7 @@
 | 401 (`Studio authorization required` 등) | 전체 | 다시 로그인하고 요청을 다시 시도한다 |
 | `reauthorization_required` (403) | Forge | 이전 위임으로 접수된 Run은 계속할 수 없다. 새 Run을 제출한다 |
 | Git 연결·저장소 오류(`git_connection_required`, `git_repository_not_found`, `git_account_changed` 등) | Forge | [forge](forge.md#오류) — 계정 연결은 Studio의 프로필 → Git 계정에서 한다. 저장소는 등록하지 않는다 |
-| Git merge 승인 대기·만료 | Forge | [forge](forge.md#오류) — 승인 기한은 Run 접수 후 50분이다 |
+| Git merge 승인 대기·만료 | Forge | [forge](forge.md#오류) — 승인 기한은 Run 접수 후 24시간이다 |
 | Git 계정·저장소 오류(`git_connection_required`, `repository_access_denied`, `ref_not_found`, `push_delegation_invalid` 등) | Runway | [delivery](delivery.md#오류) — Runway는 요청한 사용자(push 배포는 켠 사용자)의 Git 계정으로 저장소를 읽는다. 계정 연결은 Studio의 프로필 → Git 계정에서 한다 |
 | 배포 실패 | Runway | `deployment_get`의 `errorCode`와 `deployment_logs`. [delivery](delivery.md#오류) |
 | `environment_not_ready` | Runway | 오류 메시지의 원인을 따른다. 값 없는 secret은 입력 링크를 주고, `failed` 리소스는 다시 만든다. [delivery](delivery.md#오류) |
