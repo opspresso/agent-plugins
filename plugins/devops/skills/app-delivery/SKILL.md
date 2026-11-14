@@ -202,6 +202,8 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
    기존 Project에 그 Project의 것과 다른 `pipelines`를 넘기면 `pipeline_mismatch`로 실패한다.
    새 Project를 만드는 `project_apply`는 호출한 사용자의 Git 계정이 저장소를 읽을 수 있는지 확인한다([저장소 접근](#저장소-접근)).
    Runway는 그 revision의 파일 SHA-256이 적용한 내용과 같은지 확인하므로, 한 글자라도 다르면 `application_changed`로 실패한다.
+   마지막 줄바꿈 하나만 달라도 다르다. 그래서 내용을 기억이나 task 입력에서 다시 쓰지 않는다. `repository_inspect`(`ref`: 배포할 revision)가
+   돌려준 `application`(저장소 파일이 유효하면 그 파일의 원문)을 바꾸지 않고 `application`에 넘긴다.
 2. `project_apply`는 리소스를 만들지 않는다. 응답의 `application.environments`가 단계마다 `resources`(이미 있는 리소스와 상태)와
    `missingSecrets`를 준다. 앱이 기본 설정으로 시작하는 데 필요한 리소스 중 없는 것을 `resource_create`로 만든다.
    - 리소스는 환경 하나에 속한다. 앱이 실행될 단계마다 한 번씩, 같은 `name`·`template`으로 호출한다. 그 단계의 첫 Deployment 전에 만든다.
