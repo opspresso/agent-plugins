@@ -113,11 +113,15 @@ env:
 - 컨테이너는 privilege escalation 없이, 모든 capability를 뺀 상태로 실행된다. 1024 미만 포트를 쓰지 않는다.
 - 외부 연결은 HTTPS(443)와 Agent Runway PostgreSQL만 허용된다. 다른 포트의 외부 API는 쓸 수 없다.
 - 기동 후 3분 안에 health 경로가 2xx를 반환해야 한다. DB migration은 기동 시 실행하되 실패하면 health가 실패하게 한다.
+- DB가 재시작되거나 잠시 끊겨도 프로세스를 끝내지 않는다. 공유 DB 풀은 노드 교체(Spot 회수 등)로 1~3분 멈출 수 있다.
+  - 연결 pool의 오류 이벤트를 처리한다. Node.js `pg`는 처리기가 없으면 끊긴 유휴 연결의 오류로 프로세스를 끝낸다.
+  - 기동 시 migration이 실패하면 성공할 때까지 몇 초 간격으로 다시 시도한다. 한 번만 시도하면 DB가 돌아와도 startup probe가 끝날 때까지 health가 실패한다.
 - 로그는 stdout·stderr로 쓴다. 비밀 값을 로그에 쓰지 않는다.
 
 ## Node.js 예시
 
-PostgreSQL을 쓰는 앱의 예시다. 기동 시 migration을 실행하고, `/health`는 migration 성공과 DB 연결을 매번 확인한다.
+PostgreSQL을 쓰는 앱의 예시다. 기동 시 migration을 성공할 때까지 실행하고, `/health`는 migration 성공과 DB 연결을 매번 확인한다.
+DB가 재시작되면 pool이 끊긴 연결을 버리고 다음 요청에서 새로 연결한다.
 `DATABASE_URL`은 리소스 이름이 Project slug와 같을 때의 Variable이다. 의존성은 `pg`다.
 
 ```dockerfile
@@ -137,17 +141,24 @@ CMD ["node", "server.js"]
 ```
 
 ```js
-// server.js: PORT, 기동 시 migration, DB를 확인하는 /health
+// server.js: PORT, 성공할 때까지 다시 하는 기동 시 migration, DB를 확인하는 /health
 import http from "node:http";
 import pg from "pg";
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
+// 처리기가 없으면 DB 재시작으로 끊긴 유휴 연결의 오류가 프로세스를 끝낸다. pool은 그 연결을 버린다.
+pool.on("error", (error) => console.error("idle database connection lost:", error.message));
 let migrated = false;
 async function migrate() {
-  await pool.query("CREATE TABLE IF NOT EXISTS todo (id serial PRIMARY KEY, title text NOT NULL)");
-  migrated = true;
+  try {
+    await pool.query("CREATE TABLE IF NOT EXISTS todo (id serial PRIMARY KEY, title text NOT NULL)");
+    migrated = true;
+  } catch (error) {
+    console.error("migration failed, retrying in 5 s:", error.message);
+    setTimeout(migrate, 5000);
+  }
 }
-migrate().catch((error) => console.error("migration failed:", error.message));
+migrate();
 
 const server = http.createServer(async (req, res) => {
   if (req.url === "/health") {
