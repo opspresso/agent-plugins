@@ -63,6 +63,7 @@
 | `pipeline_list` | 설치의 pipeline(이름·`default`·`trigger`·`stages`)과 cloud별 target type(`targetTypes`) | 읽기 전용. 새 Project의 pipeline을 고르거나 `project_configure` 전에 읽는다 |
 | `release_list`, `release_get` | Release와 단계별 Deployment 이력 | 읽기 전용. `deployable: false`인 Release는 다시 배포할 수 없다 |
 | `deployment_list`, `deployment_get`, `deployment_logs` | 배포 목록·상태·스텝 로그(마지막 64 KiB) | 읽기 전용. 승인 대기면 `approvalUrl`이 있다. 로그는 workflow 실행 중과 끝난 뒤 하루 동안 있다 |
+| `service_logs` | 실행 중인 앱의 Pod 상태와 앱 출력(현재·재시작 전, 합계 64 KiB) | 읽기 전용, `eks`만. 시크릿 값은 `***`로 가린다. 앱이 503·무응답일 때 원인을 읽는다 |
 | `deployment_lookup_request` | 응답 유실 복구 | 같은 `idempotencyKey`로 조회한다 |
 | `application_validate` | `application.yaml` 검사 | 아무것도 만들거나 바꾸지 않는다 |
 | `project_ensure`, `project_apply` | Project 생성, `application.yaml` 적용 | 리소스를 만들지 않는다. `pipelines`(이름 배열)와 `runtime`은 새 Project에만 쓴다. 기존 Project의 `project_apply`에 다른 `pipelines`를 주면 `pipeline_mismatch`다. 새 Project를 만들 때는 호출한 사용자의 Git 계정이 저장소를 볼 수 있어야 한다. `project_apply`는 단계마다 리소스 상태와 값이 없는 secret의 입력 링크를 돌려준다 |

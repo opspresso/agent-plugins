@@ -41,6 +41,7 @@
 | Git merge 승인 대기·만료 | Forge | [forge](forge.md#오류) — 승인 기한은 Run 접수 후 24시간이다 |
 | Git 계정·저장소 오류(`git_connection_required`, `repository_access_denied`, `ref_not_found`, `push_delegation_invalid` 등) | Runway | [delivery](delivery.md#오류) — Runway는 요청한 사용자(push 배포는 켠 사용자)의 Git 계정으로 저장소를 읽는다. 계정 연결은 Studio의 프로필 → Git 계정에서 한다 |
 | 배포 실패 | Runway | `deployment_get`의 `errorCode`와 `deployment_logs`. [delivery](delivery.md#오류) |
+| 배포한 앱이 503·무응답 | Runway | `service_logs`로 Pod 상태(재시작, 종료 원인)와 앱 출력을 읽는다. [delivery](delivery.md#오류) |
 | `environment_not_ready` | Runway | 오류 메시지의 원인을 따른다. 값 없는 secret은 입력 링크를 주고, `failed` 리소스는 다시 만든다. [delivery](delivery.md#오류) |
 | `pipeline_required`, `environment_not_in_pipeline`, `release_outdated`, `ref_not_allowed` | Runway | pipeline을 고르지 않았거나 Project의 런타임·pipeline과 맞지 않는 요청이다. `pipeline_list`와 `project_status`의 `runtime`·`pipelines`를 확인한다. [delivery](delivery.md#오류) |
 | 런타임이나 pipeline을 바꿀 수 없음(`pipeline_locked`, `project_in_use`) | Runway | 배포된 서비스나 리소스가 그 변경을 막는다. `project_status`의 `deployedEnvironments`를 확인하고 [delivery](delivery.md#런타임과-pipeline-변경)의 절차를 따른다 |
