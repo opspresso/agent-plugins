@@ -79,7 +79,7 @@ PR/MR 설명 형식이 필요하고 `pr-description`이 연결됐으면 해당 S
   `merge`의 승인 화면에는 Git 호스트의 PR/MR을 여는 링크도 있다. `release`·`deploy`의 승인 화면에는 diff가 없다.
   커밋하지 않은 변경은 어떤 보호 작업도 게시하지 않으며 승인 화면에도 나오지 않는다.
 - 보호 작업이 `sandbox_outdated`(409)로 거절되면 Git `review`를 한 번 실행하고, 그 결과의 `headSha`·`fingerprint`로 다시 제출한다.
-- 보호 작업의 Run은 요청한 `timeoutMs`와 관계없이 제한 시간이 1시간이다. 승인 기한은 접수 후 50분이다.
+- 보호 작업의 Run은 요청한 `timeoutMs`와 관계없이 제한 시간이 24시간 10분이다. 승인 기한은 접수 후 24시간이다. 승인을 기다리는 동안 그 Workspace는 다른 Run을 받지 않으므로(`Workspace already has an active run`), 새 Run을 제출하지 말고 `git_approval_get`으로 상태를 확인한다.
   기한이 지나면 승인할 수 없고 Forge가 Run을 취소한다. 거절·만료·취소는 효과를 막는다.
 - `git_approval_get`의 `status`는 `pending`(결정 대기), `approved`, `rejected`, `executing`(효과 시작, Run이 끝나지 않음)과
   Run이 끝난 뒤의 값이다. `pending`·`executing`은 Run이 끝나면 남지 않는다.
