@@ -112,7 +112,9 @@ env:
 - `PORT`에서 HTTP를 받는다. TLS는 플랫폼이 처리한다.
 - 컨테이너는 privilege escalation 없이, 모든 capability를 뺀 상태로 실행된다. 1024 미만 포트를 쓰지 않는다.
 - 외부 연결은 HTTPS(443)와 Agent Runway PostgreSQL만 허용된다. 다른 포트의 외부 API는 쓸 수 없다.
-- 기동 후 3분 안에 health 경로가 2xx를 반환해야 한다. DB migration은 기동 시 실행하되 실패하면 health가 실패하게 한다.
+- 기동 후 3분 안에 health 경로가 2xx를 반환해야 한다. DB migration은 기동 시 실행하고, 성공하기 전에는 health가 실패하게 한다.
+- health 경로는 startup·readiness·liveness probe가 함께 쓴다. migration이 성공한 뒤에는 일시적 DB 장애로 health를 실패시키지 않는다.
+  liveness가 실패하면 kubelet이 앱을 재시작하는데, 재시작은 DB를 고치지 못하고 재시작 대기(최대 5분)만 늘린다. DB가 필요한 요청은 앱이 503으로 답한다.
 - DB가 재시작되거나 잠시 끊겨도 프로세스를 끝내지 않는다. 공유 DB 풀은 노드 교체(Spot 회수 등)로 1~3분 멈출 수 있다.
   - 연결 pool의 오류 이벤트를 처리한다. Node.js `pg`는 처리기가 없으면 끊긴 유휴 연결의 오류로 프로세스를 끝낸다.
   - 기동 시 migration이 실패하면 성공할 때까지 몇 초 간격으로 다시 시도한다. 한 번만 시도하면 DB가 돌아와도 startup probe가 끝날 때까지 health가 실패한다.
@@ -120,8 +122,8 @@ env:
 
 ## Node.js 예시
 
-PostgreSQL을 쓰는 앱의 예시다. 기동 시 migration을 성공할 때까지 실행하고, `/health`는 migration 성공과 DB 연결을 매번 확인한다.
-DB가 재시작되면 pool이 끊긴 연결을 버리고 다음 요청에서 새로 연결한다.
+PostgreSQL을 쓰는 앱의 예시다. 기동 시 migration을 성공할 때까지 실행하고, `/health`는 migration이 성공했는지만 본다.
+DB가 재시작되면 pool이 끊긴 연결을 버리고 다음 요청에서 새로 연결한다. 그동안 DB가 필요한 요청은 503을 받는다.
 `DATABASE_URL`은 리소스 이름이 Project slug와 같을 때의 Variable이다. 의존성은 `pg`다.
 
 ```dockerfile
@@ -141,7 +143,7 @@ CMD ["node", "server.js"]
 ```
 
 ```js
-// server.js: PORT, 성공할 때까지 다시 하는 기동 시 migration, DB를 확인하는 /health
+// server.js: PORT, 성공할 때까지 다시 하는 기동 시 migration, migration 성공을 알리는 /health
 import http from "node:http";
 import pg from "pg";
 
@@ -160,21 +162,26 @@ async function migrate() {
 }
 migrate();
 
+const json = (res, status, body) => {
+  res.writeHead(status, { "content-type": "application/json" });
+  res.end(JSON.stringify(body));
+};
+
 const server = http.createServer(async (req, res) => {
-  if (req.url === "/health") {
+  // liveness probe이기도 하므로 DB의 현재 상태를 보지 않는다. migration 전에만 실패한다.
+  if (req.url === "/health") return json(res, migrated ? 200 : 503, { ok: migrated });
+  if (req.url === "/todos" && req.method === "GET") {
     try {
-      if (!migrated) throw new Error("migration not complete");
-      await pool.query("SELECT 1");
-      res.writeHead(200, { "content-type": "application/json" });
-      return res.end('{"ok":true}');
-    } catch {
-      res.writeHead(503, { "content-type": "application/json" });
-      return res.end('{"ok":false}');
+      const { rows } = await pool.query("SELECT id, title FROM todo ORDER BY id");
+      return json(res, 200, rows);
+    } catch (error) {
+      console.error("database unavailable:", error.message);
+      return json(res, 503, { error: "database unavailable" });
     }
   }
-  res.writeHead(404); res.end();
+  json(res, 404, { error: "not found" });
 });
 server.listen(Number(process.env.PORT ?? 8080));
 ```
 
-리소스가 없는 앱은 `/health`에서 DB 확인을 뺀다.
+리소스가 없는 앱의 `/health`는 기동 즉시 2xx를 반환한다.

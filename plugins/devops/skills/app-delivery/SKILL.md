@@ -175,8 +175,10 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
      부모가 `application_validate`로 통과한 전체 내용을 task에 그대로 넣고, runtime이 그 내용으로 파일을 쓰게 한다. runtime은 스키마를 모르므로 직접 짓게 하지 않는다.
    - `Dockerfile`: Project 런타임의 architecture 하나(`linux/amd64` 또는 `linux/arm64`, `project_status`의 `runtime.architecture`)로 빌드되고,
      `PORT` 환경 변수의 포트에서 HTTP를 받는다. 빌드는 commit의 소스 아카이브로 하므로 `.git`·submodule·Git LFS 객체에 의존하지 않는다.
-   - health 경로(기본 `/health`): 리소스를 쓰는 앱은 매 요청에서 각 리소스에 실제로 연결하고(PostgreSQL은 `SELECT 1`)
-     기동 시 migration이 성공했을 때만 2xx를 반환한다. Runway의 verify는 이 경로만 확인하므로 고정 응답은 DB 장애를 숨긴다.
+   - health 경로(기본 `/health`): 리소스를 쓰는 앱은 기동 시 각 리소스에 연결하고 migration이 성공한 뒤에만 2xx를 반환한다.
+     Runway의 verify는 이 경로만 확인하므로, 기동 전부터 2xx인 고정 응답은 잘못된 연결 값을 숨긴다.
+     그 뒤의 일시적 DB 장애로는 health를 실패시키지 않는다. 이 경로는 liveness probe이기도 하다. 실패하면 kubelet이 앱을 재시작하고,
+     재시작이 쌓이면 재시작 대기(최대 5분)가 길어져 DB가 돌아온 뒤 복구가 늦어진다. DB가 필요한 요청은 앱이 503으로 답한다.
    - DB 재시작: 앱은 DB가 잠시 끊겨도 종료되지 않고 다시 연결한다. 연결 pool의 오류 이벤트를 처리하고, 기동 시 migration은 성공할 때까지 다시 시도한다.
    - 테스트 명령: 외부 리소스 없이 끝나야 한다. Runway의 test 스텝에는 Agent Runway Variable이 없다.
    - 언어 런타임 버전: `test.image`와 Dockerfile의 base image는 Forge Run이 checks를 실행하는 런타임과 같은 메이저 버전으로 한다
