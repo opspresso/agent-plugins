@@ -184,6 +184,6 @@ push 배포는 설정 탭이나 `push_enable`·`push_disable`로 켜고 끈다. 
 | `push_busy` (409) | 같은 Project의 push 배포 켜기·끄기는 한 번에 하나만 진행한다. 다른 변경이 진행 중이라 기다리지 않고 거절됐다. 메시지의 시간(5초) 뒤에 다시 호출한다. `push_enable`을 다시 호출하면 승인 카드도 다시 뜬다 |
 | `checkout_failed` | `prepare` 스텝의 실패다. push한 commit이 저장소에 없거나, build가 소스 아카이브를 풀지 못했다 |
 | `test_failed`, `build_failed`, `deploy_failed`, `verify_failed` | `deployment_logs(deploymentId, step)`로 원인을 읽는다. verify는 health 경로가 2xx를 돌려줘야 한다 |
-| `deployment_not_started` (409), `logs_not_found` (404) | 그 스텝에 읽을 출력이 없다. workflow 전에 실패했거나(`application_changed` 등), `resources` 스텝이거나, workflow가 끝난 지 하루가 지났다. 다시 호출하지 말고 `deployment_get`의 `errorCode`와 `statusMessage`로 판단한다 |
+| `deployment_not_started` (409), `logs_not_found` (404) | 그 스텝에 읽을 출력이 없다. workflow 전에 실패했거나(`application_changed` 등), `resources` 스텝이거나, 성공한 스텝의 Pod가 이미 없다. 실패한 스텝의 출력은 Pod가 없어져도 Runway가 저장해 둔 것을 준다. 다시 호출하지 말고 `deployment_get`의 `errorCode`와 `statusMessage`로 판단한다 |
 | `delivery_unavailable` (502), `provider_unavailable` (503) | 운영 문제다. 다시 시도해도 같은 결과이므로 반복하지 않는다 |
 | 리소스 `failed` | 같은 이름으로 `resource_create`를 다시 하거나 콘솔에서 재시도한다 |
