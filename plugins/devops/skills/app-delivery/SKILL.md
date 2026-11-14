@@ -178,6 +178,9 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
    - health 경로(기본 `/health`): 리소스를 쓰는 앱은 매 요청에서 각 리소스에 실제로 연결하고(PostgreSQL은 `SELECT 1`)
      기동 시 migration이 성공했을 때만 2xx를 반환한다. Runway의 verify는 이 경로만 확인하므로 고정 응답은 DB 장애를 숨긴다.
    - 테스트 명령: 외부 리소스 없이 끝나야 한다. Runway의 test 스텝에는 Agent Runway Variable이 없다.
+   - 언어 런타임 버전: `test.image`와 Dockerfile의 base image는 Forge Run이 checks를 실행하는 런타임과 같은 메이저 버전으로 한다
+     (예: Run의 Node가 24면 `node:24-alpine`). 메이저 버전이 다르면 Forge에서 통과한 테스트가 Runway의 test 스텝에서 실패할 수 있다.
+     새 앱의 스택을 제안할 때도 이 버전을 권장한다. 다른 버전이 필요하면 그 버전으로 Forge Run의 test를 실행해 통과한 뒤에만 쓴다.
 4. Forge Run의 checks(test·lint·build)로 확인한다. sandbox 환경의 리소스가 `ready`이면 Forge가 Run의 명령 환경에 그 Variable을
    넣으므로 migration과 DB 연동을 실제 DB로 확인한다. 이 확인은 Forge에서만 가능하다. Runway의 test 스텝에는 DB가 없다.
 5. task가 끝나면 부모가 `run_submit`의 Git `review` Run을 내고, diff의 `application.yaml` 전체를 `application_validate`로 다시 검사한다.
