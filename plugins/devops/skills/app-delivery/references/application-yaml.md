@@ -105,6 +105,8 @@ env:
 
 - 이미지는 Project 런타임의 architecture 하나(`linux/amd64` 또는 `linux/arm64`)로 빌드된다. `project_status`의 `runtime.architecture`로 확인하고,
   그 architecture를 지원하지 않는 base image나 바이너리를 쓰지 않는다.
+- base image와 `test.image`의 언어 런타임은 Forge Run이 checks를 실행한 런타임과 같은 메이저 버전이다(예: Node 24 → `node:24-alpine`).
+  Runway의 test 스텝은 `test.image`로 테스트를 다시 실행하므로, 버전이 다르면 Forge에서 통과한 테스트가 실패할 수 있다.
 - 빌드는 배포할 commit의 소스 아카이브로 한다. 아카이브에는 `.git` 디렉터리, submodule의 내용, Git LFS 객체,
   `.gitattributes`가 `export-ignore`로 뺀 경로가 없다. 빌드가 이 파일들에 의존하지 않게 한다.
 - `PORT`에서 HTTP를 받는다. TLS는 플랫폼이 처리한다.
