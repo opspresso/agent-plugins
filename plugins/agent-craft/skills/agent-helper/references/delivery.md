@@ -170,7 +170,7 @@ push 배포는 설정 탭이나 `push_enable`·`push_disable`로 켜고 끈다. 
 | `quota_exceeded` (409) | Project·리소스 수 한도다. 정확한 한도는 오류 메시지에 있다 |
 | `resource_in_use` (409) | 서비스가 실행 중인 환경에서 적용한 `application.yaml`이나 실행 중인 Release가 `secrets`에 쓰는 Variable의 리소스는 지울 수 없다. 서비스를 내리거나 그 이름을 뺀 선언을 적용·배포한 뒤 지운다 |
 | `approval_expired` | 승인이 24시간을 넘었다. 다시 요청한다 |
-| `application_changed` | 커밋된 파일로 `project_apply`를 다시 하고 다시 배포한다 |
+| `application_changed` | `repository_inspect`(`ref`: 배포한 revision)가 돌려준 `application`(저장소 파일 원문)을 바꾸지 않고 `project_apply`에 넘긴 뒤 다시 배포한다. 내용을 다시 쓰면 마지막 줄바꿈 하나로도 다시 실패한다 |
 | `git_connection_required` (409, push로 시작한 Deployment의 `errorCode`) | 사용자가 그 Git 호스트를 Studio에서 연결하지 않았거나 다시 연결해야 한다. 오류 메시지의 Studio 연결 링크(`connectUrl`)를 주고, 사용자가 연결한 뒤 다시 요청한다. push로 시작한 Deployment에서는 push 배포를 켠 사용자가 다시 연결해야 하며, 다시 연결하면 다음 push부터 배포된다 |
 | `repository_access_denied` (403, push로 시작한 Deployment의 `errorCode`) | 그 사용자의 Git 계정이 저장소를 볼 수 없거나, `push_enable`에 필요한 역할(GitHub `admin`, GitLab Maintainer 이상)이 없다. 다시 연결하게 하지 않는다. 저장소 이름과 그 계정의 권한을 확인한다 |
 | `ref_not_found` (404) | 저장소에 그 branch·tag·commit이 없다. `ref`를 생략했으면 저장소에 기본 브랜치가 없다(커밋 없는 저장소). `ref`를 확인한다 |
