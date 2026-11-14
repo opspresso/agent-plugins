@@ -13,7 +13,7 @@ Forge의 Git 실행 계약이다. Git 단계마다 `run_submit`에 `input.kind="
 | 커밋 | `commit` | `fingerprint`, `message` | 없음 |
 | 작업 브랜치 푸시 | `push` | `headSha` | 없음 |
 | PR/MR 생성·갱신 | `pull-request` | `headSha`, `fingerprint`, `title`, `body`, `draft` | 없음 |
-| 보호 branch 직접 게시 | `publish-protected` | `targetBranch`, `expectedHeadSha`, `headSha`, `fingerprint` | Forge 콘솔 |
+| 보호 branch 직접 게시·새 branch 생성 | `publish-protected` | `targetBranch`, `expectedHeadSha`(새 branch는 `null`), `headSha`, `fingerprint` | Forge 콘솔 |
 | PR/MR을 기본 브랜치에 병합 | `merge` | `pullRequestNumber`, `headSha`, `fingerprint` | Forge 콘솔 |
 | 태그 | `tag` | `tag`, `message`, `headSha`, `fingerprint` | Forge 콘솔 |
 | 릴리즈 | `release` | `tag`, `headSha`, `fingerprint`, `title`, `body`, `draft`, `prerelease` | Forge 콘솔 |
@@ -108,6 +108,10 @@ PR/MR 설명 형식이 필요하고 `pr-description`이 연결됐으면 해당 S
   3. 그 `headSha`·`fingerprint`로 `tag`를 제출한다. 승인 화면의 변경은 비어 있다. tag가 기준 브랜치에 더하는 변경이 없기 때문이다.
   기본 브랜치의 HEAD가 아닌 commit에는 Forge로 tag를 만들 수 없다. `sourceRevision`으로 준비한 Workspace는 `review`만 한다(`git_action_unsupported`).
   사용자가 그런 commit을 지정하면 Git 호스트에서 tag를 만들도록 안내한다.
+- `publish-protected`는 Workspace HEAD를 `targetBranch`에 올린다. `expectedHeadSha`가 그 브랜치의 현재 commit이면 fast-forward하고,
+  `null`이면 그 브랜치를 새로 만든다. 새로 만들 브랜치가 원격에 이미 있으면 `git_branch_exists`(409)로 거절되고 아무것도 바뀌지 않는다.
+  기본 브랜치는 만들 수 없다(`git_action_unsupported`). 기본 브랜치의 현재 commit을 다른 브랜치(예: 배포용 `stg`)에 올리려면
+  기본 브랜치로 새 Workspace를 `prepare`하고, 커밋하지 않은 채 `review`의 `headSha`·`fingerprint`로 제출한다. 승인 화면에는 새 브랜치인지가 나온다.
 - `release`는 이미 있는 tag가 가리키는 승인 commit과 CI를 확인한다. tag 성공 뒤에만 준비한다.
 - `deploy`는 profile의 `deploymentWorkflows`에 있는 workflow만 허용한다. `inputs`는 이름→값 object다.
   `ref`는 저장소의 기본 브랜치(`workspace_get`의 `repository.defaultBranch`)이고, `headSha`는 그 브랜치의 현재 HEAD다.
