@@ -274,6 +274,9 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
      Deployment ID와 스텝을 사용자에게 알린다. `application_changed`이면 배포한 ref의 `application.yaml`을
      읽어 그 내용을 3절로 적용하거나, 적용한 선언과 같은 파일을 가진 ref로 다시 배포한다. 다른 ref의 파일을 적용하지 않는다.
      같은 실패를 원인 확인 없이 다시 시작하지 않는다.
+   - 배포는 성공했는데 앱이 503을 돌려주거나 응답하지 않으면, 추측하지 말고 `service_logs`(`project`, `environment`)로
+     Pod 상태(`ready`, `restartCount`, `lastTermination`, `waiting`)와 앱 출력(`log`, 재시작 전 `previousLog`)을 읽는다.
+     예: DB 연결 실패로 프로세스가 끝났으면 `lastTermination`의 `exitCode`와 `previousLog`가 원인을 보여 준다. 출력의 시크릿 값은 `***`로 가려져 있다.
    - `rejected`: 소유자가 거절했거나 승인이 만료됐다(`approval_expired`). 다시 요청할지 사용자에게 확인한다.
 5. 요청이 거부되면 오류 코드에 따라 처리한다.
    - `environment_not_ready`: 시간이 해결하지 못하는 문제다. 메시지가 원인을 알려 준다. `failed` 리소스와 값 없는 secret은 3절로 준비한다.
