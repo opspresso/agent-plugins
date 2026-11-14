@@ -175,17 +175,18 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
      부모가 `application_validate`로 통과한 전체 내용을 task에 그대로 넣고, runtime이 그 내용으로 파일을 쓰게 한다. runtime은 스키마를 모르므로 직접 짓게 하지 않는다.
    - `Dockerfile`: Project 런타임의 architecture 하나(`linux/amd64` 또는 `linux/arm64`, `project_status`의 `runtime.architecture`)로 빌드되고,
      `PORT` 환경 변수의 포트에서 HTTP를 받는다. 빌드는 commit의 소스 아카이브로 하므로 `.git`·submodule·Git LFS 객체에 의존하지 않는다.
-   - health 경로(기본 `/health`): 리소스를 쓰는 앱은 기동 시 각 리소스에 연결하고 migration이 성공한 뒤에만 2xx를 반환한다.
-     Runway의 verify는 이 경로만 확인하므로, 기동 전부터 2xx인 고정 응답은 잘못된 연결 값을 숨긴다.
-     그 뒤의 일시적 DB 장애로는 health를 실패시키지 않는다. 이 경로는 liveness probe이기도 하다. 실패하면 kubelet이 앱을 재시작하고,
-     재시작이 쌓이면 재시작 대기(최대 5분)가 길어져 DB가 돌아온 뒤 복구가 늦어진다. DB가 필요한 요청은 앱이 503으로 답한다.
-   - DB 재시작: 앱은 DB가 잠시 끊겨도 종료되지 않고 다시 연결한다. 연결 pool의 오류 이벤트를 처리하고, 기동 시 migration은 성공할 때까지 다시 시도한다.
+   - 준비 상태: `runtime.health`(예: `/ready`)는 기동 시 migration 완료와 현재 필수 리소스 연결을 확인한다. 연결이 끊기면 503, 복구되면 2xx를 반환한다.
+     EKS에서 DB를 쓰는 새 앱은 `runtime.liveness`(예: `/health`)를 따로 선언하고 이 경로에서는 프로세스 응답만 확인한다.
+     `liveness`를 생략한 기존 앱은 `health`를 liveness에도 쓰므로, DB 상태를 검사하도록 바꿀 때 두 경로를 함께 분리한다. EB는 `health`만 사용한다.
+   - DB 재시작: 연결 pool의 오류 이벤트를 처리하고 다음 요청에서 새로 연결한다. 잘못된 인증·migration 오류를 무한 재시도로 숨기지 않는다.
+     기동 재시도가 필요하면 재시도 가능한 오류·횟수·시간 상한을 정하고, 소진되면 실패를 보고한다. 연결·쿼리에도 시간 제한을 둔다.
    - 테스트 명령: 외부 리소스 없이 끝나야 한다. Runway의 test 스텝에는 Agent Runway Variable이 없다.
    - 언어 런타임 버전: `test.image`와 Dockerfile의 base image는 Forge Run이 checks를 실행하는 런타임과 같은 메이저 버전으로 한다
      (예: Run의 Node가 24면 `node:24-alpine`). 메이저 버전이 다르면 Forge에서 통과한 테스트가 Runway의 test 스텝에서 실패할 수 있다.
      새 앱의 스택을 제안할 때도 이 버전을 권장한다. 다른 버전이 필요하면 그 버전으로 Forge Run의 test를 실행해 통과한 뒤에만 쓴다.
 4. Forge Run의 checks(test·lint·build)로 확인한다. sandbox 환경의 리소스가 `ready`이면 Forge가 Run의 명령 환경에 그 Variable을
    넣으므로 migration과 DB 연동을 실제 DB로 확인한다. 이 확인은 Forge에서만 가능하다. Runway의 test 스텝에는 DB가 없다.
+   DB 연결 실패·복구 시 준비 상태와 생존 상태가 구분되는지 검사하고, 입력 범위는 실제 저장소 타입의 한계와 맞춘다.
 5. task가 끝나면 부모가 `run_submit`의 Git `review` Run을 내고, diff의 `application.yaml` 전체를 `application_validate`로 다시 검사한다.
    거부되면 커밋하지 않고 오류 필드를 고치는 task를 낸 뒤 `review`부터 다시 한다.
 6. 부모가 Git `commit`·`push`·`pull-request` Run으로 PR/MR을 만든다. Git 작업을 task에 넣지 않는다. native Runtime은 커밋할 수 없다.

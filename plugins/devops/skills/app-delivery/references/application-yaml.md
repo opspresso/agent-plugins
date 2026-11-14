@@ -38,6 +38,7 @@ env:
 | `spec.description` | 아니요 | 200자 이하 | |
 | `runtime.port` | 예 | 1024~65535. 플랫폼이 `PORT`로도 넘긴다 | |
 | `runtime.health` | 아니요 | `/`로 시작하는 경로 | `/health` |
+| `runtime.liveness` | 아니요 | EKS의 생존 확인 경로. DB 상태를 확인하지 않는다. EB는 `health`만 쓴다 | `runtime.health` |
 | `runtime.command`, `runtime.args` | 아니요 | 문자열 1~32개의 목록 | 이미지 기본값 |
 | `build.context`, `build.dockerfile` | 아니요 | 저장소 안의 상대 경로. `..`를 쓸 수 없다 | `.`, `Dockerfile` |
 | `test.image`, `test.command` | 아니요 | 이미지와 `/bin/sh -c`로 실행할 명령. 저장소 루트에서 실행한다. `test`를 쓰면 둘 다 필요하다 | 없으면 건너뜀 |
@@ -113,16 +114,16 @@ env:
 - 컨테이너는 privilege escalation 없이, 모든 capability를 뺀 상태로 실행된다. 1024 미만 포트를 쓰지 않는다.
 - 외부 연결은 HTTPS(443)와 Agent Runway PostgreSQL만 허용된다. 다른 포트의 외부 API는 쓸 수 없다.
 - 기동 후 3분 안에 health 경로가 2xx를 반환해야 한다. DB migration은 기동 시 실행하고, 성공하기 전에는 health가 실패하게 한다.
-- health 경로는 startup·readiness·liveness probe가 함께 쓴다. migration이 성공한 뒤에는 일시적 DB 장애로 health를 실패시키지 않는다.
-  liveness가 실패하면 kubelet이 앱을 재시작하는데, 재시작은 DB를 고치지 못하고 재시작 대기(최대 5분)만 늘린다. DB가 필요한 요청은 앱이 503으로 답한다.
-- DB가 재시작되거나 잠시 끊겨도 프로세스를 끝내지 않는다. 공유 DB 풀은 노드 교체(Spot 회수 등)로 1~3분 멈출 수 있다.
-  - 연결 pool의 오류 이벤트를 처리한다. Node.js `pg`는 처리기가 없으면 끊긴 유휴 연결의 오류로 프로세스를 끝낸다.
-  - 기동 시 migration이 실패하면 성공할 때까지 몇 초 간격으로 다시 시도한다. 한 번만 시도하면 DB가 돌아와도 startup probe가 끝날 때까지 health가 실패한다.
+- EKS에서 `runtime.health`는 startup·readiness, `runtime.liveness`는 liveness probe에 사용한다. 생략하면 같은 경로다.
+  DB를 쓰는 새 앱은 `health: /ready`, `liveness: /health`로 분리한다. `/ready`는 현재 DB 연결을 제한 시간 안에 확인하고 실패하면 503을 반환한다.
+  `/health`는 프로세스가 응답하면 2xx다. DB 장애 때문에 liveness가 실패하면 불필요한 재시작과 복구 지연이 발생한다.
+- DB가 재시작되면 연결 pool이 끊긴 연결을 버리고 다음 요청에서 새로 연결한다. pool의 오류 이벤트를 처리한다.
+  기동 시 인증·migration 오류를 무한 재시도하지 않는다. 필요한 재시도는 대상 오류·횟수·시간 상한을 명시하고, 소진되면 기동 실패로 처리한다.
 - 로그는 stdout·stderr로 쓴다. 비밀 값을 로그에 쓰지 않는다.
 
 ## Node.js 예시
 
-PostgreSQL을 쓰는 앱의 예시다. 기동 시 migration을 성공할 때까지 실행하고, `/health`는 migration이 성공했는지만 본다.
+PostgreSQL을 쓰는 앱의 예시다. `runtime.health: /ready`, `runtime.liveness: /health`로 선언한다. migration 실패는 기동 실패이며 준비 상태 검사는 현재 DB 연결을 확인한다.
 DB가 재시작되면 pool이 끊긴 연결을 버리고 다음 요청에서 새로 연결한다. 그동안 DB가 필요한 요청은 503을 받는다.
 `DATABASE_URL`은 리소스 이름이 Project slug와 같을 때의 Variable이다. 의존성은 `pg`다.
 
@@ -143,24 +144,21 @@ CMD ["node", "server.js"]
 ```
 
 ```js
-// server.js: PORT, 성공할 때까지 다시 하는 기동 시 migration, migration 성공을 알리는 /health
+// server.js: bounded database calls, separate readiness and liveness.
 import http from "node:http";
 import pg from "pg";
 
-const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5 });
-// 처리기가 없으면 DB 재시작으로 끊긴 유휴 연결의 오류가 프로세스를 끝낸다. pool은 그 연결을 버린다.
-pool.on("error", (error) => console.error("idle database connection lost:", error.message));
-let migrated = false;
-async function migrate() {
-  try {
-    await pool.query("CREATE TABLE IF NOT EXISTS todo (id serial PRIMARY KEY, title text NOT NULL)");
-    migrated = true;
-  } catch (error) {
-    console.error("migration failed, retrying in 5 s:", error.message);
-    setTimeout(migrate, 5000);
-  }
+if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required");
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL, max: 5,
+  connectionTimeoutMillis: 3000, query_timeout: 3000, statement_timeout: 3000 });
+pool.on("error", () => console.error("idle database connection lost"));
+try {
+  await pool.query("CREATE TABLE IF NOT EXISTS todo (id serial PRIMARY KEY, title text NOT NULL)");
+} catch {
+  console.error("database initialization failed");
+  await pool.end();
+  process.exit(1);
 }
-migrate();
 
 const json = (res, status, body) => {
   res.writeHead(status, { "content-type": "application/json" });
@@ -168,14 +166,21 @@ const json = (res, status, body) => {
 };
 
 const server = http.createServer(async (req, res) => {
-  // liveness probe이기도 하므로 DB의 현재 상태를 보지 않는다. migration 전에만 실패한다.
-  if (req.url === "/health") return json(res, migrated ? 200 : 503, { ok: migrated });
+  if (req.url === "/health") return json(res, 200, { ok: true });
+  if (req.url === "/ready") {
+    try {
+      await pool.query("SELECT 1");
+      return json(res, 200, { ok: true });
+    } catch {
+      return json(res, 503, { ok: false });
+    }
+  }
   if (req.url === "/todos" && req.method === "GET") {
     try {
       const { rows } = await pool.query("SELECT id, title FROM todo ORDER BY id");
       return json(res, 200, rows);
-    } catch (error) {
-      console.error("database unavailable:", error.message);
+    } catch {
+      console.error("database unavailable");
       return json(res, 503, { error: "database unavailable" });
     }
   }
