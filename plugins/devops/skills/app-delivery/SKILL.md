@@ -185,7 +185,7 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
    - 저장소 루트의 `application.yaml`(`spec.owner`에 Project 소유자의 Studio subject).
      이미 있는 저장소의 `application.yaml`을 바꾸기 전에는 `repository_inspect`로 현재 선언과 감지 결과를 읽는다.
      부모가 `application_validate`로 통과한 전체 내용을 task에 그대로 넣고, runtime이 그 내용으로 파일을 쓰게 한다. runtime은 스키마를 모르므로 직접 짓게 하지 않는다.
-   - `Dockerfile`: Project 런타임의 architecture 하나(`linux/amd64` 또는 `linux/arm64`, `project_status`의 `runtime.architecture`)로 빌드되고,
+   - 컨테이너 빌드의 `Dockerfile`: Project 런타임의 architecture 하나(`linux/amd64` 또는 `linux/arm64`, `project_status`의 `runtime.architecture`)로 빌드되고,
      `PORT` 환경 변수의 포트에서 HTTP를 받는다. 빌드는 commit의 소스 아카이브로 하므로 `.git`·submodule·Git LFS 객체에 의존하지 않는다.
    - 준비 상태: `runtime.health`(예: `/ready`)는 기동 시 migration 완료와 현재 필수 리소스 연결을 확인한다. 연결이 끊기면 503, 복구되면 2xx를 반환한다.
      EKS에서 DB를 쓰는 새 앱은 `runtime.liveness`(예: `/health`)를 따로 선언하고 이 경로에서는 프로세스 응답만 확인한다.
@@ -204,7 +204,11 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
 6. 부모가 Git `commit`·`push`·`pull-request` Run으로 PR/MR을 만든다. Git 작업을 task에 넣지 않는다. native Runtime은 커밋할 수 없다.
    `pull-request`는 승인을 만들지 않는다. `pull-request` Run이 `interrupted`로 끝나면 사용자에게 Git 호스트 화면을 확인하게 하지 않는다.
    같은 `headSha`·`fingerprint`와 새 `requestKey`로 `pull-request`를 다시 제출한다. Forge는 그 브랜치의 열린 PR/MR을 찾아 갱신하므로 두 번 만들지 않고, 결과의 `pullRequestNumber`를 확정한다.
-7. PR/MR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approval.id`와 `approvalUrl`을 반환한다.
+7. 사용자가 push 자동 배포를 요청했다면 **병합·태그 생성 전에** 3절을 검증된 작업 브랜치의 정확한 commit으로 수행한다.
+   `repository_inspect(ref: <headSha>)`의 선언을 적용하고 필요한 리소스·시크릿을 준비한 뒤 `push_enable`의 사람 승인을 받는다.
+   `project_get`에서 `push.state: on`과 요청한 trigger를 확인한 뒤에만 해당 push를 발생시킨다.
+   이미 지난 push는 webhook을 켜도 다시 처리되지 않는다. 자동 배포 검증을 수동 `deploy`로 대신하지 않는다.
+   PR/MR의 CI가 통과하면 Git `merge`를 제출한다. 보호 작업이므로 Run이 승인을 기다리며 `approval.id`와 `approvalUrl`을 반환한다.
    `git_approval_get` 화면을 Chat에 보여 소유자가 그 자리에서 승인하게 하고, 링크도 답변에 그대로 넣어 사용자에게 준다(`WaitForServiceWork`로 턴을 끝낼 때도 그 메시지에 넣는다). 병합 Run이 `succeeded`인지 확인한 뒤 3절로 간다. 승인 없이 다른 경로로 병합하지 않는다.
    Forge는 저장소의 기본 브랜치(`main`이 아닐 수 있다)로만 병합한다.
    Workspace의 기준 브랜치가 기본 브랜치가 아니면 `merge`가 `git_action_unsupported`로 거절되고 승인은 만들어지지 않는다.
@@ -228,7 +232,8 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
    - `sandbox`가 `false`인 template은 sandbox 환경에 만들 수 없다(`template_not_in_sandbox`). 그 단계에는 같은 Variable 이름을 주는
      template(예: `rds-postgres` 대신 `pool-postgres`)을 같은 `name`으로 만든다. 그런 template이 없으면 사용자에게 알린다.
    - 런타임 type이 `eks`가 아닌 Project는 `target_unsupported`다. 연결 값의 Variable 이름을 `application.yaml`의 `secrets`에 선언하고 사용자가 값을 입력하게 한다.
-3. 배포를 요청받았으면 리소스가 `ready`가 되기를 기다리지 않고 바로 [4. 배포와 승격](#4-배포와-승격)의 `deploy`를 호출한다.
+3. push 자동 배포 요청이면 여기서 `deploy`를 호출하지 않는다. [push 배포](#push-배포)를 켜고 승인된 병합·branch push·tag push가 만든 Deployment를 따른다.
+   수동 배포 요청이면 리소스가 `ready`가 되기를 기다리지 않고 바로 [4. 배포와 승격](#4-배포와-승격)의 `deploy`를 호출한다.
    생성 중(`pending`)인 리소스는 Deployment가 `resources` 스텝에서 기다리고, Studio가 그 Deployment를 끝까지 따라간다.
    Deployment는 리소스를 만들지 않는다. 리소스가 `failed`이면 원인을 보고한다.
 4. 값 없는 시크릿이 있으면 응답의 `application.secretsUrl`(모든 단계), 또는 한 단계만이면 그 환경의 `secretsUrl` **링크 하나**를 사용자에게 준다.
@@ -270,7 +275,7 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
    - 첫 단계가 아닌 단계에 `deploy`로 ref를 보내면 `release_not_promoted`다. 같은 pipeline의 바로 앞 단계에서 성공하지 않은 Release를 `release`로 보내도 같다.
      그 단계에서 지금 실행 중인 Release를 다시 배포하는 `deploy`(재시작)는 이 조건을 보지 않는다.
    - pipeline의 마지막 단계에서 `promote`하면 `no_next_environment`다. 승격은 다른 pipeline으로 이어지지 않는다.
-     예: `main` → `dev`와 `v*` → `stg` → `prod` pipeline을 가진 Project에서 `dev`의 Release는 `stg`로 승격되지 않는다. `stg`에는 `v*` 태그를 `deploy`한다.
+     예: `main` → `dev`와 `v*` → `stg` → `prod` pipeline을 가진 Project에서 `dev`의 Release는 `stg`로 승격되지 않는다. `stg`는 push 배포가 켜져 있으면 `v*` 태그 push로 시작하고, 꺼져 있으면 그 태그를 `deploy`한다.
    - `approval: owner` 환경은 `awaiting_approval`을 반환한다. Studio Chat에는 `deploy`·`promote`·`rollback` 결과의 배포 화면이 보인다.
      소유자에게 그 화면의 **승인하고 시작**·**거절**을 누르고 Studio 승인 카드에서 확인하라고 안내한다. 모델은 승인하지 않는다.
      화면이 없는 surface(Slack·Telegram·Teams·API)에서만 `approvalUrl`을 주고 소유자가 Agent Runway 콘솔에서 승인하게 한다.
