@@ -14,7 +14,7 @@ metadata:
 사용자가 요청한 앱을 실행 중인 서비스로 만든다. 저장소·코드·`application.yaml`·리소스·배포·응답하는 URL이
 모두 확인될 때 완료다. PR/MR이나 이미지 push만으로 완료라고 하지 않는다.
 
-필요한 연결: Agent Runway MCP(`repository_inspect`, `pipeline_list`, `project_apply`, `resource_create`, `variables_set`, `deploy`, `promote` 등)와 Agent Forge MCP(Workspace·Git).
+필요한 연결: Agent Runway MCP(`environment_list`, `repository_inspect`, `pipeline_list`, `project_apply`, `resource_create`, `variables_set`, `deploy`, `promote` 등)와 Agent Forge MCP(Workspace·Git).
 둘 중 하나가 없으면 할 수 있는 작업까지만 진행하고, 없는 연결과 남은 작업을 알린다.
 사용자는 저장소가 있는 Git 호스트를 Agent Studio의 프로필 → Git 계정에서 연결해야 한다([저장소 접근](#저장소-접근)).
 
@@ -35,6 +35,18 @@ metadata:
   켜지 않은 Project는 요청(`deploy`)으로만 배포한다([push 배포](#push-배포)).
 - **`application.yaml`**: 앱의 빌드·테스트·실행 방법과 `secrets`·`env`만 선언한다. 환경·리소스·크기·trigger·cloud·target type·architecture는
   파일에 없다. 이 값들은 Project의 런타임과 pipeline, `project_configure`, `resource_create`가 정한다.
+
+## 지원 범위와 산출물
+
+현재 도구 스키마와 `environment_list`·`pipeline_list` 결과를 지원 범위의 근거로 쓴다. 같은 기능이 있는지
+확인하려고 비슷한 Memory 검색을 반복하지 않는다. 없는 기능·플랫폼은 미지원 또는 미설정으로 설명한다.
+기억이나 과거 배포 기록이 현재 도구 계약을 대신하지 않는다.
+
+- EKS는 컨테이너 이미지를, EB는 JAR·WAR를 인스턴스에서 직접 실행한다. AKS·VMSS는 아직 구현되지 않았다.
+- 새 저장소의 `repository_inspect`에는 의도한 `targetType`을 넘긴다. EB는 Dockerfile을 만들거나 요구하지 않는다.
+- Nexus 게시와 읽기 인증은 플랫폼이 관리한다. 앱의 `application.yaml`에 registry 자격 증명을 쓰거나 Chat에서 받지 않는다.
+- 컨테이너 Release는 `image` digest, native Release는 `artifact`의 URL·SHA-256·크기로 확인한다. 배포·승격은 같은 산출물을 사용한다.
+- EB의 Java·Tomcat 버전은 `environment_list`의 target `platforms`와 맞아야 한다. 파일의 확장자만으로 실행 방식을 추측하지 않는다.
 
 ## 질문
 
@@ -59,8 +71,8 @@ metadata:
 1. 저장소에 Project가 이미 있으면 그 Project의 런타임과 pipeline을 쓴다. `project_status`의 `runtime`이 cloud·target type·architecture를,
    `pipelines[]`가 pipeline마다 이름·trigger·단계를 준다. `project_ensure`와 `project_apply`는 기존 Project의 런타임과 pipeline을 바꾸지 않는다.
    사용자가 다른 값을 요청했을 때만 [5. 운영과 변경](#5-운영과-변경)의 `project_configure`로 바꾼다.
-2. 새 Project이고 사용자가 pipeline을 정했으면 그 이름을 쓴다. 사용자가 배포 흐름만 말했으면(예: "main은 dev, v 태그는 stg를 거쳐 prod")
-   `pipeline_list`에서 그 trigger와 단계를 가진 pipeline을 하나씩 고른다.
+2. `environment_list`로 요청한 환경이 제공하는 target·architecture·native 플랫폼을 확인한다. 새 Project이고 사용자가 pipeline을 정했으면 그 이름을 쓴다. 사용자가 배포 흐름만 말했으면(예: "main은 dev, v 태그는 stg를 거쳐 prod")
+   `pipeline_list`에서 그 단계를 가진 pipeline을 하나씩 고른다. 단계는 맞지만 trigger만 다르면 Project의 `pipelines` 항목 `{name, trigger}`로 요청한 branch/tag 조건을 지정할 수 있다.
 3. 사용자가 정하지 않았으면 `pipeline_list`를 읽는다. `default`가 `true`인 pipeline들의 단계에 사용자가 요청한 환경이 모두 있으면
    pipeline을 넘기지 않는다. 새 Project는 `default`인 pipeline을 모두 쓴다. 아니면 다음 조건에 모두 맞는 pipeline 목록을 고른다.
    - 사용자가 요청한 환경이 모두 고른 pipeline 중 하나의 단계다.
@@ -254,7 +266,7 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
      그래서 병합 직후의 `deploy`가 `deployment_in_progress`일 수 있다. 이때는 새로 요청하지 않고 `project_status`의 그 단계 `inProgress.deploymentId`를
      `deployment_get`으로 한 번 읽어 그 Deployment를 따른다. push 배포를 켜지 않은 Project는 병합만으로 배포되지 않으므로 `deploy`를 호출한다.
 2. 다음 단계는 `promote`(`project`, `from`, `idempotencyKey`)로 같은 Release를 배포한다. `from` 단계의 `next`가 배포될 단계다.
-   다시 build하지 않으므로 앞 단계에서 검증한 이미지가 그대로 간다.
+   다시 build하지 않으므로 앞 단계에서 검증한 이미지 digest 또는 JAR/WAR SHA-256이 그대로 간다.
    - 첫 단계가 아닌 단계에 `deploy`로 ref를 보내면 `release_not_promoted`다. 같은 pipeline의 바로 앞 단계에서 성공하지 않은 Release를 `release`로 보내도 같다.
      그 단계에서 지금 실행 중인 Release를 다시 배포하는 `deploy`(재시작)는 이 조건을 보지 않는다.
    - pipeline의 마지막 단계에서 `promote`하면 `no_next_environment`다. 승격은 다른 pipeline으로 이어지지 않는다.
@@ -440,6 +452,10 @@ Project의 한 단계가 `https://<slug>.<도메인>`(환경 이름 없는 주�
 변경이 먼저 끝나면 그 배포 요청이 `project_changed`로 거절된다. `project_changed`이면 `project_status`를 다시 읽고 다시 요청한다.
 
 ### 사람의 승인
+
+`person_approval_required` 오류가 없다는 이유로 "승인 없이 실행됐다"고 보고하지 않는다. 보호 도구가 성공한
+Studio 호출은 이미 사람 승인 표시를 검증한 호출이다. 실제 카드 조작을 확인하지 못했으면 확인한 실행 결과만 보고한다.
+
 
 `push_enable`·`service_remove`·`resource_delete`·`project_delete`·`host_move`는 사람이 호출마다 승인한다([앱 주소](#앱-주소)).
 Studio Chat이 호출 전에 승인 카드를 보여 주고, 사용자가 승인한 호출만 실행한다. 사용자가 거절한 호출은 반복하지 않는다.

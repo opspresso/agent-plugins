@@ -39,8 +39,11 @@ env:
 | `runtime.port` | 예 | 1024~65535. 플랫폼이 `PORT`로도 넘긴다 | |
 | `runtime.health` | 아니요 | `/`로 시작하는 경로 | `/health` |
 | `runtime.liveness` | 아니요 | EKS의 생존 확인 경로. DB 상태를 확인하지 않는다. EB는 `health`만 쓴다 | `runtime.health` |
-| `runtime.command`, `runtime.args` | 아니요 | 문자열 1~32개의 목록 | 이미지 기본값 |
-| `build.context`, `build.dockerfile` | 아니요 | 저장소 안의 상대 경로. `..`를 쓸 수 없다 | `.`, `Dockerfile` |
+| `runtime.command`, `runtime.args` | 아니요 | 문자열 1~32개의 목록. WAR의 시작점은 Tomcat이 관리한다 | 이미지 기본값 또는 `java -jar application.jar` |
+| `build.context`, `build.dockerfile` | 컨테이너 | 저장소 안의 상대 경로. `..`를 쓸 수 없다 | `.`, `Dockerfile` |
+| `build.kind` | native | `artifact`는 JAR/WAR 직접 실행용 빌드다. 컨테이너는 생략하거나 `container` | `container` |
+| `build.image`, `build.command`, `build.output`, `build.format`, `build.javaVersion` | native | 빌더 이미지·명령·정확한 출력 파일·`jar`/`war`·Java 주 버전. 출력은 context 안의 상대 경로이며 glob은 금지한다 | |
+| `build.tomcatVersion` | WAR | target 플랫폼과 일치하는 Tomcat 주 버전 | |
 | `test.image`, `test.command` | 아니요 | 이미지와 `/bin/sh -c`로 실행할 명령. 저장소 루트에서 실행한다. `test`를 쓰면 둘 다 필요하다 | 없으면 건너뜀 |
 | `secrets` | 아니요 | 앱이 배포되는 모든 단계에서 값이 필요한 Variable 이름의 목록. 사용자가 Agent Runway 콘솔의 링크 하나(`secretsUrl`)에서 값 없는 시크릿을 한 번에 입력한다 | |
 | `env` | 아니요 | 비밀이 아니고 모든 환경에서 같은 값. 값은 문자열·숫자·boolean이고 1 KiB 이하다 | |
@@ -190,3 +193,25 @@ server.listen(Number(process.env.PORT ?? 8080));
 ```
 
 리소스가 없는 앱의 `/health`는 기동 즉시 2xx를 반환한다.
+
+
+## EB native 예시
+
+`environment_list`에서 선택한 환경들이 `jar-21` 플랫폼을 제공하는지 먼저 확인한다. 아래 `output`은 실제 Maven
+설정이 만드는 파일과 일치해야 한다. Forge에서 빌드해 확인하고, 파일 이름을 짐작하지 않는다.
+
+```yaml
+build:
+  kind: artifact
+  context: .
+  image: maven:3-eclipse-temurin-21
+  command: mvn -B verify
+  output: target/application.jar
+  format: jar
+  javaVersion: 21
+```
+
+JAR는 실행 가능한 Main-Class를 포함해야 한다. WAR는 `format: war`, `tomcatVersion`과 WAR 출력 경로를 지정한다.
+WAR의 포트는 8080이며 사용자 `runtime.command`·`args`를 넣지 않는다. `build.image`의 Java 버전과
+`javaVersion`, Forge 검사에 사용하는 Java 버전을 맞춘다. Native 빌드는 게시 자격 증명 없이 실행하며,
+플랫폼의 별도 게시 단계가 Nexus 업로드와 해시 검증을 수행한다.
