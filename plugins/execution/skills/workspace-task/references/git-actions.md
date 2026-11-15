@@ -101,13 +101,18 @@ PR/MR 설명 형식이 필요하고 `pr-description`이 연결됐으면 해당 S
   승인과 Run은 만들어지지 않는다. 다시 제출하지 않고, 사용자가 Git 호스트에서 그 PR/MR을 병합해야 한다고 알린다.
   접수 뒤 실행 전에 저장소의 기본 브랜치가 바뀌면 병합하지 않고 Run이 `failed`(`errorCode: git_action_unsupported`)로 끝난다. 이때도 다시 제출하지 않고 사용자에게 알린다.
 - `tag`는 검토한 HEAD에 annotated tag를 만든다. 기존 tag를 덮어쓰지 않는다.
-- 배포·릴리즈용 tag(예: `v1.0.0`)는 기본 브랜치에 있는 commit에 단다. PR/MR을 병합한 Workspace의 HEAD는 병합 commit이 아니고,
-  그 뒤 기본 브랜치에 들어간 다른 변경도 담지 않는다. 그 HEAD에 tag를 달면 기본 브랜치에 없는 commit이 배포된다.
-  1. 기본 브랜치(`baseBranch` 생략)로 새 Workspace를 `prepare`한다. 파일을 바꾸거나 커밋하지 않는다.
-  2. `review`의 `headSha`가 기본 브랜치의 현재 HEAD다. 사용자에게 tag 이름과 그 commit(짧은 SHA, 마지막 commit 제목)을 알린다.
+- 배포·릴리즈용 tag(예: `v1.0.0`)는 사용자가 요청한 브랜치·commit에 단다. 대상을 지정하지 않았으면 기본 브랜치의 현재 HEAD를 쓴다.
+  Forge는 다른 기준 브랜치에서 준비한 Workspace의 검토된 HEAD에도 tag를 허용한다. 기본 브랜치 전용 기능이 아니다.
+  PR/MR을 병합해도 기존 Workspace의 HEAD가 병합 commit으로 바뀌지는 않는다. 요청한 대상과 다르면 다음 순서로 준비한다.
+  1. 요청한 브랜치로 새 Workspace를 `prepare`한다(기본 브랜치면 `baseBranch` 생략). 파일을 바꾸거나 커밋하지 않는다.
+  2. `review`의 `headSha`를 확인한다. 사용자가 정확한 commit을 지정했으면 그 값과 같아야 한다. 다르면 tag를 제출하지 않는다.
+     사용자에게 tag 이름과 실제 commit(짧은 SHA, 마지막 commit 제목)을 알린다.
   3. 그 `headSha`·`fingerprint`로 `tag`를 제출한다. 승인 화면의 변경은 비어 있다. tag가 기준 브랜치에 더하는 변경이 없기 때문이다.
-  기본 브랜치의 HEAD가 아닌 commit에는 Forge로 tag를 만들 수 없다. `sourceRevision`으로 준비한 Workspace는 `review`만 한다(`git_action_unsupported`).
-  사용자가 그런 commit을 지정하면 Git 호스트에서 tag를 만들도록 안내한다.
+  `sourceRevision`으로 준비한 Workspace는 `review`만 하므로 tag를 게시할 수 없다(`git_action_unsupported`).
+  지정한 commit을 브랜치의 HEAD로 준비할 수 없으면 그 한계를 알리고 Git 호스트에서 tag를 만들도록 안내한다.
+  원격 tag 존재 확인을 위해 native task에서 인증이 필요한 `git ls-remote`를 반복하지 않는다. Sandbox에는 원격 Git 자격증명이 없다.
+  별도 조회가 필요하면 해당 호스트의 연결된 읽기 도구를 쓴다. 조회 도구가 없어도 Forge `tag`는 기존 tag를 덮어쓰지 않도록
+  원격 ref가 없다는 조건으로 게시한다. 조회 실패를 tag가 없다는 증거로 보고하지 않는다.
 - `publish-protected`는 Workspace HEAD를 `targetBranch`에 올린다. `expectedHeadSha`가 그 브랜치의 현재 commit이면 fast-forward하고,
   `null`이면 그 브랜치를 새로 만든다. 새로 만들 브랜치가 원격에 이미 있으면 `git_branch_exists`(409)로 거절되고 아무것도 바뀌지 않는다.
   기본 브랜치는 만들 수 없다(`git_action_unsupported`). 기본 브랜치의 현재 commit을 다른 브랜치(예: 배포용 `stg`)에 올리려면
