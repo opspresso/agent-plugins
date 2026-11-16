@@ -51,7 +51,7 @@ with a short-lived verified reference (`url`, `checksum`, `sizeBytes`,
 `expiresAt`). Recording attachments, MCP file transfers and Agent Knowledge originals
 are limited to 512 MiB. Plaud's mapped `get_file` downloads the original into a
 user-owned Studio file and returns `file_id`; pass that ID as `source`. Never
-substitute the Plaud recording ID, a temporary URL or a legacy `source_ref`.
+substitute the Plaud recording ID or a temporary URL.
 
 Submission and retry responses carry a work reference in
 `structuredContent.work` and `_meta["org.opspresso.agent.work"]`. Studio records

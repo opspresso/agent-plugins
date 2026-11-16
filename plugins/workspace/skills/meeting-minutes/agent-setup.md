@@ -7,8 +7,8 @@
   profile에는 Agent Knowledge가 허용한 전사 모델 ID·언어·보존 기간과, 회의록이 필요하면 회의록(summary) 모델과 선택적 지시문을 저장한다.
   Studio Tools의 Agent Knowledge 상세 화면에 설정·이력 링크가 있다. 접수된 작업은 당시 profile snapshot을 사용한다.
 - 녹음은 Chat에 첨부하거나 Agent Knowledge 콘솔에서 올린다. 원본은 최대 512 MiB다.
-- Plaud 녹음은 MCP `get_file`이 반환한 `file_id`로 Agent Knowledge에 가져온다. `mcpFileOutputs`를 지원하는 Studio를 먼저 배포하고
-  `workspace` plugin 1.3.0 이상을 동기화한다. Plaud MCP를 연결하고 사용자의 OAuth·Cloud Sync 상태를 확인한다.
+- Plaud 녹음은 MCP `get_file`이 반환한 `file_id`로 Agent Knowledge에 가져온다. `workspace` plugin을 동기화하고
+  Plaud MCP를 연결한 뒤 사용자의 OAuth·Cloud Sync 상태를 확인한다.
 - 과거 회의 검색은 Agent Knowledge의 검색 도구를, 요청 시 장기 기억은 `personal-records` skill과 Agent Memory MCP를 같은 Agent에 연결한다.
 
 시스템 프롬프트 예시:

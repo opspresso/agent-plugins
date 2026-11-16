@@ -13,8 +13,8 @@ Studio의 한 Agent가 Agent Knowledge MCP로 녹음 처리를 위임한다. Age
   공급자 주소·자격 증명·가격은 Agent Models와 Agent Knowledge 설치 설정이다.
 - 사용자별 오디오 설정. Agent Knowledge 콘솔에서 전사 모델·선택 회의록 모델과 지시문·언어·보존 기간·
   작업 수 한도를 저장하고 기본 프로필을 선택한다. Studio 도구의 Agent Knowledge 상세 화면에 설정·이력 링크가 있다.
-- Plaud 원본 가져오기에는 `mcpFileOutputs`를 지원하는 Studio 배포와 `workspace` Plugin 1.3.0 이상이 필요하다.
-  Studio를 먼저 배포하고 Plugin을 동기화한다. Plaud MCP OAuth 연결과 실제 녹음 읽기도 확인한다.
+- Plaud 원본 가져오기에는 `workspace` Plugin의 `mcpFileOutputs` 선언이 필요하다. Plugin을 동기화하고
+  Plaud MCP OAuth 연결과 실제 녹음 읽기를 확인한다.
   Studio 원본 저장소의 `source-files/`는 비공개여야 하며 `ARTIFACT_ACCESS_MODE=public`에서는 가져오기를 거절한다.
   가져온 원본은 요청한 사용자만 읽을 수 있고, Studio의 기본 파일 보존기간을 따른다.
 - 비동기 결과 전달에는 인증된 스케줄 tick(`/api/triggers/scan`)이 필요하다. tick이 없으면 결과가 Chat에 전달되지 않는다.

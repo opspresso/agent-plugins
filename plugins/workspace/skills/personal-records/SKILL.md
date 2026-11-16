@@ -22,7 +22,7 @@ Agent Knowledge 오디오 도구(`recording_import`, `audio_job_submit` 등)는 
   개인 scope `{kind:"user"}`와 서버가 전달한 사용자 문맥을 사용한다.
 - email·토큰을 인수로 요구하거나 임의의 userId·조직 scope를 지정하지 않는다.
 - 요청한 범위의 본문을 끝까지 확인하지 못했다면 미확인 범위를 알리고 기록하지 않는다.
-- Memory에는 요청된 범위에서 근거가 분명한 항목만 `remember`로 기록한다. 같은 대상의 재시도에서는 source.uri와 idempotencyKey를 유지한다.
+- Memory에는 요청된 범위에서 근거가 분명한 항목만 `remember`로 기록한다. 같은 대상의 재시도에서는 `sourceUri`와 idempotencyKey를 유지한다.
 
 ## Artifact를 기록하는 경우
 
@@ -34,7 +34,7 @@ Agent Knowledge 오디오 도구(`recording_import`, `audio_job_submit` 등)는 
    같은 Artifact 재시도에서는 제목·본문·mimeType·scope와 키를 유지한다.
    File 편집은 새 Artifact ID를 반환하므로 편집본은 그 새 ID로 기록한다.
    `document_ingest_status`로 실제 상태를 확인하고 접수와 ready를 구분한다.
-3. Memory는 source.uri `urn:agent-studio:artifact:<artifact_id>`와 idempotencyKey `<artifact_id>:memory:<항목번호>`를 사용한다.
+3. Memory `remember`는 `sourceUri` `urn:agent-studio:artifact:<artifact_id>`와 idempotencyKey `<artifact_id>:memory:<항목번호>`를 사용한다.
 
 ## 오디오 작업 결과를 기록하는 경우
 
@@ -44,7 +44,7 @@ Studio Chat에 전달된 전사문·회의록 파일은 Artifact이지만, 오�
 
 1. Agent Knowledge `audio_status`(`resource:"job"`)로 작업이 `completed`이고 해당 `outputs.<kind>.availability`가 `available`인지 확인한다. kind는 `transcript` 또는 `summary`다.
 2. `audio_output_read`로 해당 결과를 읽는다. `hasMore`가 true이면 `nextCursor`를 바꾸지 않고 `cursor`로 보내, 요청한 범위를 모두 읽을 때까지 이어 읽는다.
-3. `remember`에 source.uri `urn:agent-knowledge:audio-job:<job_id>:<kind>`와 idempotencyKey `<job_id>:<kind>:memory:<항목번호>`를 사용한다.
+3. `remember`에 `sourceUri` `urn:agent-knowledge:audio-job:<job_id>:<kind>`와 idempotencyKey `<job_id>:<kind>:memory:<항목번호>`를 사용한다.
 
 ## 결과 보고
 

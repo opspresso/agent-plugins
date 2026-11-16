@@ -22,7 +22,7 @@ Plaud가 실제 녹음 출처이고 해당 MCP가 연결된 경우에만 사용�
    접수 상태와 작업 ID를 보고한다. 완료된 전사문·회의록은 Studio가 원래 Chat에 전달한다.
 
 - 한 실행에서 이미 받은 `file_id`는 재사용한다. 가져온 파일 ID가 있는데 `get_file`을 다시 호출하지 않는다.
-- `source`에 Plaud 녹음 ID(`external_id`), `presigned_url`, 이전 `source_ref`를 넣지 않는다. 임시 URL을 모델 문맥이나 답변에 복사하지 않는다.
+- `source`에 Plaud 녹음 ID(`external_id`)나 `presigned_url`을 넣지 않는다. 임시 URL을 모델 문맥이나 답변에 복사하지 않는다.
 - `get_file`이 오류를 반환하면 가져오기에 실패한 것이다. 파일 ID를 만들거나 작업을 제출하지 않는다. 실제 오류를 보고한다.
 - 응답에 `file_id`가 없으면 Studio의 파일 매핑 지원·plugin 동기화 상태를 운영자가 확인해야 한다. 원본 URL을 다른 도구로 우회하지 않는다.
 - 원본 전송은 최대 512 MiB다. Agent Knowledge 원본 한도도 같으므로 콘솔 업로드로 한도를 우회할 수 없다.

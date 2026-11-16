@@ -26,10 +26,8 @@ integrations remain available for their respective sources.
 
 ## Connect in the host app
 
-Check [discovery compatibility](#host-app-discovery-compatibility) before
-starting account authorization. The declarations are ready to sync; the current
-client must support Google's explicitly recognized issuer alias. Older clients
-reject this metadata and need an update before Connect.
+The host app accepts Google's issuer alias during Discover; see
+[discovery compatibility](#host-app-discovery-compatibility).
 
 1. Confirm preview access and enable the corresponding API and MCP service in
    the selected Google Cloud project. Configure consent and test users as needed.
@@ -71,9 +69,8 @@ validation; a callback with a different `iss` is still rejected. The
 [OpenID fallback](https://accounts.google.com/.well-known/openid-configuration)
 declares the same issuer without the slash.
 
-Clients without this handling fail with `Could not read authorization server
-metadata` at both Google metadata addresses. Deploy a client containing the
-Google discovery fix and run Discover again before Connect. Do not disable
+A client that compares the two issuers exactly fails with `Could not read
+authorization server metadata` at both Google metadata addresses. Do not disable
 issuer validation or copy a token into the bundled manifest. Public protocol and
 tool catalog checks do not establish account authorization; verify an
 authenticated read after connection. Slack requires a separate, narrowly scoped

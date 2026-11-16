@@ -57,8 +57,7 @@ and stores a user-owned Studio file. The model receives only
 The download URL and original bytes stay outside model context. This mapping has
 no source-reference lifecycle or automatic URL refresh.
 
-Deploy Studio with `mcpFileOutputs` support before syncing workspace plugin 1.3.0
-or later. Plugin sync updates the declaration and skills; it does not upgrade Studio.
+Plugin sync updates the declaration and skills; Studio applies the mapping.
 The Studio object store must keep `source-files/` private. Imports are refused when
 `ARTIFACT_ACCESS_MODE=public`. Imported originals are readable only by the requesting
 user, including when the Agent belongs to someone else, and follow Studio's default

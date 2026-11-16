@@ -42,7 +42,7 @@ metadata:
 확인하려고 비슷한 Memory 검색을 반복하지 않는다. 없는 기능·플랫폼은 미지원 또는 미설정으로 설명한다.
 기억이나 과거 배포 기록이 현재 도구 계약을 대신하지 않는다.
 
-- EKS는 컨테이너 이미지를, EB는 JAR·WAR를 인스턴스에서 직접 실행한다. AKS·VMSS는 아직 구현되지 않았다.
+- Agent Runway가 배포하는 target type은 `eks`와 `eb`다. EKS는 컨테이너 이미지를, EB는 JAR·WAR를 인스턴스에서 직접 실행한다. 다른 `runtime.type`은 거절된다.
 - 새 저장소의 `repository_inspect`에는 의도한 `targetType`을 넘긴다. EB는 Dockerfile을 만들거나 요구하지 않는다.
 - Nexus 게시와 읽기 인증은 플랫폼이 관리한다. 앱의 `application.yaml`에 registry 자격 증명을 쓰거나 Chat에서 받지 않는다.
 - 컨테이너 Release는 `image` digest, native Release는 `artifact`의 URL·SHA-256·크기로 확인한다. 배포·승격은 같은 산출물을 사용한다.
@@ -63,8 +63,7 @@ metadata:
 1. 앱의 목적·핵심 기능·데이터·외부 API와 배포할 환경을 확인한다. 정해진 부분은 묻지 않는다.
 2. 저장소의 Git 호스트와 owner(GitHub·Gitea owner, GitLab 사용자 이름이나 group 경로)를 정한다. 사용자가 정하지 않았으면 `repository_namespaces`로
    연결 계정이 저장소를 만들 수 있는 namespace를 읽고, 하나뿐이면 그것을 쓰고 여럿이면 [질문](#질문)에 넣는다. 새 저장소의 owner는 짐작하지 않는다([2. 저장소와 코드](#2-저장소와-코드)).
-3. 이름(slug)을 정한다. `^[a-z][a-z0-9-]{1,30}[a-z0-9]$`이고 설치의 환경 이름으로 끝날 수 없다(예: `-dev`, `-prod`).
-   `agent-`·`addon-`·`delivery-`·`kube-`로 시작하는 이름과 `istio`·`argocd`·`default`·`system`은 쓸 수 없다.
+3. 이름(slug)을 정한다. 규칙은 [application.yaml의 `spec.name`](references/application-yaml.md#필드)을 따른다.
    저장소 이름과 같게 하면 추적이 쉽다. 주소는 [앱 주소](#앱-주소)의 규칙을 따른다. `project_status`의 `environments[].host`가
    그 단계의 다음 배포가 받을 주소이고, `runningHost`가 실행 중인 서비스의 주소다.
 4. [런타임과 pipeline 선택](#런타임과-pipeline-선택)으로 런타임과 pipeline을 정한다.
@@ -120,7 +119,7 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
 | `invalid_ref` | `ref` 형식이 틀렸다. `ref`를 생략했으면 저장소의 기본 브랜치 이름이 Runway의 `ref` 규칙에 맞지 않는다 | 형식을 고친다. 기본 브랜치 이름 때문이면 배포할 tag나 commit SHA를 `ref`로 보낸다 |
 | `source_too_large` | 그 commit의 소스 아카이브가 설치의 한도를 넘는다 | 사용자에게 알린다. 저장소를 줄이거나 운영자가 한도를 올려야 한다 |
 | `source_busy` | Runway가 한 번에 읽는 소스 아카이브 수가 한도에 있거나, 같은 Project의 다른 소스 아카이브를 읽는 중이다 | 메시지가 알려 주는 시간(10초) 뒤에 같은 호출을 다시 한다 |
-| `git_host_removed` | Agent Studio가 그 Git 호스트를 더 이상 Git 호스트로 두지 않는다 | 사용자에게 알린다. 운영자가 Agent Studio에 그 호스트를 다시 등록해야 한다 |
+| `git_host_removed` | 저장소의 Git 호스트가 Agent Studio의 Git 호스트 목록에 없다 | 사용자에게 알린다. 운영자가 Agent Studio에 그 호스트를 다시 등록해야 한다 |
 | `invalid_repository` | 새 Project의 저장소가 이 설치의 Git 호스트에 있지 않거나, 저장소 주소가 그 호스트의 `<host>/<path>` 형식이 아니다(GitHub는 정확히 `owner/repo`, port가 있는 주소는 받지 않는다) | 메시지가 알려 주는 Git 호스트와 저장소 주소를 사용자와 확인한다 |
 
 ## 기존 저장소의 Project 만들기
@@ -184,21 +183,12 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
    `template`은 `resource_catalog`에서 `available`이 `true`인 것을 고른다. 앱 DB는 보통 공유 풀의 `pool-postgres`, 파일은 `bucket`이다.
    기본 `name`은 Project slug다. 이 리소스의 Variable에는 접두어가 없다(`DATABASE_URL`). `main`은 다른 이름처럼 `MAIN_` 접두어가 붙는다.
    접속 정보는 Agent Runway가 저장한다. 값은 Chat·코드·로그에 쓰지 않고 Variable 이름만 쓴다.
-3. 코드를 구현한다. 배포에 필요한 조건은 다음과 같다. 세부 규칙과 예시는 [application.yaml과 배포 조건](references/application-yaml.md)을 읽는다.
+3. 코드를 구현한다. 구현 task를 내기 전에 [application.yaml과 배포 조건](references/application-yaml.md)을 읽고,
+   그 문서의 컨테이너 조건(architecture·`PORT`·소스 아카이브·health와 liveness·DB 재시작·테스트 명령·언어 런타임 버전)을 task에 넣는다.
    - 저장소 루트의 `application.yaml`(`spec.owner`에 Project 소유자의 Studio subject).
      이미 있는 저장소의 `application.yaml`을 바꾸기 전에는 `repository_inspect`로 현재 선언과 감지 결과를 읽는다.
      부모가 `application_validate`로 통과한 전체 내용을 task에 그대로 넣고, runtime이 그 내용으로 파일을 쓰게 한다. runtime은 스키마를 모르므로 직접 짓게 하지 않는다.
-   - 컨테이너 빌드의 `Dockerfile`: Project 런타임의 architecture 하나(`linux/amd64` 또는 `linux/arm64`, `project_status`의 `runtime.architecture`)로 빌드되고,
-     `PORT` 환경 변수의 포트에서 HTTP를 받는다. 빌드는 commit의 소스 아카이브로 하므로 `.git`·submodule·Git LFS 객체에 의존하지 않는다.
-   - 준비 상태: `runtime.health`(예: `/ready`)는 기동 시 migration 완료와 현재 필수 리소스 연결을 확인한다. 연결이 끊기면 503, 복구되면 2xx를 반환한다.
-     EKS에서 DB를 쓰는 새 앱은 `runtime.liveness`(예: `/health`)를 따로 선언하고 이 경로에서는 프로세스 응답만 확인한다.
-     `liveness`를 생략한 기존 앱은 `health`를 liveness에도 쓰므로, DB 상태를 검사하도록 바꿀 때 두 경로를 함께 분리한다. EB는 `health`만 사용한다.
-   - DB 재시작: 연결 pool의 오류 이벤트를 처리하고 다음 요청에서 새로 연결한다. 잘못된 인증·migration 오류를 무한 재시도로 숨기지 않는다.
-     기동 재시도가 필요하면 재시도 가능한 오류·횟수·시간 상한을 정하고, 소진되면 실패를 보고한다. 연결·쿼리에도 시간 제한을 둔다.
-   - 테스트 명령: 외부 리소스 없이 끝나야 한다. Runway의 test 스텝에는 Agent Runway Variable이 없다.
-   - 언어 런타임 버전: `test.image`와 Dockerfile의 base image는 Forge Run이 checks를 실행하는 런타임과 같은 메이저 버전으로 한다
-     (예: Run의 Node가 24면 `node:24-alpine`). 메이저 버전이 다르면 Forge에서 통과한 테스트가 Runway의 test 스텝에서 실패할 수 있다.
-     새 앱의 스택을 제안할 때도 이 버전을 권장한다. 다른 버전이 필요하면 그 버전으로 Forge Run의 test를 실행해 통과한 뒤에만 쓴다.
+   - 새 앱의 스택을 제안할 때도 Forge Run이 checks를 실행하는 언어 런타임의 메이저 버전을 권장한다. 다른 버전이 필요하면 그 버전으로 Forge Run의 test를 실행해 통과한 뒤에만 쓴다.
 4. Forge Run의 checks(test·lint·build)로 확인한다. sandbox 환경의 리소스가 `ready`이면 Forge가 Run의 명령 환경에 그 Variable을
    넣으므로 migration과 DB 연동을 실제 DB로 확인한다. 이 확인은 Forge에서만 가능하다. Runway의 test 스텝에는 DB가 없다.
    DB 연결 실패·복구 시 준비 상태와 생존 상태가 구분되는지 검사하고, 입력 범위는 실제 저장소 타입의 한계와 맞춘다.
@@ -340,7 +330,7 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
   - `push_busy`는 같은 Project의 다른 push 배포 변경(켜기·끄기·Project 삭제의 끄기)이 진행 중이라는 뜻이다. Runway는 기다리지 않고 거절한다.
     메시지가 알려 주는 시간(5초) 뒤에 다시 호출한다. `push_enable`을 다시 호출하면 승인 카드도 다시 뜬다.
   - Project 소유자나 Studio 관리자만 켤 수 있다(`owner_required`). 켜는 사용자의 Git 계정은 저장소의 webhook을 관리하는 역할이어야 한다:
-    GitHub(github.com·GitHub Enterprise Server) 저장소는 `admin`, GitLab 프로젝트는 Maintainer 이상이다. 아니면 `repository_access_denied`다.
+    GitHub(github.com·GitHub Enterprise Server) 저장소는 `admin`, GitLab 프로젝트는 Maintainer 이상, Gitea 저장소는 관리자(admin) 권한이다. 아니면 `repository_access_denied`다.
   - `git_connection_required`·`git_host_removed`는 [저장소 접근](#저장소-접근)에 따른다. `policy_refused`는 Agent Studio가 그 사용자에게 Git 위임을 주지 않는다는 뜻이다.
     사용자 등급이 허용하지 않거나, 그 Git 계정의 위임이 한도에 찼다. 한도에 찼으면 사용자가 프로필 → Git 계정에서 위임을 폐기한다.
     `identity_unavailable`은 메시지가 알려 주는 시간 뒤에 다시 호출한다. `source_refused`는 Git 호스트가 webhook을 거절한 것이며 메시지가 이유를 준다.
@@ -467,14 +457,13 @@ pipeline을 더해 새 단계가 생기면, 첫 배포 전에 기존 단계에 �
 `person_approval_required` 오류가 없다는 이유로 "승인 없이 실행됐다"고 보고하지 않는다. 보호 도구가 성공한
 Studio 호출은 이미 사람 승인 표시를 검증한 호출이다. 실제 카드 조작을 확인하지 못했으면 확인한 실행 결과만 보고한다.
 
-
 `push_enable`·`service_remove`·`resource_delete`·`project_delete`·`host_move`는 사람이 호출마다 승인한다([앱 주소](#앱-주소)).
 Studio Chat이 호출 전에 승인 카드를 보여 주고, 사용자가 승인한 호출만 실행한다. 사용자가 거절한 호출은 반복하지 않는다.
 
 - `person_approval_required`(403)는 승인 표시 없이 호출됐다는 뜻이다. Runway는 아무것도 읽거나 바꾸지 않았다.
 - 같은 호출을 자동으로 반복하지 않는다. Studio Chat의 승인 카드에서 사용자가 그 호출을 승인해야 한다고 알린다.
-- 사용자가 승인했는데도 이 code가 오면 Studio가 승인 표시를 보내지 않는 버전이다. 운영자에게 알리고,
-  그동안은 Project 소유자나 Studio 관리자가 Agent Runway 콘솔에서 직접 해야 한다고 안내한다.
+- 사용자가 승인했는데도 이 code가 오면 Studio가 그 호출에 승인 표시를 보내지 않은 것이다. 운영자에게 알리고,
+  Project 소유자나 Studio 관리자가 Agent Runway 콘솔에서 직접 해야 한다고 안내한다.
 
 ## 보고
 

@@ -19,8 +19,8 @@ Before connecting, verify host app discovery compatibility. Slack's 401 at
 which identifies the resource as `https://mcp.slack.com`. The companion client's
 `src/infrastructure/mcp/oauthMetadata.ts` accepts this exact alias only for the
 official `/mcp` endpoint and challenged metadata URL. Other resources still require
-an exact match. Clients without this handling need an update before Connect;
-do not disable resource validation or substitute an undocumented endpoint.
+an exact match. Do not disable resource validation or substitute an
+undocumented endpoint.
 
 After discovery is compatible, configure the installation's registered
 Slack app client ID and secret in the Agent's connection. Register the actual

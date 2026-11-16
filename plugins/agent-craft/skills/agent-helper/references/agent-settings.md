@@ -42,7 +42,7 @@ Playground(`/agents/<name>`)는 하나의 현재 설정을 저장한다. 실행�
 | `imageGeneration`, `imageModel` | `GenerateImage`·`EditImage` 제공 |
 | `dynamicCapabilities` | 요청마다 맞는 Skill·MCP 도구를 찾아 추가한다. 등록된 Embedding 모델이 필요하다 |
 | `memoryRecall` | 실행 전 자동 회상. `agent-memory`를 `mcpList`에 명시적으로 연결하고 `recall`을 허용해야 한다. 동적 탐색만으로는 자동 회상이 되지 않는다 |
-| `memoryCapture` | 로그인한 사용자가 시작한 실행이 끝나면 요청과 답변을 Memory의 `memory_capture`로 보내 단기 기억으로 남긴다. 명시적으로 연결한 Memory 서버가 `memory_capture`를 허용해야 한다. 실패는 로그에만 남는다 |
+| `memoryCapture` | 로그인한 사용자가 시작한 실행이 끝나면 요청과 답변을 Memory의 `memory_capture`로 보내 세션 기록으로 남긴다. 다음 Dreaming이 그 기록에서 남길 기억을 모은다. 명시적으로 연결한 Memory 서버가 `memory_capture`를 허용해야 한다. 실패는 로그에만 남는다 |
 | `modelRouting` | 설정의 자동 모델 라우팅 정책 사용 |
 | `reasoningTrace` | 화면에 모델 추론 과정 표시 |
 | `callerContext`, `piiFiltering` | 호출자 정보 전달, 인식된 PII 패턴 치환(완전한 익명화가 아님) |
@@ -113,7 +113,7 @@ bot token, signing secret, app password, MCP header 값, MCP OAuth 연결, 개�
 |---|---|
 | MCP header 값 | Agent 화면(`/agents/<name>`)의 MCP 서버 설정 |
 | MCP OAuth 연결, Slack·Telegram·Teams credential, 개인 API·webhook token | 연동 화면(`/agents/<name>/integrations`) |
-| Runway 앱 secret | Runway 콘솔. [delivery](delivery.md#secret) |
+| Runway 앱 secret | Runway 콘솔. [delivery](delivery.md#secret과-variable) |
 
 MCP OAuth 연결은 사용자·MCP 서버 단위이며 여러 Agent가 함께 쓴다. Agent 서비스(`agent-*` Tools)는 OAuth 연결 없이
 Studio 로그인으로 위임된다.

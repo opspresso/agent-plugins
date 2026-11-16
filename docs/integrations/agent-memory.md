@@ -22,18 +22,26 @@ in installation secret configuration, never skills, prompts or task inputs.
 
 | Discovered tool | Purpose |
 |---|---|
-| `recall` | Ranked long-term memories: compact text plus ID, version, content, source and scope; no document or graph search |
-| `remember` | Durable scoped memory with provenance; keep an explicit idempotency key on retries |
-| `forget` | Archive the observed memory version with manage permission |
+| `recall` | Ranked memories for a question: ID, version, kind and category with the content, cut to fit; no document or graph search |
+| `memory_get` | One memory whole, with its change history |
+| `memory_category` | The category index, or every memory of one category |
+| `remember` | Save one scoped `rule`, `fact` or `lesson`; `replaces` moves the listed memories to the trash in the same step. Keep an explicit idempotency key on retries |
+| `revise` | Change a memory's kind, title, content, repository or category; send the complete new content |
+| `forget` | Move a memory to the trash, where a person can restore it in the Memory console for 30 days |
+| `dream` | Start the caller's personal dreaming run or read the latest run |
 | `handoff_create` | Save goal, summary, next actions, blockers and references with an idempotency key |
 | `handoff_list`, `handoff_get` | Find active tasks and inspect full context before resuming |
 | `handoff_update`, `handoff_close` | Change progress or close using the observed `expectedVersion` |
-| `memory_delete`, `handoff_delete` | Permanently erase memories or a handoff with all history. Offered only to credentials that hold `memory:delete` or `handoff:delete` |
+| `handoff_delete` | Permanently erase a handoff with all history. Offered only to credentials that hold `handoff:delete` |
 
-Permanent deletion is a separate grant. Studio delegation and organization tokens
-never hold the delete scopes, so Studio Agents do not see the delete tools. A
+`memory_capture` is called by the host after a run, not by the model.
+
+Permanent deletion is a separate grant. `forget` takes `permanent: true` only for
+credentials that hold `memory:delete`, and `handoff_delete` exists only for
+credentials that hold `handoff:delete`. Studio delegation and organization tokens
+never hold the delete scopes, so Studio Agents cannot delete permanently. A
 personal client token holds them only when the user enables permanent deletion
-when the token is issued. Call a delete tool only on an explicit
+when the token is issued. Delete permanently only on an explicit
 permanent-deletion request; use `forget` or `handoff_close` otherwise.
 
 The actual discovered schema is authoritative. Handoff references identify a
@@ -57,5 +65,5 @@ permissions. A denied personal write must not be retried as an organization writ
 Console description example:
 
 ```text
-현재 인증된 사용자에게 허용된 장기 기억과 단기 작업 인수인계를 조회·관리합니다. 결정·선호·경험은 recall/remember로, 진행 중 작업은 handoff 도구로 다룹니다. 문서·RAG·지식 그래프 검색은 Agent Knowledge에서 수행합니다.
+현재 인증된 사용자에게 허용된 장기 기억과 단기 작업 인수인계를 조회·관리합니다. 규칙·사실·교훈은 recall/remember로, 진행 중 작업은 handoff 도구로 다룹니다. 문서·RAG·지식 그래프 검색은 Agent Knowledge에서 수행합니다.
 ```

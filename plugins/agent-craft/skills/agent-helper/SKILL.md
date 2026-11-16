@@ -24,7 +24,7 @@ Studio에 서비스 데이터의 사본이 없으므로 서비스의 현재 상�
 | 서비스 | 소유하는 것 | Helper가 쓰는 경로 | 상세 |
 |---|---|---|---|
 | Agent Studio | Agent·Skill·Plugin·Tools(MCP 레지스트리)·Chat·Artifact·trigger·메신저 연동·비용·Trace·사용자의 Git 호스트 계정 연결 | Studio 관리 도구(`StudioRead` 등), Studio 페이지 | [agent-settings](references/agent-settings.md) |
-| Agent Memory | 장기·단기 기억과 작업 handoff | Memory 도구, `agent-memory` 콘솔 | [memory](references/memory.md) |
+| Agent Memory | 기억(규칙·사실·교훈)과 작업 handoff | Memory 도구, `agent-memory` 콘솔 | [memory](references/memory.md) |
 | Agent Knowledge | 문서·RAG·지식 그래프·ontology 객체·녹음·전사·회의록·오디오 profile | Knowledge 도구, `agent-knowledge` 콘솔 | [knowledge](references/knowledge.md) |
 | Agent Forge | Workspace·Sandbox·Run·Workspace profile·Git 단계 실행·보호된 Git 작업 승인 | Forge 도구, `agent-forge` 콘솔 | [forge](references/forge.md) |
 | Agent Runway | Project·환경·pipeline·DB·bucket·secret·`application.yaml`·빌드·배포·소유자 승인 | Runway 도구, `agent-runway` 콘솔 | [delivery](references/delivery.md) |
