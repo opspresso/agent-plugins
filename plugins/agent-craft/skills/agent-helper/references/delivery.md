@@ -13,8 +13,8 @@
   첫 부팅이 `default` pipeline을 만든다. `default`가 `true`인 pipeline은 pipeline을 정하지 않은 새 Project가 모두 쓴다. `pipeline_list`가 설치의 pipeline을 준다.
   관리자의 pipeline 변경은 Project의 배포된 서비스가 있는 단계를 빼거나(`pipeline_locked`), Project의 다른 pipeline 단계를 더하거나(`pipeline_conflict`),
   Project 런타임이 실행할 수 없는 단계를 더할 때(`pipeline_incompatible`)만 거절된다. 설명·trigger·단계 순서·크기와 새 단계는 언제든 바꿀 수 있다.
-- **Project**: GitHub(github.com·GitHub Enterprise Server) 또는 GitLab(GitLab.com·self-managed) 저장소 하나다. 저장소는 `<host>/<path>`로 쓴다
-  (예: `github.com/owner/app`, `github.example.com/owner/app`, `gitlab.example.com/group/subgroup/app`). host가 없는 `owner/repo`는 github.com만 뜻한다. 저장소의 Project를 처음 만든 Studio 사용자가 소유자다. slug는 전체에서 유일하며 다시 쓰지 않는다.
+- **Project**: GitHub(github.com·GitHub Enterprise Server), GitLab(GitLab.com·self-managed) 또는 Gitea 저장소 하나다. 저장소는 `<host>/<path>`로 쓴다
+  (예: `github.com/owner/app`, `github.example.com/owner/app`, `gitlab.example.com/group/subgroup/app`, `gitea.example.com/owner/app`). host가 없는 `owner/repo`는 github.com만 뜻한다. 저장소의 Project를 처음 만든 Studio 사용자가 소유자다. slug는 전체에서 유일하며 다시 쓰지 않는다.
   저장소는 Agent Studio가 알려 주는 Git 호스트에 있어야 한다. Project와 저장소를 연결하거나 등록하는 단계는 없다.
   Project는 런타임(`runtime`: cloud, target type, architecture `amd64` 또는 `arm64`) 하나로 모든 단계에서 앱을 실행하고, pipeline 하나 이상을 순서대로 가진다.
   Project의 pipeline끼리는 환경을 공유하지 않는다. 예: `main` push → `dev`와 `v*` tag → `stg` → 승격 → `prod`.
@@ -173,7 +173,7 @@ push 배포는 설정 탭이나 `push_enable`·`push_disable`로 켜고 끈다. 
 | `approval_expired` | 승인이 24시간을 넘었다. 다시 요청한다 |
 | `application_changed` | `repository_inspect`(`ref`: 배포한 revision)가 돌려준 `application`(저장소 파일 원문)을 바꾸지 않고 `project_apply`에 넘긴 뒤 다시 배포한다. 내용을 다시 쓰면 마지막 줄바꿈 하나로도 다시 실패한다 |
 | `git_connection_required` (409, push로 시작한 Deployment의 `errorCode`) | 사용자가 그 Git 호스트를 Studio에서 연결하지 않았거나 다시 연결해야 한다. 오류 메시지의 Studio 연결 링크(`connectUrl`)를 주고, 사용자가 연결한 뒤 다시 요청한다. push로 시작한 Deployment에서는 push 배포를 켠 사용자가 다시 연결해야 하며, 다시 연결하면 다음 push부터 배포된다 |
-| `repository_access_denied` (403, push로 시작한 Deployment의 `errorCode`) | 그 사용자의 Git 계정이 저장소를 볼 수 없거나, `push_enable`에 필요한 역할(GitHub `admin`, GitLab Maintainer 이상)이 없다. 다시 연결하게 하지 않는다. 저장소 이름과 그 계정의 권한을 확인한다 |
+| `repository_access_denied` (403, push로 시작한 Deployment의 `errorCode`) | 그 사용자의 Git 계정이 저장소를 볼 수 없거나, `push_enable`에 필요한 역할(GitHub·Gitea 저장소 `admin`, GitLab Maintainer 이상)이 없다. 다시 연결하게 하지 않는다. 저장소 이름과 그 계정의 권한을 확인한다 |
 | `ref_not_found` (404) | 저장소에 그 branch·tag·commit이 없다. `ref`를 생략했으면 저장소에 기본 브랜치가 없다(커밋 없는 저장소). `ref`를 확인한다 |
 | `invalid_ref` (400) | `ref` 형식이 틀렸거나, `ref`를 생략했는데 저장소의 기본 브랜치 이름이 Runway의 `ref` 규칙에 맞지 않는다. 그때는 tag나 commit SHA를 `ref`로 보낸다 |
 | `source_too_large` (413, push로 시작한 Deployment의 `errorCode`) | 소스 아카이브가 설치의 한도를 넘는다. 저장소를 줄이거나 운영자가 한도를 올린다 |
