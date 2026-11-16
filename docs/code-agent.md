@@ -14,7 +14,7 @@ Sandbox는 Forge 내부의 일시 실행 자원이다.
    실행 도구에는 Agent 실행이 가능한 사용자 등급이 필요하다.
 3. 사용자는 Forge 콘솔에서 작업 공간 프로필(실행 방식·중앙 모델·저장소 규칙·검사·배포 workflow)을 만들고 기본 프로필을 선택한다. 기본 선택이 없으면 Studio 관리자가 Forge 콘솔에서 정한 조직 기본 프로필이 적용된다. 조직 프로필은 Studio 관리자가 Forge 콘솔에서 관리한다.
 4. 사용자는 Agent Studio의 프로필 → Git 계정(`/profile/git`)에서 작업할 Git 호스트를 한 번 연결한다.
-   Git 호스트는 GitHub(github.com·GitHub Enterprise Server)와 GitLab(GitLab.com·self-managed GitLab)이며, 운영자가 Studio에 등록한 호스트만 보인다.
+   Git 호스트는 GitHub(github.com·GitHub Enterprise Server), GitLab(GitLab.com·self-managed GitLab)과 Gitea이며, 운영자가 Studio에 등록한 호스트만 보인다.
    Forge 콘솔에는 계정 연결과 저장소 등록 기능이 없다. Forge 콘솔의 Git 호스트 탭은 연결 상태를 보여 주고 Studio의 연결 주소로 안내한다.
    Studio 도구의 Forge 상세 화면에 설정·이력 링크가 있다.
 

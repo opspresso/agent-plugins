@@ -61,7 +61,7 @@ metadata:
 ## 1. 요구사항, 이름, 런타임과 pipeline
 
 1. 앱의 목적·핵심 기능·데이터·외부 API와 배포할 환경을 확인한다. 정해진 부분은 묻지 않는다.
-2. 저장소의 Git 호스트와 owner(GitHub owner, GitLab 사용자 이름이나 group 경로)를 정한다. 사용자가 정하지 않았으면 `repository_namespaces`로
+2. 저장소의 Git 호스트와 owner(GitHub·Gitea owner, GitLab 사용자 이름이나 group 경로)를 정한다. 사용자가 정하지 않았으면 `repository_namespaces`로
    연결 계정이 저장소를 만들 수 있는 namespace를 읽고, 하나뿐이면 그것을 쓰고 여럿이면 [질문](#질문)에 넣는다. 새 저장소의 owner는 짐작하지 않는다([2. 저장소와 코드](#2-저장소와-코드)).
 3. 이름(slug)을 정한다. `^[a-z][a-z0-9-]{1,30}[a-z0-9]$`이고 설치의 환경 이름으로 끝날 수 없다(예: `-dev`, `-prod`).
    `agent-`·`addon-`·`delivery-`·`kube-`로 시작하는 이름과 `istio`·`argocd`·`default`·`system`은 쓸 수 없다.
@@ -101,8 +101,8 @@ Agent Runway는 한 사용자의 Git 계정으로 저장소를 읽는다. 요청
 push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계정으로 읽는다([push 배포](#push-배포)).
 공개 저장소와 비공개 저장소의 절차가 같다. Runway에는 저장소를 연결하거나 등록하는 단계가 없고, Runway는 deploy key를 만들지 않는다.
 사용자는 저장소가 있는 Git 호스트를 Agent Studio의 프로필 → Git 계정에서 한 번 연결한다.
-Git 호스트는 GitHub(github.com·GitHub Enterprise Server)와 GitLab(GitLab.com·self-managed GitLab)이다.
-`repository`는 `<host>/<path>`다(예: `github.com/owner/todo`, `github.example.com/owner/todo`, `gitlab.example.com/apps/demo/todo`).
+Git 호스트는 GitHub(github.com·GitHub Enterprise Server), GitLab(GitLab.com·self-managed GitLab)과 Gitea다.
+`repository`는 `<host>/<path>`다(예: `github.com/owner/todo`, `github.example.com/owner/todo`, `gitlab.example.com/apps/demo/todo`, `gitea.example.com/owner/todo`).
 host가 없는 `owner/repo`는 github.com만 뜻하므로 다른 호스트의 저장소에는 host를 쓴다. GitLab은 group 경로 전체를 쓴다.
 host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
 
@@ -166,9 +166,9 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
 ## 2. 저장소와 코드
 
 1. 새 저장소는 Forge `repository_create`로 만든다. 연결된 `project-generator`가 있으면 그 원격 준비 절차도 따른다.
-   GitHub(github.com·GitHub Enterprise Server) 저장소와 GitLab(GitLab.com·self-managed GitLab) 프로젝트는 같은 절차다.
+   GitHub(github.com·GitHub Enterprise Server)·Gitea 저장소와 GitLab(GitLab.com·self-managed GitLab) 프로젝트는 같은 절차다.
    - `origin`은 저장소를 만들 host의 `git_connections` `origin`이다. 그 host의 `status`가 `connected`가 아니면 `connectUrl`을 사용자에게 준다.
-   - 만들기 전에 `repository_namespaces`(`origin`)로 연결한 계정이 저장소를 만들 수 있는 namespace(GitHub 계정·조직, GitLab 사용자 이름·group 경로)를 확인한다.
+   - 만들기 전에 `repository_namespaces`(`origin`)로 연결한 계정이 저장소를 만들 수 있는 namespace(GitHub·Gitea 계정·조직, GitLab 사용자 이름·group 경로)를 확인한다.
      사용자가 지정한 namespace가 목록의 `path`에 있으면 그대로 쓴다. 없고 `complete`가 `true`이면 만들지 않는다.
      경로가 비슷한 항목(예: `app/demo` → `apps/demo`)을 보여 주고, 사용자가 고른 namespace로 만든다. 사용자가 확인하기 전에는 아무것도 만들지 않는다.
      `complete`가 `false`이면 목록에 없는 namespace도 쓸 수 있다. 사용자가 지정한 경로로 요청하고 Git 호스트의 판정을 따른다.
