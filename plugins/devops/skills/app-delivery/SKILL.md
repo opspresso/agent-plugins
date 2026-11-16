@@ -456,6 +456,9 @@ Project의 한 단계가 `https://<slug>.<도메인>`(환경 이름 없는 주�
 5. 빠졌으면 `project_configure`를 다시 호출한다.
 6. 앱을 다시 실행하려면 새 pipeline의 첫 단계에 다시 배포한다([4. 배포와 승격](#4-배포와-승격)). 사용자가 배포를 요청하지 않았으면 배포할지 묻는다.
 
+pipeline을 더해 새 단계가 생기면, 첫 배포 전에 기존 단계에 있는 리소스(입력한 secret·variable 제외)를 새 단계에도 같은 `name`으로 `resource_create`한다.
+없으면 그 단계의 배포가 `environment_not_ready`(상태 `missing`인 차단 항목)로 거절된다. 새 단계의 값 없는 secret은 `secretsUrl`로 안내한다.
+
 설정 변경과 배포 요청이 겹치면 먼저 저장된 쪽이 이긴다. 배포가 먼저 저장되면 `project_configure`의 검사가 그 배포를 포함한다.
 변경이 먼저 끝나면 그 배포 요청이 `project_changed`로 거절된다. `project_changed`이면 `project_status`를 다시 읽고 다시 요청한다.
 
