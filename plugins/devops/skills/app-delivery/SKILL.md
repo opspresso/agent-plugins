@@ -51,7 +51,10 @@ metadata:
 ## 질문
 
 사용자에게 물을 것은 모아서 `AskUser` **한 번**으로 묻는다. 질문마다 `questions[]`의 항목 하나(`id`, `question`, `kind`, `options`, `default`)로 넣고,
-도구가 확인한 값과 근거(예: "Node 24 (package.json engines) · port 8080 (Dockerfile EXPOSE)")와 `application.yaml` 초안은 `context`에 넣는다.
+`context`는 개발을 잘 모르는 사용자도 읽을 수 있게 쉬운 말로 쓴다. 무엇을 만들고 어디에 배포하는지(저장소 위치·앱 주소·DB 사용 여부)와
+선택에 필요한 확인 값과 근거(예: "Node 24 (package.json engines) · port 8080 (Dockerfile EXPOSE)")만 넣는다.
+도구 이름, Studio subject 같은 내부 ID, 결정이 필요 없는 설정은 넣지 않는다. `application.yaml` 초안 전문은 PR/MR에서 보여 주고,
+사용자가 초안 확인을 요청했을 때만 `context`에 code block으로 넣는다.
 도구와 저장소로 확인할 수 있는 값(언어·버전·포트·health 경로·테스트 명령·환경 변수 이름·namespace 후보·런타임·pipeline)은 묻지 않는다.
 요청이 이미 정한 작업(예: "만들어서 dev에 배포해")은 다시 확인하지 않는다. 물을 것이 없으면 묻지 않고 진행한다.
 
@@ -145,7 +148,7 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
    초안은 `repository_inspect`의 `application.text`를 쓴다. `application.valid`가 `true`인지 확인하고, `false`면 `violations`를 고친다.
    `spec.name`·`spec.owner`는 그대로 둔다(Project가 있으면 응답의 `project.slug`·`project.owner.subject`와 같아야 한다). 환경·리소스·크기·trigger는 쓰지 않는다.
    - 질문: `questions[]`를 [질문](#질문)대로 `AskUser` 한 번에 모두 묻는다. 각 항목의 `id`·`text`·`kind`·`options`·`default`를 그대로 옮기고,
-     `detected`의 값과 근거, 초안은 `context`에 넣는다. `detected`에 있는 값은 묻지 않는다. 질문이 없으면 묻지 않고 진행한다.
+     `detected`의 값과 근거는 [질문](#질문)의 규칙대로 `context`에 넣는다. `detected`에 있는 값은 묻지 않는다. 질문이 없으면 묻지 않고 진행한다.
    - 답 반영: `field`가 가리키는 `application.yaml` 필드를 고친다. `variables.secret`에서 고른 이름은 `secrets`에 넣는다.
      `env.<NAME>`은 모든 환경에 같은 값이면 `env`에, 환경마다 다르면 적용 뒤 `variables_set`으로 둔다. `rename.<NAME>`은 코드와 선언의 이름을 함께 바꾼다.
      `test.enable`이 `false`면 `test`를 지운다. `dockerfile.generate`가 `true`면 `dockerfile.text`를 `dockerfile.path`에 커밋한다.
@@ -453,6 +456,9 @@ Project의 한 단계가 `https://<slug>.<도메인>`(환경 이름 없는 주�
 5. 빠졌으면 `project_configure`를 다시 호출한다.
 6. 앱을 다시 실행하려면 새 pipeline의 첫 단계에 다시 배포한다([4. 배포와 승격](#4-배포와-승격)). 사용자가 배포를 요청하지 않았으면 배포할지 묻는다.
 
+pipeline을 더해 새 단계가 생기면, 첫 배포 전에 기존 단계에 있는 리소스(입력한 secret·variable 제외)를 새 단계에도 같은 `name`으로 `resource_create`한다.
+없으면 그 단계의 배포가 `environment_not_ready`(상태 `missing`인 차단 항목)로 거절된다. 새 단계의 값 없는 secret은 `secretsUrl`로 안내한다.
+
 설정 변경과 배포 요청이 겹치면 먼저 저장된 쪽이 이긴다. 배포가 먼저 저장되면 `project_configure`의 검사가 그 배포를 포함한다.
 변경이 먼저 끝나면 그 배포 요청이 `project_changed`로 거절된다. `project_changed`이면 `project_status`를 다시 읽고 다시 요청한다.
 
@@ -474,3 +480,5 @@ Studio Chat이 호출 전에 승인 카드를 보여 주고, 사용자가 승인
 
 진행한 작업마다 확인한 사실만 보고한다: 저장소와 PR/MR, Project 런타임과 pipeline 이름, 적용한 선언의 SHA, 단계별 리소스 상태, Release 이름, Deployment ID·상태·URL.
 승인을 기다리는 작업과 사용자가 할 일(승인, `secretsUrl`에서의 secret 입력, Git 호스트 연결)을 분리해 알린다.
+첫 배포를 보고할 때 다음 배포를 시작하는 방법을 쉬운 말로 함께 알린다. `push.state`가 `off`이면 "바뀐 코드는 요청할 때 배포한다"와
+켤 수 있는 push 배포(예: "`main`에 병합하면 `dev`에 자동 배포")를 pipeline의 trigger로 설명하고, 켤지 묻는다. 사용자가 원할 때만 [push 배포](#push-배포)대로 켠다.
