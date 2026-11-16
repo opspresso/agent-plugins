@@ -117,11 +117,13 @@ env:
 - 컨테이너는 privilege escalation 없이, 모든 capability를 뺀 상태로 실행된다. 1024 미만 포트를 쓰지 않는다.
 - 외부 연결은 HTTPS(443)와 Agent Runway PostgreSQL만 허용된다. 다른 포트의 외부 API는 쓸 수 없다.
 - 기동 후 3분 안에 health 경로가 2xx를 반환해야 한다. DB migration은 기동 시 실행하고, 성공하기 전에는 health가 실패하게 한다.
-- EKS에서 `runtime.health`는 startup·readiness, `runtime.liveness`는 liveness probe에 사용한다. 생략하면 같은 경로다.
-  DB를 쓰는 새 앱은 `health: /ready`, `liveness: /health`로 분리한다. `/ready`는 현재 DB 연결을 제한 시간 안에 확인하고 실패하면 503을 반환한다.
+- EKS에서 `runtime.health`는 startup·readiness, `runtime.liveness`는 liveness probe에 사용한다. `liveness`를 생략하면 같은 경로이므로,
+  `health`가 DB 상태를 검사하도록 바꿀 때 두 경로를 함께 분리한다. DB를 쓰는 새 앱은 `health: /ready`, `liveness: /health`로 분리한다. `/ready`는 현재 DB 연결을 제한 시간 안에 확인하고 실패하면 503을 반환한다.
   `/health`는 프로세스가 응답하면 2xx다. DB 장애 때문에 liveness가 실패하면 불필요한 재시작과 복구 지연이 발생한다.
 - DB가 재시작되면 연결 pool이 끊긴 연결을 버리고 다음 요청에서 새로 연결한다. pool의 오류 이벤트를 처리한다.
   기동 시 인증·migration 오류를 무한 재시도하지 않는다. 필요한 재시도는 대상 오류·횟수·시간 상한을 명시하고, 소진되면 기동 실패로 처리한다.
+  DB 연결과 쿼리에 시간 제한을 둔다.
+- `test.command`는 외부 리소스 없이 끝나야 한다. Runway의 test 스텝에는 DB와 Agent Runway Variable이 없다.
 - 로그는 stdout·stderr로 쓴다. 비밀 값을 로그에 쓰지 않는다.
 
 ## Node.js 예시
@@ -193,7 +195,6 @@ server.listen(Number(process.env.PORT ?? 8080));
 ```
 
 리소스가 없는 앱의 `/health`는 기동 즉시 2xx를 반환한다.
-
 
 ## EB native 예시
 

@@ -60,24 +60,18 @@ retrieval is not supplied by this repository; when transcript access is absent,
 request transcript text or use available sources and identify the evidence limit.
 Video metadata alone does not establish what was spoken.
 
-### Agent Memory
+### Agent Memory and Agent Knowledge
 
-Agent Memory owns durable memories and short-term task handoffs. `recall` searches
-Memory only and returns compact text plus each memory's ID, version, content,
-source and scope. `remember` writes scoped memory and can supersede observed versions, `revise` saves a new version of an observed memory, and `forget` archives an observed version.
-`handoff_create/list/get/update/close` preserve progress with TTL and version checks;
-Forge retains actual native sessions and file checkpoints.
-
-Agent Knowledge's `context_search` combines document and graph evidence;
-`document_search`, `knowledge_search` and `knowledge_neighborhood` narrow that
-search. `document_ingest` uses a stable idempotency key and
-`document_ingest_status` distinguishes accepted work from a ready document.
+Agent Memory owns durable memories and short-term task handoffs; `recall` searches
+Memory only. Forge retains actual native sessions and file checkpoints. Agent
+Knowledge owns documents and the knowledge graph; `context_search` combines
+document and graph evidence. The tool lists are in the
+[Memory connection notes](integrations/agent-memory.md) and the
+[Agent Knowledge connection notes](integrations/agent-knowledge.md).
 
 Automatic pre-run recall requires `memoryRecall` and an explicit Memory server
 binding permitting `recall`; dynamic discovery alone does not enable it. IDs from
-either service are not Studio Artifact IDs. Use the
-[Memory connection notes](integrations/agent-memory.md) and
-[Agent Knowledge connection notes](integrations/agent-knowledge.md). Current caller delegation
+either service are not Studio Artifact IDs. Current caller delegation
 uses signed, audience-bound identity and explicit local bindings, never
 `X-User-Email` or matching UUIDs.
 
@@ -128,12 +122,11 @@ for eligibility and OAuth configuration. Google MCP endpoints are in Developer
 Preview; Slack requires an eligible registered app. Both need installation-side
 account connections before authenticated reads can be verified.
 
-Google discovery requires the companion client's explicit handling of the
+Google discovery uses the host app's explicit handling of the
 `https://accounts.google.com/` → `https://accounts.google.com` issuer alias;
-older clients reject the metadata. Callback issuer validation remains exact.
-Slack discovery accepts the official endpoint's challenged origin-level resource
-identifier through a narrowly scoped alias. Older clients without these provider
-aliases need an update. Manifest sync does not update the client or authorize an account.
+callback issuer validation remains exact. Slack discovery accepts the official
+endpoint's challenged origin-level resource identifier through a narrowly scoped
+alias. Manifest sync does not authorize an account.
 
 The `email-triage`, `calendar-management` and `workspace-search` skills use only
 the capabilities offered to the run. Native Google IDs are source identifiers,
@@ -158,8 +151,7 @@ The `audio-processing` skill passes `file_id` to `recording_import.source` and
 runs `audio_job_submit` once the recording is ready. A download failure must not
 produce a fabricated file ID or a processing submission.
 
-Deploy Studio with `mcpFileOutputs` support before syncing workspace plugin 1.3.0
-or later, then verify `get_file` returns a usable `file_id`. The transfer limit is
+After sync, verify that `get_file` returns a usable `file_id`. The transfer limit is
 512 MiB. Agent Knowledge publishes transcripts and meeting notes as search
 documents; Memory records are written only on explicit request. Plaud's existing
 transcript must not replace a requested Agent Knowledge transcription.
@@ -217,9 +209,10 @@ HTML inspection returns source while reading extracts safe text. `SaveFile` and
 
 For MCP results with non-empty `content`, the model receives those blocks, not
 the accompanying `structuredContent`. Check visible counts and validation
-messages; absent metadata is not proof that an extraction is complete. Server
-authors must include model-critical metadata in text until the client carries
-both representations.
+messages; absent metadata is not proof that an extraction is complete. When
+`content` is empty or holds only blank text, the model receives the serialized
+`structuredContent` instead. Server authors must include model-critical metadata
+in text.
 
 ## Skill attachments and parsing
 
@@ -238,16 +231,10 @@ and their schemas.
 
 ### Console icons
 
-The console reads a plugin icon from `extensions.org.opspresso.agent-studio.icon`,
-a skill icon from the `SKILL.md` metadata entry `org.opspresso.agent-studio.icon`,
-and a bundled server icon from the `icon` frontmatter field of its extension
-document. Values come from the host app's supported set: Tabler icon names and
-service marks. A bundled server uses the mark of its service; a plugin or skill
-uses an icon for the kind of work it does. See
-[Console icons](../README.md#console-icons). Sync writes the icon with the entry.
-When a plugin-owned server document no longer declares an icon, sync clears the
-stored icon. An administrator sets icons for hand-registered entries in the
-console. The console also shows the tool icons that an MCP server returns from
+[Console icons](../README.md#console-icons) gives the declarations and the
+supported set. Sync writes the icon with the entry. When a plugin-owned server
+document declares no icon, sync clears the stored icon. An administrator sets
+icons for hand-registered entries in the console. The console also shows the tool icons that an MCP server returns from
 `tools/list`. It accepts only inline images (`data:`) and HTTPS images from the
 server's own origin.
 
@@ -277,53 +264,11 @@ external actions.
 
 ## Persistent Workspace and Sandbox tasks
 
-The execution plugin supplies reusable task guidance, not a shell or account credentials.
-Bind the Agent Forge Tools entry and the workspace-task and sandbox-task skills.
-The operator configures the Forge service, its Sandbox provider, worker and model gateway.
-Each user creates a Workspace profile (runtime, central model, repository rules,
-checks and deployment workflows) and selects a default in the Forge console.
-Each user connects a Git host (github.com, GitHub Enterprise Server, GitLab.com,
-self-managed GitLab or Gitea, as the operator registers it in Studio) once in Agent Studio, under
-Profile → Git accounts (`/profile/git`). Forge stores no Git credential and no
-repository list, and no repository is registered with Forge.
-The plugin grants none of these permissions.
-The actual tool schemas remain authoritative. Model tool inputs cannot choose the
-Forge URL, caller identity, organization or provider credentials.
-
-### Start and observe a task
-
-Read the profile with `profile_list`/`profile_get`, reuse an existing Workspace from
-`workspace_list`, or create one with `workspace_create`. Prepare a repository with
-a Git `prepare` run on an `agent/` branch: it names the Git host `origin` (from
-`git_connections`), the `repository` path on that host and, when the user names
-one, the `baseBranch`. Without `baseBranch` the run starts from the repository's
-default branch. The Git host decides access for the connected account. When the host is not connected,
-Forge refuses with `git_connection_required` and a `connectUrl`; the Agent gives
-that link to the user. Then submit command, native task or Git
-steps with `run_submit`. One run executes per Workspace at a time. Keep
-queued/running distinct from success. Read `run_result`, then `run_events` up to
-`lastEventSeq` until `hasMore` is false; `outputLoss` remains a permanent warning.
-`interrupted` means an uncertain external effect and is never replayed automatically.
-Lost responses are reconciled with `run_lookup_request` or `workspace_lookup_request`,
-not a new execution.
-
-### Git publication
-
-A coding request includes review, commit, work-branch push and pull-request runs
-without another approval, unless the user limits the scope. Protected branch
-publication, merge, tags, releases and deployment workflow dispatch require a
-separate request and the Workspace owner's approval in the Forge console; MCP has
-no approval tool. The approval page shows the committed change from the `prepare`
-base commit to the approved HEAD and, for a merge, a link to the pull request.
-Forge merges into the repository's default branch only, which the Git host reports
-and which need not be `main`. It refuses a merge on a Workspace whose base branch
-is not the default branch with `git_action_unsupported` before it creates an
-approval, and the user merges that pull request on the Git host. A deployment
-workflow runs on the default branch only. A Workspace prepared with
-`sourceRevision` is read-only: Forge refuses every Git step except `review` there.
-Tags bind to the reviewed HEAD;
-releases bind to an existing tag and its exact commit. General agent descriptions and system prompts identify
-capabilities; account, repository, branch and requested file changes belong in
-each user's task input.
-See the [Workspace agent profile](code-agent.md) for task bindings, runtime limits,
-GitHub Actions toolset configuration and the general system prompt.
+The execution plugin supplies task guidance, not a shell or account credentials.
+Bind the Agent Forge Tools entry and the `workspace-task` and `sandbox-task` skills.
+Model tool inputs cannot choose the Forge URL, caller identity, organization or
+provider credentials, and the actual tool schemas remain authoritative.
+The [Workspace agent profile](code-agent.md) covers setup, Git host connection,
+repository rules, Git publication and approval, GitHub toolsets and the system
+prompt. The `workspace-task` skill carries the run contract: submission,
+observation and recovery of a lost response.

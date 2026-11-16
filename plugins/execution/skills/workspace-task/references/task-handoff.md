@@ -38,7 +38,7 @@ command Runtime은 `input.script`를 셸로 그대로 실행한다. 설명·번�
 | 반복 작업 스크립트 | 허가된 입력·출력·외부 효과, 비대화형 실행 | 종료 코드·재실행 영향·오류 보고 |
 | 문서·보고서용 자료 생성 | 제공된 내용과 출력 형식 | 문서·스프레드시트 Skill/도구가 있으면 해당 편집·전달 계약 사용 |
 
-Chat 첨부와 Studio Artifact는 Workspace 파일로 자동 마운트되지 않는다. 현재 Forge 도구에는 파일 인자가 없다.
+Chat 첨부와 Studio Artifact는 Workspace 파일로 자동 마운트되지 않는다. Forge 도구에는 파일 인자가 없다.
 발견한 schema에 파일 참조 parameter가 있을 때만 Studio 파일 ID를 넘긴다. 없으면 필요한 텍스트를 작업 지시에 넣거나
 저장소·접근 가능한 위치의 파일을 사용한다. Workspace 파일이 Studio Artifact로 생겼다고 가정하지 않는다.
 웹 미리보기·다운로드·공개 URL도 제공된 기능이 있을 때만 약속한다.

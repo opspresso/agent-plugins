@@ -5,26 +5,26 @@
 ## 기억을 쓰는 에이전트의 프롬프트
 
 기억을 지속적으로 쓰는 에이전트에는 조회·저장 시점과 공유 범위를 적는다. 아래 예시는
-Agent Memory의 `remember`·`recall`·`revise`·`forget` 계약이다. 배포된 서버의 실제 schema를 먼저
+Agent Memory의 `recall`·`memory_get`·`remember`·`revise`·`forget` 계약이다. 배포된 서버의 실제 schema를 먼저
 확인하고 없는 도구를 호출하게 만들지 않는다.
 
 **동작 규칙**에는 필요한 항목을 넣는다.
 
 ```
 - 이전 결정·선호는 Agent Memory의 recall로 찾는다. 조직 문서와 Graph는 Agent Knowledge의 context_search로 찾는다.
-- recall은 Memory만 검색한다. 결과에는 기억 ID·버전과 본문·출처·scope가 함께 있다.
+- recall은 Memory만 검색한다. 결과에는 기억 ID·version·kind·category와 본문이 함께 있다.
   검색 결과가 없다는 것을 자료가 전혀 없다는 뜻으로 해석하지 않는다.
-- 다음 작업에도 유효한 사실은 저장 권한과 공유 범위를 확인하고 remember로 저장한다.
-  kind, scope, title, content, source를 실제 schema에 맞춰 전달한다.
+- 다음 작업에도 유효한 규칙·사실·교훈은 저장 권한과 공유 범위를 확인하고 remember로 저장한다.
+  kind(rule, fact, lesson), title, content와 필요한 scope, repository, category를 실제 schema에 맞춰 전달한다.
   idempotencyKey가 제공되면 같은 저장 요청의 키와 입력을 유지한다. 키 없는 신규 생성의
-  응답이 불확실할 때 같은 내용을 무조건 다시 저장하지 않는다.
+  응답이 불확실할 때 같은 내용을 무조건 다시 저장하지 않는다. outcome이 existing이면 다시 저장하지 않는다.
 - scope.kind는 organization, team, user 중 요청에 맞게 명시한다.
   개인·팀 범위가 거부되면 조직 전체에 대신 저장하지 않는다. 대화 전용 scope는 없다.
-- 기억의 일부가 틀리면 recall 결과의 memory ID와 version으로 revise(memoryId, expectedVersion, title?, content?)를 호출한다.
-  기억 전체를 새 사실로 바꿀 때는 remember의 supersedes에 이전 기억의 ID와 version을 넣는다.
-- 잊기 요청은 실제 조회·저장 결과의 memory ID와 현재 version을 확인한 뒤
-  forget(memoryId, expectedVersion, changeReason?)으로 처리한다.
-  성공은 archive이며 원문·revision의 영구 삭제가 아니다.
+- 기억의 일부가 틀리면 recall 결과의 memory ID로 memory_get을 호출해 전체 본문을 읽고,
+  revise(memoryId, expectedVersion?, title?, content?)로 전체 새 본문을 보낸다.
+  기존 기억을 새 문장으로 바꿀 때는 remember의 replaces에 그 기억의 ID를 넣는다.
+- 잊기 요청은 실제 조회·저장 결과의 memory ID를 확인한 뒤 forget(memoryId, expectedVersion?, reason?)으로 처리한다.
+  성공은 휴지통 이동이며 사람이 콘솔에서 30일 동안 복원할 수 있다. 영구 삭제가 아니다.
 - 권한 오류나 version 충돌을 성공으로 보고하지 않는다. 충돌은 최신 기억을 다시 확인하고
   사용자가 허가한 대상과 여전히 일치할 때만 재시도한다.
 - 기억의 출처·유효 기간을 확인한다. 파일·설정·이름은 현재 상태와 대조한다.
@@ -39,9 +39,9 @@ Agent Knowledge의 문서 수집 도구가 제공되면 `document_ingest`로 개
 기억 본문 수정은 Memory의 `revise` 도구나 관리 화면, Graph 작성은 Agent Knowledge의 관리 화면이나 API에서 수행한다.
 검색 결과의 문서 ID는 호스트 앱의 `File` artifact ID가 아니다.
 
-`recall`의 text에는 ID와 version이 있지만 항목당 1,200자·전체 4,000자로 잘린다.
+`recall`의 text에는 ID와 version이 있지만 항목당 1,200자·전체 기본 4,000자로 잘린다. 잘린 기억은 `memory_get`으로 전체를 읽는다.
 호스트 앱이 전달하지 않은 `structuredContent.hits`를 읽었다고 가정하지 않는다.
-`forget`의 version을 1로 고정하거나 제목만 보고 ID를 만들지 않는다.
+`expectedVersion`을 1로 고정하거나 제목만 보고 ID를 만들지 않는다.
 
 자동 회상을 원하면 버전의 `memoryRecall`을 켜고 별도 등록한 서버를 명시적으로 binding하며
 허용 도구에 `recall`을 포함한다. 요청별 동적 발견만으로는 실행 전 자동 recall이 되지 않는다.

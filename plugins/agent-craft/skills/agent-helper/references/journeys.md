@@ -41,7 +41,7 @@ push로 배포하려면 사용자가 요청할 때 `push_enable`로 Project의 p
 ## 기억하는 Agent
 
 1. Agent의 `mcpList`에 `agent-memory`를 연결하고 `recall`을 허용한다.
-2. `parameters.memoryRecall`을 켠다. 실행 뒤 자동으로 단기 기억을 남기려면 `memoryCapture`도 켜고 `memory_capture`를 허용한다.
+2. `parameters.memoryRecall`을 켠다. 실행을 세션 기록으로 남겨 Dreaming이 기억을 모으게 하려면 `memoryCapture`도 켜고 `memory_capture`를 허용한다.
 3. 프롬프트에 언제 `remember`할지(사용자가 요청할 때, 확인된 선호·결정)와 기본 scope를 적는다.
 
 ## 코딩 Agent 준비

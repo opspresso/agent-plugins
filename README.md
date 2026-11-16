@@ -121,12 +121,9 @@ deployment in the `agent-mcps` namespace, with matching host app descriptions:
 - [Kubernetes](plugins/devops/org.opspresso.agent-studio/mcp/kubernetes.md)
 
 Plugin sync registers `http://mcp-<name>.agent-mcps.svc.cluster.local/mcp` for
-these four services. They require cluster DNS/network access and the host app's
-internal-host allowlist; see [in-cluster setup](docs/agent-studio.md#in-cluster-mcp-services).
-Upstream identities, credentials and RBAC remain deployment-managed. Other
-installations can register their own endpoints under distinct names so sync does
-not overwrite them. Removing a bundled declaration does not remove an existing
-installation; see
+these four services. Network access, credentials and RBAC are described in
+[in-cluster setup](docs/agent-studio.md#in-cluster-mcp-services); what sync
+creates, overwrites and leaves is described in
 [sync ownership](docs/agent-studio.md#registration-and-sync-ownership).
 
 AWS Knowledge supplies AWS documentation, not general research or live account
@@ -256,7 +253,9 @@ python3 scripts/validate.py
 node --test scripts/test_html_*.mjs
 ```
 
-CI runs all three without installing dependencies, once per change when it reaches `main`. The Python checker enforces
+CI (`.github/workflows/validate.yml`) runs all three on GitHub-hosted `ubuntu-latest`
+without installing dependencies, on each push to `main` and on manual dispatch.
+A pull request does not start CI. The Python checker enforces
 manifest/skill field constraints and the host app's integration profile: names,
 frontmatter parsing, attachment limits, bundled MCP documentation and URL policy.
 Duplicate frontmatter keys, symlink plugin payloads, empty
@@ -286,8 +285,3 @@ model routing, rendering or live integration behavior. For workflow changes,
 also review [service boundary scenarios](evals/service-boundaries.json) and realistic positive and near-miss
 requests using [the evaluation guide](plugins/agent-craft/skills/skill-writer/evaluation.md),
 and distinguish scenario review from actual model/tool execution.
-
-## CI runner
-
-콘텐츠 검증은 GitHub-hosted `ubuntu-latest`에서 `main` push 또는 수동 실행으로 수행합니다.
-PR 자체는 CI를 시작하지 않습니다.
