@@ -477,3 +477,5 @@ Studio Chat이 호출 전에 승인 카드를 보여 주고, 사용자가 승인
 
 진행한 작업마다 확인한 사실만 보고한다: 저장소와 PR/MR, Project 런타임과 pipeline 이름, 적용한 선언의 SHA, 단계별 리소스 상태, Release 이름, Deployment ID·상태·URL.
 승인을 기다리는 작업과 사용자가 할 일(승인, `secretsUrl`에서의 secret 입력, Git 호스트 연결)을 분리해 알린다.
+첫 배포를 보고할 때 다음 배포를 시작하는 방법을 쉬운 말로 함께 알린다. `push.state`가 `off`이면 "바뀐 코드는 요청할 때 배포한다"와
+켤 수 있는 push 배포(예: "`main`에 병합하면 `dev`에 자동 배포")를 pipeline의 trigger로 설명하고, 켤지 묻는다. 사용자가 원할 때만 [push 배포](#push-배포)대로 켠다.
