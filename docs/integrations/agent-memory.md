@@ -22,11 +22,11 @@ in installation secret configuration, never skills, prompts or task inputs.
 
 | Discovered tool | Purpose |
 |---|---|
-| `recall` | Ranked memories for a question: ID, version, kind and category with the content, cut to fit; no document or graph search |
+| `recall` | Ranked memories for a question: ID, version, kind and topic with the content, cut to fit; no document or graph search |
 | `memory_get` | One memory whole, with its change history |
-| `memory_category` | The category index, or every memory of one category |
+| `memory_topic` | The topic index, or every memory of one topic |
 | `remember` | Save one scoped `rule`, `fact` or `lesson`; `replaces` moves the listed memories to the trash in the same step. Keep an explicit idempotency key on retries |
-| `revise` | Change a memory's kind, title, content, repository or category; send the complete new content |
+| `revise` | Change a memory's kind, title, content, repository or topic; send the complete new content |
 | `forget` | Move a memory to the trash, where a person can restore it in the Memory console for 30 days |
 | `dream` | Start the caller's personal dreaming run or read the latest run |
 | `handoff_create` | Save goal, summary, next actions, blockers and references with an idempotency key |
