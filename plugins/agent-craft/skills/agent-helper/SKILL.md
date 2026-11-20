@@ -63,7 +63,7 @@ Helper는 사용자가 Agent 플랫폼을 쓰도록 돕는다. 사용자의 목�
 | 화면 입력·클릭 | 페이지 전용 작업(예: `agent_draft`)을 우선하고, 없으면 최신 inspect ref로 `StudioControl` |
 | Agent·Skill·trigger·연동 변경 | Studio 관리 도구. [agent-settings](references/agent-settings.md) |
 | 서비스 조회·작업 시작 | 서비스 도구. 해당 서비스 참고 파일 |
-| 승인·거절·삭제 확인·비밀 입력 | 사람이 한다. 페이지를 열거나 링크를 주고 무엇을 확인하고 누를지 말한다. [사람의 결정](#사람의-결정) |
+| 승인·거절·삭제 확인·비밀 입력 | 사람이 한다. 결정 화면의 링크(또는 `/inbox`)를 주고 무엇을 확인하고 누를지 말한다. [사람의 결정](#사람의-결정) |
 | 오류·실패·"동작하지 않음" | [troubleshooting](references/troubleshooting.md) |
 
 ## 공통 원칙
@@ -125,7 +125,10 @@ Helper는 사용자가 Agent 플랫폼을 쓰도록 돕는다. 사용자의 목�
 승인·거절·삭제 확인·비밀 입력은 사람이 직접 한다. Helper는 다음 순서로 안내한다.
 
 1. 조회 도구로 결정할 대상과 상태를 확인한다(예: `git_approval_get`, `deployment_get`, `project_status`).
-2. 결정할 곳을 연다. 닫힌 화면이면 도구 결과의 링크(`approvalUrl`, `secretsUrl` 등)를 그대로 준다.
+2. 결정할 곳의 링크를 준다. Forge Git 승인, 데스크톱 승인 요청, Runway 배포 화면은 닫힌 화면이므로 Helper가 이동하거나 읽지 못한다.
+   그 화면의 상대 경로(예: `/forge/git/approvals/<approvalId>`)나 받은 일(`/inbox`)을 링크로 주고, 사람이 열어 확인하고 결정한다.
+   도구 결과의 `approvalUrl`은 같은 화면의 전체 주소다. 화면이 없는 surface에서는 그 주소를 그대로 준다.
+   비밀 입력 화면(`secretsUrl`)과 Knowledge 검토 화면은 Helper가 열 수 있다. 그래도 비밀 입력란과 결정 버튼은 읽거나 채우거나 누르지 않는다.
 3. 그 화면에서 확인할 내용과 누를 버튼을 한두 문장으로 말한다.
 4. 결정 결과가 Chat으로 돌아오거나 사용자가 알려 주면 상태를 한 번 다시 읽고 보고한다.
 
@@ -133,12 +136,12 @@ Helper는 사용자가 Agent 플랫폼을 쓰도록 돕는다. 사용자의 목�
 |---|---|---|
 | 결정 대기 목록 | 받은 일(`/inbox`). 모든 서비스의 항목이 모인다 | 항목을 열어 아래 해당 화면에서 결정한다 |
 | Studio 변경, Runway 삭제·`push_enable`·`host_move`, Forge 승인 버튼 | Chat의 승인 카드 | 카드의 대상과 바뀌는 내용을 확인하고 승인하거나 거절한다 |
-| Forge 보호된 Git 작업 | Chat의 `git_approval_get` 화면, 또는 `/forge/git/approvals/<approvalId>`(결과의 `approvalUrl`) | 커밋된 변경(diff)과 `merge`의 PR/MR 링크를 확인한다. Chat에서는 **승인**·**거절**을 누르고 승인 카드에서 확인한다. AgentOps 화면에서는 **이 작업 승인**·**거절**을 누르고 확인 창에서 확인한다. 기한은 Run 접수 후 24시간 |
-| Runway 소유자 배포 승인 | Chat의 배포 화면, 또는 `/runway/projects/<slug>/deployments/<deploymentId>`(결과의 `approvalUrl`) | 환경·요청 종류·Release(commit)와 바뀌는 Release를 확인한다. Chat에서는 **승인하고 시작**·**거절**을 누르고 승인 카드에서 확인한다. AgentOps 화면에서는 **승인**·**거절** 뒤 확인 창의 **{환경} 배포 승인**·**배포 거절**을 누른다. 기한은 24시간 |
-| Runway secret 값 | `/runway/projects/<slug>/secrets/new?environment=&variable=`(결과의 `secretsUrl`) | 값을 입력하고 저장한다. 값은 Chat에 쓰지 않는다 |
+| Forge 보호된 Git 작업 | Chat의 `git_approval_get` 화면, 또는 `/forge/git/approvals/<approvalId>`(결과의 `approvalUrl`, 닫힌 화면, 링크로 준다) | 커밋된 변경(diff)과 `merge`의 PR/MR 링크를 확인한다. Chat에서는 **승인**·**거절**을 누르고 승인 카드에서 확인한다. AgentOps 화면에서는 **이 작업 승인**·**거절**을 누르고 확인 창에서 확인한다. 기한은 Run 접수 후 24시간 |
+| Runway 소유자 배포 승인 | Chat의 배포 화면, 또는 `/runway/projects/<slug>/deployments/<deploymentId>`(결과의 `approvalUrl`, 닫힌 화면, 링크로 준다) | 환경·요청 종류·Release(commit)와 바뀌는 Release를 확인한다. Chat에서는 **승인하고 시작**·**거절**을 누르고 승인 카드에서 확인한다. AgentOps 화면에서는 **승인**·**거절** 뒤 확인 창의 **{환경} 배포 승인**·**배포 거절**을 누른다. 기한은 24시간 |
+| Runway secret 값 | `/runway/projects/<slug>/secrets/new?environment=&variable=`(결과의 `secretsUrl`). Helper가 열 수 있지만 입력란은 읽거나 채우지 않는다 | 사용자가 값을 입력하고 저장한다. 값은 Chat에 쓰지 않는다 |
 | Studio credential·MCP header·MCP OAuth·개인 token | `StudioRequestCredential`의 승인 카드. 도구가 없으면 [비밀 값](references/agent-settings.md#비밀-값)의 화면 | 카드나 화면에서 입력·연결·발급한다 |
 | Knowledge AI 후보·회의 제안 | `/knowledge/review?tab=groups`·`meetings`·`chunks` | 후보마다 근거를 보고 승인하거나 거절한다 |
-| Forge 개발 데스크톱 요청(관리자) | `/forge/desktops/requests` | 요청자·풀·사유를 확인하고 승인하거나 거절한다 |
+| Forge 개발 데스크톱 요청(관리자) | `/forge/desktops/requests`(닫힌 화면, 링크로 준다) | 요청자·풀·사유를 확인하고 승인하거나 거절한다 |
 
 ## Agent 생성과 개선
 

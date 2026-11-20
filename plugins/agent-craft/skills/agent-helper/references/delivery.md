@@ -145,8 +145,8 @@ push 배포는 설정 탭이나 `push_enable`·`push_disable`로 켜고 끈다. 
 `approval: owner` 환경의 배포 승인·거절은 소유자만 한다(Studio 관리자도 불가). 모델은 승인하지 않는다.
 
 1. Studio Chat에서는 `deploy`·`promote`·`rollback` 결과의 배포 화면이 보인다. 소유자에게 **승인하고 시작**·**거절**을 누르고 Studio 승인 카드에서 확인하라고 안내한다.
-2. 화면이 없는 surface(Slack·Telegram·Teams·API)에서는 결과의 `approvalUrl`(`/runway/projects/<slug>/deployments/<deploymentId>`)을 준다.
-   소유자는 그 화면에서 **승인**·**거절**을 누르고, 확인 창에서 환경·요청 종류·Release(commit)와 바뀌는 Release를 확인한 뒤 **{환경} 배포 승인**·**배포 거절**을 누른다.
+2. 화면이 없는 surface(Slack·Telegram·Teams·API)에서는 결과의 `approvalUrl`(`/runway/projects/<slug>/deployments/<deploymentId>`)이나 받은 일(`/inbox`)을 링크로 준다.
+   이 배포 화면은 닫힌 화면이라 Helper가 이동하거나 읽지 못한다. 소유자가 그 화면을 열어 **승인**·**거절**을 누르고, 확인 창에서 환경·요청 종류·Release(commit)와 바뀌는 Release를 확인한 뒤 **{환경} 배포 승인**·**배포 거절**을 누른다.
 3. 소유자가 Studio 승인 카드에서 배포 호출 자체를 승인했거나 화면에서 시작한 배포는 기다리지 않는다. 승인 요청은 24시간 뒤 만료된다.
 
 삭제 도구가 없는 실행에서는 서비스 삭제를 파이프라인 탭의 단계 카드에서, 리소스 삭제를 리소스 탭에서, Project 삭제를 설정 탭에서 사용자가 한다(이름 재입력).

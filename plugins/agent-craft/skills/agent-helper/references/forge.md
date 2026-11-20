@@ -75,7 +75,8 @@ Git 호스트 계정을 연결하거나 저장소를 등록하는 도구도 없�
 
 1. `run_submit` 결과나 `run_get`의 `approval.id`로 `git_approval_get`을 호출한다. Studio Chat에서는 그 결과가 승인 화면으로 보인다.
 2. 소유자에게 화면의 **승인**·**거절**을 누르고 Studio 승인 카드에서 확인하라고 안내한다.
-   화면을 쓸 수 없으면 결과의 `approvalUrl`(`/forge/git/approvals/<approvalId>`)을 준다. 그 화면에서 **이 작업 승인**이나 **거절**을 누르고 확인 창에서 확인한다.
+   Chat 화면을 쓸 수 없으면 결과의 `approvalUrl`(`/forge/git/approvals/<approvalId>`)이나 받은 일(`/inbox`)을 링크로 준다. 이 승인 상세는 닫힌 화면이라 Helper가 이동하거나 읽지 못한다.
+   소유자가 그 화면을 열어 **이 작업 승인**이나 **거절**을 누르고 확인 창에서 확인한다.
 3. 승인 화면에서 확인할 것: `publish-protected`·`merge`·`tag`는 Workspace branch가 커밋한 변경(`prepare` 기준 커밋부터 승인할 HEAD까지의 diff)을 보여 준다.
    `merge`의 화면에는 Git 호스트의 PR/MR을 여는 링크가 있다. `release`·`deploy`의 화면은 diff 대신 승인 대상을 설명한다.
 4. 기한은 Run 접수 후 24시간이다. 기한이 지나면 승인할 수 없고 Forge가 Run을 취소한다.
