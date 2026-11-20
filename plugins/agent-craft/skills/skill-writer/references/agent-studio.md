@@ -36,4 +36,4 @@ Helper의 `StudioSaveSkill`은 한 Agent 전용 Skill을 저장한다. 저장소
 - `--`는 전용 Skill에만 쓴다. 이 저장소의 공유 Skill 이름에는 `--`를 쓰지 않는다. Studio sync가 거절한다.
 - `files`는 위의 참고 파일 형식·크기 한도를 따른다. 경로는 `references/guide.md` 같은 상대 경로다.
 - 새 Skill은 소유 Agent에 자동 연결되고 다른 Agent에는 연결할 수 없다. 동적 탐색 대상이 아니다.
-- 교체·삭제는 `StudioRead(resource="skill")`로 읽은 `updatedAt`이 필요하다.
+- 새로 만들 때는 `revision`에 `null`을 보낸다. 교체·삭제는 `StudioRead(resource="skill")`로 읽은 `revision`을 그대로 보낸다.

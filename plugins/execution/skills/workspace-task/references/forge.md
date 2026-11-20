@@ -32,7 +32,7 @@
 `profile_delete`는 사용자가 profile의 영구 삭제를 명시적으로 요청한 경우에만 쓴다. 소유자만 삭제할 수 있고 되돌릴 수 없다.
 profile을 삭제하거나 AgentOps의 프로필 화면에서 `scope:user`로 바꾸면 그 profile을 기본으로 선택한 사용자의 선택과 조직 기본 프로필 지정이 해제된다. 닫은 Workspace와 끝난 Run은 수락한 설정을 유지한다.
 응답을 잃으면 `profile_get`을 읽는다. `profile_not_found`이면 삭제된 것이다.
-`workspace_delete`는 영구 삭제 요청에만 쓴다. closed Workspace와 관측한 `expectedRevision`이 필요하다.
+`workspace_delete`는 영구 삭제 요청에만 쓴다. closed Workspace와 관측한 `revision`이 필요하다.
 
 ## 입력 형태
 
@@ -97,7 +97,7 @@ Run 상태는 `queued`, `running`, `succeeded`, `failed`, `cancelled`, `interrup
 
 | code | 행동 |
 |---|---|
-| `profile_revision_conflict` | `profile_get`으로 현재 revision을 다시 읽는다 |
+| `workspace_profile_conflict` | `profile_get`으로 현재 revision을 다시 읽는다 |
 | `profile_in_use` | 삭제하려는 profile을 닫지 않은 Workspace나 끝나지 않은 Run이 쓴다. `error`가 본인 Workspace 수, 다른 사용자의 Workspace 수, 끝나지 않은 Run 수를 알린다. 사용자가 요청하면 본인 Workspace를 `workspace_close`로 닫고, Run이 끝난 뒤 다시 삭제한다. 다른 사용자의 Workspace가 쓰면 Studio 관리자가 AgentOps의 프로필 화면에서 profile을 `scope:user`로 바꿔야 한다고 알린다(MCP로는 `console_required`) |
 | `profile_required`, `profile_input_conflict` | profile 쌍을 함께 보내거나 충돌 입력을 뺀다 |
 | `profile_runtime_mismatch` | 기존 Workspace의 Runtime·profile을 유지하거나 새 Workspace를 만든다 |
