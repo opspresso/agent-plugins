@@ -24,7 +24,7 @@ Agent Memory의 `recall`·`memory_get`·`remember`·`revise`·`forget` 계약이
   revise(memoryId, expectedVersion?, title?, content?)로 전체 새 본문을 보낸다.
   기존 기억을 새 문장으로 바꿀 때는 remember의 replaces에 그 기억의 ID를 넣는다.
 - 잊기 요청은 실제 조회·저장 결과의 memory ID를 확인한 뒤 forget(memoryId, expectedVersion?, reason?)으로 처리한다.
-  성공은 휴지통 이동이며 사람이 콘솔에서 30일 동안 복원할 수 있다. 영구 삭제가 아니다.
+  성공은 휴지통 이동이며 사람이 AgentOps의 기억 화면(`/memory/memories`)에서 30일 동안 복원할 수 있다. 영구 삭제가 아니다.
 - 권한 오류나 version 충돌을 성공으로 보고하지 않는다. 충돌은 최신 기억을 다시 확인하고
   사용자가 허가한 대상과 여전히 일치할 때만 재시도한다.
 - 기억의 출처·유효 기간을 확인한다. 파일·설정·이름은 현재 상태와 대조한다.

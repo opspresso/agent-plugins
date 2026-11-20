@@ -18,6 +18,7 @@ contracts before changing a plugin's tool instructions or connection settings.
 | Project | Owns | Plugin consequence |
 |---|---|---|
 | `agent-studio` | Plugin sync, current Agent bindings, builtin tools, attachment extraction, artifact delivery, MCP file references, service result delivery to Chat and each user's Git host connections | A component must be offered through saved bindings or enabled dynamic discovery; describe only inputs and results the run can access |
+| `agentops` | The AgentOps console (each service's `CONSOLE_BASE_URL`): every human screen of Studio and the Agent services, and the Helper dock | Point people to AgentOps screen paths (`/studio/...`, `/memory/...`, `/knowledge/...`, `/forge/...`, `/runway/...`, `/models`); services have no console of their own |
 | `agent-models` | Provider connections, selected models, inference routing, usage ledger and the public model catalog | Not a Tools entry. Use a selected model `id`, not its provider `wireId`, in Agent settings |
 | `agent-memory` | Long-term memories and short-term task handoffs | Bind the exact service URL, current caller and `recall`/`remember`/`handoff_*` scopes |
 | `agent-knowledge` | Documents, RAG, knowledge graph, recordings, transcription, meeting notes, audio profiles and job history | Bind its Tools entry; audio runs through Agent Knowledge MCP tools with the user's audio profile |
@@ -35,9 +36,9 @@ only through MCP:
 - Each MCP connection is offered to the Agent as one native specialist. Every
   request carries a short-lived token delegated from the current Studio user.
 - Each service owns its settings (named profiles), execution and history. People
-  manage them in the service console; the Tools detail page shows the settings
-  and history links the service advertises through
-  `org.opspresso.agent.tool-management`.
+  manage them on that service's AgentOps console screens; the Tools detail page
+  (`/studio/tools/<name>`) shows the settings and history links the service
+  advertises through `org.opspresso.agent.tool-management`.
 - When a service accepts long-running work (`audio_job_submit`, `run_submit`,
   `repository_create`, Runway `deploy`, `promote`, `rollback` and their
   retries), Studio records the keyed submission and delivers the terminal
@@ -234,7 +235,7 @@ and their schemas.
 [Console icons](../README.md#console-icons) gives the declarations and the
 supported set. Sync writes the icon with the entry. When a plugin-owned server
 document declares no icon, sync clears the stored icon. An administrator sets
-icons for hand-registered entries in the console. The console also shows the tool icons that an MCP server returns from
+icons for hand-registered entries in the AgentOps console. The console also shows the tool icons that an MCP server returns from
 `tools/list`. It accepts only inline images (`data:`) and HTTPS images from the
 server's own origin.
 
@@ -254,7 +255,7 @@ internal HTTP only for the four declared server names and their exact URLs above
 other non-loopback endpoints must use HTTPS. This validation exception does not
 change the client's network policy or the deployment's access controls.
 
-Sync creates and updates declared names. It can overwrite console edits to
+Sync creates and updates declared names. It can overwrite AgentOps console edits to
 those entries, so change bundled content in this repository. Entries whose names
 no plugin declares remain independently managed. Removing a declaration reports
 an orphan; it does not delete the registration, credentials or deployment.

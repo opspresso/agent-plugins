@@ -30,7 +30,7 @@
 
 응답 `{profileId, profile}`에서 `profile.id`와 `profile.revision`을 사용한다. 둘 다 `null`이면 선택이 없다.
 `profileId`만 있고 `profile`이 `null`이면 선택한 profile에 더 이상 접근할 수 없다.
-두 경우 모두 접수하지 않고 Agent Knowledge 콘솔에서 설정을 선택하도록 안내한다.
+두 경우 모두 접수하지 않고 AgentOps의 오디오 프로필 화면(`/knowledge/recordings/profiles`)에서 설정을 선택하도록 안내한다.
 `profile.settings`에는 `transcriptionModelId`, 선택 `summary`(회의록 모델), `language`, `retention`, `maxActive`, `maxPerOccurrence`가 있다.
 
 ## Studio 파일을 가져온다
@@ -90,7 +90,7 @@
 | --- | --- |
 | profile revision 불일치(409) | `audio_profile_get`으로 현재 revision을 다시 읽는다. 응답 유실 뒤라면 먼저 `audio_request_status`로 원래 요청을 확인한다 |
 | 활성·발생당 한도 초과(409) | 새 작업은 없다. 남은 녹음을 미접수로 보고한다 |
-| `blocked`(`effect_uncertain`) | 모델 호출 결과가 불확실하다. 재시도하지 않고 상태를 보고한다. 관리자가 Agent Knowledge 콘솔에서 확정한다 |
+| `blocked`(`effect_uncertain`) | 모델 호출 결과가 불확실하다. 재시도하지 않고 상태를 보고한다. 관리자가 AgentOps의 작업 화면(`/knowledge/recordings/<recordingId>/jobs/<jobId>`)에서 확정한다 |
 | `failed` | 원인을 보고한다. 사용자가 요청하면 `audio_job_retry`로 재시도한다 |
 | 권한 거절(403)·인증 오류 | 연결과 권한 문제를 보고한다. 다른 credential이나 범위로 바꾸지 않는다 |
 

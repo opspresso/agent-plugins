@@ -50,7 +50,7 @@ binding. Do not put credentials or deployment-specific headers in this repositor
 | Issue fix and feature work | issue_read, repository/code reads | Supply context to Workspace; issue text is not execution permission |
 | CI investigation | actions_list, actions_get, get_job_logs | Read run/attempt/head, failing step and bounded logs; omit actions_run_trigger for investigation-only use |
 | Dependency/security findings | offered Dependabot/code-security reads or supplied advisory | Toolsets and access are optional; 403 or no tool does not mean no vulnerability |
-| Publication of Workspace files | Forge `run_submit` Git actions | Do not substitute push_files, create_branch, create_pull_request or merge_pull_request for Forge Git actions and its console approvals |
+| Publication of Workspace files | Forge `run_submit` Git actions | Do not substitute push_files, create_branch, create_pull_request or merge_pull_request for Forge Git actions and the owner's approvals |
 
 These names are examples from the official server; use the actually discovered
 schemas. For job logs, request a bounded tail and returned content when supported;

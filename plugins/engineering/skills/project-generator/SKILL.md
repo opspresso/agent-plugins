@@ -51,7 +51,7 @@ Forge는 GitHub(github.com·GitHub Enterprise Server)에는 저장소를, GitLab
 3. 생성에 쓸 Workspace profile이 그 이름을 허용하는지 확인한다. 이름은 github.com이 `owner/name`, 다른 host가 `<host>/<path>`다.
    `repositoryMode`가 `new`이면 유효한 모든 이름, `selected`는 `repositories`의 이름, `owners`는 `repositories`의 이름과 `repositoryOwners`의 owner에 속한 이름
    (GitLab은 `<host>/<최상위 group>` 아래 모든 하위 group), `all`은 모든 이름을 허용한다. 허용되지 않으면
-   profile 소유자가 Forge 콘솔에서 profile을 바꿔야 한다고 알린다. 다른 이름의 저장소를 만들거나 profile을 임의로 넓히지 않는다.
+   profile 소유자가 AgentOps의 프로필 화면(`/forge/profiles/<profileId>`)에서 profile을 바꿔야 한다고 알린다. 다른 이름의 저장소를 만들거나 profile을 임의로 넓히지 않는다.
 4. 제공된 조회 도구로 같은 이름의 저장소를 확인한다.
    404는 비공개 저장소 접근 거절일 수도 있다. 다른 이름·fork·공개 전환으로 우회하지 않는다.
 5. Forge `repository_create`에 `origin`(1단계의 host), `profileId`, `profileRevision`, `repository`, 선택 `description`(350자 이하), `private`, `requestKey`를 보낸다.

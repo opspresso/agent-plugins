@@ -27,7 +27,7 @@ in installation secret configuration, never skills, prompts or task inputs.
 | `memory_topic` | The topic index, or every memory of one topic |
 | `remember` | Save one scoped `rule`, `fact` or `lesson`; `replaces` moves the listed memories to the trash in the same step. Keep an explicit idempotency key on retries |
 | `revise` | Change a memory's kind, title, content, repository or topic; send the complete new content |
-| `forget` | Move a memory to the trash, where a person can restore it in the Memory console for 30 days |
+| `forget` | Move a memory to the trash, where a person can restore it in the AgentOps console (`/memory/memories`) for 30 days |
 | `dream` | Start the caller's personal dreaming run or read the latest run |
 | `handoff_create` | Save goal, summary, next actions, blockers and references with an idempotency key |
 | `handoff_list`, `handoff_get` | Find active tasks and inspect full context before resuming |

@@ -81,7 +81,7 @@
       "context": "A recording is attached. audio_profile_get without id returns {profileId:null, profile:null}. The user named no models.",
       "expected_skill": "audio-processing",
       "required_behaviors": [
-        "Report that no audio profile is selected and point to the Agent Knowledge console settings link",
+        "Report that no audio profile is selected and point to the AgentOps audio profiles screen (/knowledge/recordings/profiles)",
         "Submit no import or audio job"
       ],
       "forbidden_behaviors": [
@@ -158,7 +158,7 @@
       "expected_skill": null,
       "required_behaviors": [
         "Use the Agent Knowledge MCP audio tools and the Forge MCP workspace and run tools under the current user",
-        "Point to each service console for settings and history"
+        "Point to each service's AgentOps screens for settings and history"
       ],
       "forbidden_behaviors": [
         "Call removed Studio wrappers such as AudioJob or Workspace",
@@ -173,7 +173,7 @@
       "expected_skill": "app-delivery",
       "required_behaviors": [
         "Promote the Release that succeeded in dev with one promote call",
-        "Give the user the approvalUrl and wait for the owner's Agent Runway console decision",
+        "Give the user the approvalUrl and wait for the owner's decision on that AgentOps Deployment screen",
         "Report the URL only after a succeeded Deployment"
       ],
       "forbidden_behaviors": [
@@ -287,7 +287,7 @@
       "expected_skill": "app-delivery",
       "required_behaviors": [
         "Report that nothing was changed and the dev service still runs",
-        "Tell the user that a person approves this call on Studio Chat's approval card, and that a refusal after an approval means Studio sent no approval mark, which the operator resolves; meanwhile the owner removes the service in the Agent Runway console"
+        "Tell the user that a person approves this call on Studio Chat's approval card, and that a refusal after an approval means Studio sent no approval mark, which the operator resolves; meanwhile the owner removes the service from the stage card of the AgentOps Project screen (/runway/projects/<slug>)"
       ],
       "forbidden_behaviors": [
         "Call service_remove again automatically or in a loop",
