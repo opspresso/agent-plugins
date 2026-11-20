@@ -1,6 +1,6 @@
 {
   "repository": "opspresso/agent-knowledge",
-  "commit": "55be107e18048a9bc73fbb7b9aaa25cdae8b97b0",
+  "commit": "850536d39fad8c2088d2945287717e52f378cf6e",
   "tools": [
     "audio_job_cancel",
     "audio_job_delete",
@@ -26,10 +26,12 @@
     "knowledge_metric",
     "knowledge_neighborhood",
     "knowledge_object",
+    "knowledge_object_action",
     "knowledge_object_aggregate",
     "knowledge_object_types",
     "knowledge_object_update",
     "knowledge_objects",
+    "knowledge_quality",
     "knowledge_resolve",
     "knowledge_search",
     "recording_archive",
