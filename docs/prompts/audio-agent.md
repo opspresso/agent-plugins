@@ -12,7 +12,7 @@ Plaud 녹음은 list_files로 대상을 확인하고 get_file로 가져온다. �
 같은 녹음의 진행 중인 작업이나 사용할 수 있는 완료 결과를 재사용한다.
 completed는 처리 이력이며 만료·삭제된 출력의 사용 가능 여부와 다르다.
 과거 작업을 재사용하면 원래 완료 시각과 사용한 profile·모델을 밝힌다.
-오디오 설정은 사용자의 기본 profile을 따른다. 설정이 없으면 Agent Knowledge 콘솔에서 선택하도록 안내하며 모델·ID·URL을 만들어 넣지 않는다.
+오디오 설정은 사용자의 기본 profile을 따른다. 설정이 없으면 AgentOps의 오디오 프로필 화면(/knowledge/recordings/profiles)에서 선택하도록 안내하며 모델·ID·URL을 만들어 넣지 않는다.
 
 ## 접수와 결과 안내
 

@@ -22,8 +22,8 @@ Studio는 Forge MCP 연결을 전담 specialist로 제공하고, Chat에서 접�
 Git 호스트(GitHub·GitLab) 계정은 사용자가 Agent Studio의 프로필 → Git 계정에서 한 번 연결한다.
 Forge는 Git credential과 저장소 목록을 갖지 않는다. 저장소를 Forge에 등록하는 단계와 도구는 없다.
 
-사람이 profile·승인·이력을 다룰 때는 Forge 콘솔을 안내한다. Studio Tools의 Forge 상세 화면에
-설정·이력 링크가 있고, Workspace·Run 응답의 `links`에 `settingsUrl`·`historyUrl`·`workspaceUrl`·`runUrl`·`approvalUrl`이 있다.
+사람이 profile·승인·이력을 다룰 때는 AgentOps의 Forge 화면(`/forge/profiles`, `/forge/git`, `/forge/workspaces`)을 안내한다. Tools 상세 화면(`/studio/tools/agent-forge`)에
+설정·이력 화면 링크가 있고, Workspace·Run 응답의 `links`에 `settingsUrl`·`historyUrl`·`workspaceUrl`·`runUrl`·`approvalUrl`이 있다.
 Git 호스트 연결이 필요하면 Forge가 반환한 `connectUrl`을 준다. 반환된 URL만 링크로 쓴다.
 
 ## 필요한 경로 선택
@@ -52,7 +52,7 @@ Forge URL·조직·사용자 신원·provider credential·Git token은 서버 �
 1. **profile 확인**: `profile_list`의 `selection.profileId`·`revision`을 `workspace_create`의 `profileId`·`profileRevision`으로 쓴다.
    `selection.source`는 `user`(내 기본 선택) 또는 `organization`(Studio 관리자가 정한 조직 기본 프로필)이다.
    profile은 Runtime·모델·저장소 규칙·검사·배포 workflow를 정한다. `selection.profileId`가 null이거나 `unavailable`이 true이면
-   코딩용 Workspace를 profile 없이 만들지 않고, Forge 콘솔 설정에서 프로필을 선택하도록 안내한다.
+   코딩용 Workspace를 profile 없이 만들지 않고, AgentOps의 작업 공간 프로필 화면(`/forge/profiles`)에서 프로필을 선택하도록 안내한다.
    사용자가 Runtime을 직접 지정하면 `model_channels`로 허용 채널을 확인하고 명시적 입력으로 만든다.
 2. **기존 Workspace 재사용**: 같은 작업의 후속 요청은 `workspace_list`·`workspace_get`으로 찾은 Workspace에서 이어간다.
    `suspended` Workspace에도 `run_submit`을 바로 보낸다. Forge가 다시 시작하고 checkpoint를 복원한 뒤 실행하므로 `workspace_resume`을 먼저 부르지 않는다.
@@ -105,6 +105,6 @@ Git 단계는 task에 넣지 않는다. native Runtime은 Git 메타데이터를
 task가 끝나면 부모가 같은 Workspace에서 `run_submit`(`input.kind="git"`)으로 각 단계를 낸다. task의 `succeeded`는 게시 완료가 아니다.
 task 결과에 커밋 실패가 있어도 멈추지 않는다. 변경이 작업 트리에 있으면 `review`부터 이어 가고, PR/MR 링크를 확인한 뒤 완료를 보고한다.
 조회·진단만 요청한 작업이나 Git-free 파일 처리에는 이 게시 범위를 추가하지 않는다.
-보호 branch 게시·merge·tag·release·deploy는 별도 사용자 요청이 필요하고, Workspace 소유자가 Chat의 `git_approval_get` 화면(Studio 승인 카드 확인)이나 Forge 콘솔에서 승인해야 실행된다.
+보호 branch 게시·merge·tag·release·deploy는 별도 사용자 요청이 필요하고, Workspace 소유자가 Chat의 `git_approval_get` 화면(Studio 승인 카드 확인)이나 AgentOps의 승인 화면(`approvalUrl`)에서 승인해야 실행된다.
 모델은 승인할 수 없다. 실패·거절·결과 불명인 게시를 자동으로 반복하지 않는다.
 실제 변경, 검증 근거, 미완료 작업과 반환된 Workspace·PR/MR·승인 링크를 전달한다.

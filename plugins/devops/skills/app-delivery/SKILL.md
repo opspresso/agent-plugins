@@ -87,7 +87,7 @@ metadata:
    - 모든 단계의 환경이 런타임 type의 target을 갖고 그 target이 런타임 architecture를 실행해야 한다. 아니면 `pipeline_incompatible`이다.
 5. 조건에 맞는 조합이 둘 이상이고 요청과 저장소로 고를 수 없을 때만 `AskUser`로 한 번 묻는다.
    후보마다 pipeline 이름·trigger·단계 순서를 보여 준다.
-6. 조건에 맞는 pipeline이 없으면 Project를 만들지 않는다. 없는 조건을 알리고, 관리자가 Agent Runway 콘솔 `/admin/pipelines`에서
+6. 조건에 맞는 pipeline이 없으면 Project를 만들지 않는다. 없는 조건을 알리고, Studio 관리자가 AgentOps의 파이프라인 화면(`/runway/pipelines`)에서
    pipeline을 추가해야 한다고 안내한다.
 
 고른 이름은 새 Project를 만드는 `project_ensure` 또는 `project_apply`의 `pipelines`(이름 배열, Project의 순서)에, 런타임은 `runtime`(`{cloud?, type?, architecture?}`)에 넘긴다.
@@ -271,7 +271,7 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
      예: `main` → `dev`와 `v*` → `stg` → `prod` pipeline을 가진 Project에서 `dev`의 Release는 `stg`로 승격되지 않는다. `stg`는 push 배포가 켜져 있으면 `v*` 태그 push로 시작하고, 꺼져 있으면 그 태그를 `deploy`한다.
    - `approval: owner` 환경은 `awaiting_approval`을 반환한다. Studio Chat에는 `deploy`·`promote`·`rollback` 결과의 배포 화면이 보인다.
      소유자에게 그 화면의 **승인하고 시작**·**거절**을 누르고 Studio 승인 카드에서 확인하라고 안내한다. 모델은 승인하지 않는다.
-     화면이 없는 surface(Slack·Telegram·Teams·API)에서만 `approvalUrl`을 주고 소유자가 Agent Runway 콘솔에서 승인하게 한다.
+     화면이 없는 surface(Slack·Telegram·Teams·API)에서만 `approvalUrl`을 주고 소유자가 그 AgentOps 배포 화면(`/runway/projects/<slug>/deployments/<deploymentId>`)에서 승인하게 한다.
      승인 요청은 24시간 뒤 만료된다. 소유자가 Studio의 승인 카드에서 그 호출을 직접 승인했으면 Runway가 소유자 승인으로 받아 기다리지 않고 진행한다.
 3. Studio가 Deployment를 따라가다 끝나면 결과를 Chat에 전달하고 대화를 이어 준다. 같은 Deployment를 기다리며
    `deployment_get`을 반복 호출하지 않는다. 사용자가 진행 상황을 물으면 한 번 조회해 스텝(`step`)을 알린다.
@@ -325,7 +325,7 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
   - 켜면 Runway가 저장소에 push webhook을 만들고, push마다 켠 사용자의 Git 권한으로 저장소를 읽는다.
     이 허용은 push 배포를 끄거나 그 사용자가 Agent Studio의 프로필 → Git 계정에서 위임을 폐기할 때까지 유지된다. 호출하기 전에 사용자에게 이 내용을 알린다.
   - Studio Chat은 호출마다 사람의 승인 카드를 보여 주고, 승인된 호출만 실행한다. 승인할 사람이 없는 실행에는 `push_enable` 도구가 없다.
-    도구가 없으면 Project 소유자나 Studio 관리자가 Agent Runway 콘솔의 Project 설정(`/projects/<slug>/settings`)에서 켜야 한다고 안내한다.
+    도구가 없으면 Project 소유자나 Studio 관리자가 AgentOps의 Project 설정 탭(`/runway/projects/<slug>/settings`)에서 켜야 한다고 안내한다.
   - Runway는 승인 표시가 없는 호출을 아무것도 바꾸지 않고 `person_approval_required`로 거절한다. [사람의 승인](#사람의-승인)에 따른다.
   - `push_busy`는 같은 Project의 다른 push 배포 변경(켜기·끄기·Project 삭제의 끄기)이 진행 중이라는 뜻이다. Runway는 기다리지 않고 거절한다.
     메시지가 알려 주는 시간(5초) 뒤에 다시 호출한다. `push_enable`을 다시 호출하면 승인 카드도 다시 뜬다.
@@ -377,7 +377,7 @@ host 주소는 Forge `git_connections`의 `origin`에서 읽는다.
   같은 키에 다른 값을 보내면 그 Variable은 바뀌지 않고 `failed[]`의 `idempotency_conflict`가 된다(모든 Variable이 그렇다면 409 `idempotency_conflict`). 값을 바꿀 때는 새 키를 쓴다.
   소유자·관리자만 호출할 수 있고 값은 반환되지 않는다. 결과의 `applied[]`는 쓴 Variable이고 `failed[]`는 쓰지 못한 Variable과 `code`다. `failed[]`가 있으면 그 이름만 새 키로 다시 보내거나 `code`에 따라 처리한다.
   호출이 `internal_error` 같은 오류로 끝나면 같은 키와 같은 값으로 한 번 다시 보낸다. 이미 쓴 Variable은 재생(`replayed: true`)되고 나머지만 쓴다.
-  앱은 다음 배포부터 값을 받는다. 소유자가 콘솔(`/projects/<slug>/variables`)에서 입력해도 된다. 그 이름은 `application.yaml`의 `env`와 `secrets`에 쓰지 않는다.
+  앱은 다음 배포부터 값을 받는다. 소유자가 AgentOps의 환경 변수 탭(`/runway/projects/<slug>/variables`)에서 입력해도 된다. 그 이름은 `application.yaml`의 `env`와 `secrets`에 쓰지 않는다.
   다음은 `variable_is_secret`으로 거절된다: 선언한 `secrets`의 이름, 환경의 secret, 자격 증명 형태의 이름(`…_TOKEN`, `…_KEY`, `…_PASSWORD`, `…_WEBHOOK`, `DATABASE_URL` 등), 자격 증명 형태의 값(token, JWT, webhook URL, 비밀번호가 든 URL, 개인 키, 긴 무작위 문자열). 거절되면 메시지의 링크를 사용자에게 주고, 값을 Chat에 다시 쓰거나 붙여 넣으라고 하지 않는다.
   적용한 `env`에 있는 이름은 `variable_declared`, 리소스가 주는 이름은 `variable_conflict`다.
 - 장애 조사는 `incident-triage`를 쓴다. 런타임 type이 `eks`인 Project의 앱 namespace는 `app-<slug>-<env>`, Deployment 이름은 `app`이다.
@@ -397,7 +397,7 @@ Project의 한 단계가 `https://<slug>.<도메인>`(환경 이름 없는 주�
 | 필드 | 뜻 |
 |---|---|
 | `bare` | 환경 이름 없는 주소를 받는 환경. 없으면 `null`이다 |
-| `chosenBy` | 고른 주체. `auto`(Agent Runway 규칙), `person`(사람이 콘솔에서 골랐다), `agent`(Agent가 `project_configure`로 골랐다) |
+| `chosenBy` | 고른 주체. `auto`(Agent Runway 규칙), `person`(사람이 AgentOps의 Project 설정 탭에서 골랐다), `agent`(Agent가 `project_configure`로 골랐다) |
 | `fixed` | 선택이 저장됐는지. `auto`는 환경 이름 없는 주소로 처음 배포하는 요청이 그 환경을 저장한다 |
 | `suggestion` | Agent Runway 규칙이 지금 고를 다른 단계. 없으면 `null`이다. 주소를 옮기지는 않는다 |
 | `moves[]` | 다음 배포에서 주소가 바뀌는 실행 중인 서비스 `{environment, from, to}`다. `from`·`to`는 전체 host 이름(예: `todo.apps.rovr.dev`)이고, 배열이 실행할 순서다 |
@@ -463,7 +463,7 @@ Studio Chat이 호출 전에 승인 카드를 보여 주고, 사용자가 승인
 - `person_approval_required`(403)는 승인 표시 없이 호출됐다는 뜻이다. Runway는 아무것도 읽거나 바꾸지 않았다.
 - 같은 호출을 자동으로 반복하지 않는다. Studio Chat의 승인 카드에서 사용자가 그 호출을 승인해야 한다고 알린다.
 - 사용자가 승인했는데도 이 code가 오면 Studio가 그 호출에 승인 표시를 보내지 않은 것이다. 운영자에게 알리고,
-  Project 소유자나 Studio 관리자가 Agent Runway 콘솔에서 직접 해야 한다고 안내한다.
+  Project 소유자나 Studio 관리자가 AgentOps의 Project 화면(`/runway/projects/<slug>`)에서 직접 해야 한다고 안내한다.
 
 ## 보고
 

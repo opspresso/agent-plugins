@@ -45,7 +45,7 @@ env:
 | `build.image`, `build.command`, `build.output`, `build.format`, `build.javaVersion` | native | 빌더 이미지·명령·정확한 출력 파일·`jar`/`war`·Java 주 버전. 출력은 context 안의 상대 경로이며 glob은 금지한다 | |
 | `build.tomcatVersion` | WAR | target 플랫폼과 일치하는 Tomcat 주 버전 | |
 | `test.image`, `test.command` | 아니요 | 이미지와 `/bin/sh -c`로 실행할 명령. 저장소 루트에서 실행한다. `test`를 쓰면 둘 다 필요하다 | 없으면 건너뜀 |
-| `secrets` | 아니요 | 앱이 배포되는 모든 단계에서 값이 필요한 Variable 이름의 목록. 사용자가 Agent Runway 콘솔의 링크 하나(`secretsUrl`)에서 값 없는 시크릿을 한 번에 입력한다 | |
+| `secrets` | 아니요 | 앱이 배포되는 모든 단계에서 값이 필요한 Variable 이름의 목록. 사용자가 링크 하나(`secretsUrl`, AgentOps의 `/runway/projects/<slug>/secrets/new`)에서 값 없는 시크릿을 한 번에 입력한다 | |
 | `env` | 아니요 | 비밀이 아니고 모든 환경에서 같은 값. 값은 문자열·숫자·boolean이고 1 KiB 이하다 | |
 
 - 알 수 없는 필드는 거부된다. 오류(`invalid_application`)는 위반한 필드를 모두 나열한다.
@@ -69,7 +69,7 @@ env:
 | 배포를 시작하는 push | pipeline의 trigger. Project 값은 `project_configure`의 `pipelines` 항목 `{name, trigger}`. push 배포를 켠 Project(`push_enable`)만 push로 배포한다 |
 | 앱 주소 | Project의 주소 규칙. 한 단계가 `<slug>.<도메인>`, 그 밖의 환경이 `<slug>-<env>.<도메인>`이다. 그 단계는 `project_configure`의 `host`로 정한다([앱 주소](../SKILL.md#앱-주소)) |
 | 리소스(DB·cache·bucket) | 단계마다 `resource_create` |
-| 환경마다 다른 값 | 그 환경의 Variable. 비밀 값은 `secrets`에 이름을 선언하고 소유자가 `secretsUrl` 링크 하나에서 입력한다. 비밀이 아닌 값은 Agent가 `variables_set`(요청마다 새 `idempotencyKey`, 결과 `applied[]`·`failed[]`)으로 설정하거나 소유자가 콘솔의 Project 환경 변수 화면(`/projects/<slug>/variables`)에서 입력한다. 비밀이 아닌 Variable의 이름은 `env`와 `secrets`에 쓰지 않는다. 적용한 `env`에 있는 이름은 콘솔에서 입력할 때 `variable_declared`(409)로 거부된다 |
+| 환경마다 다른 값 | 그 환경의 Variable. 비밀 값은 `secrets`에 이름을 선언하고 소유자가 `secretsUrl` 링크 하나에서 입력한다. 비밀이 아닌 값은 Agent가 `variables_set`(요청마다 새 `idempotencyKey`, 결과 `applied[]`·`failed[]`)으로 설정하거나 소유자가 AgentOps의 환경 변수 탭(`/runway/projects/<slug>/variables`)에서 입력한다. 비밀이 아닌 Variable의 이름은 `env`와 `secrets`에 쓰지 않는다. 적용한 `env`에 있는 이름은 그 탭에서 입력할 때 `variable_declared`(409)로 거부된다 |
 
 `apiVersion`이 `agent.opspresso.com/v1`·`v2`·`v3`인 파일은 `invalid_application`으로 거부된다. v4로 다시 쓴다.
 `spec`과 `runtime`의 `port`·`health`·`command`·`args`는 유지한다. `pipeline.build`·`pipeline.test`는 최상위 `build`·`test`로 옮긴다.

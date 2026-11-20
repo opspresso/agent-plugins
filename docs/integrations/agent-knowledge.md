@@ -60,10 +60,12 @@ saves available transcript and meeting-note outputs as Chat files. Never resubmi
 uncertain work under a new key or `processingRevision`; inspect the original
 request with `audio_request_status`.
 
-When the deployment sets `AUTH_BASE_URL`, MCP initialize advertises
-`org.opspresso.agent.tool-management` with `settingsUrl` and `historyUrl`.
-Studio's Tools detail page shows those links. Job responses also include a
-console-relative `historyHref`.
+MCP initialize advertises `org.opspresso.agent.tool-management` with
+`settingsUrl` (the AgentOps audio profiles screen, `/knowledge/recordings/profiles`)
+and `historyUrl` (the AgentOps recordings screen), built on the deployment's
+`CONSOLE_BASE_URL`. Studio's Tools detail page shows those links. Each job in a
+response carries `route`, the AgentOps screen of that job
+(`/knowledge/recordings/<recordingId>/jobs/<jobId>`).
 
 Agent Knowledge publishes each transcript and meeting note as the caller's search document.
 Do not ingest them again as documents. Save a decision or fact to Memory only on

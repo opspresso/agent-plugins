@@ -3,10 +3,10 @@
 전사와 회의록은 Agent Knowledge가 실행한다. 운영 Agent는 하나면 되며 subagent 연결은 필요하지 않다.
 
 - Agent에 `audio-processing`, `meeting-minutes` skill과 Agent Knowledge Tools 항목을 연결한다.
-- Agent Knowledge 콘솔의 오디오 설정에서 이름 있는 profile을 만들고 기본 profile로 선택한다.
+- AgentOps의 오디오 프로필 화면(`/knowledge/recordings/profiles`)에서 이름 있는 profile을 만들고 기본 profile로 선택한다.
   profile에는 Agent Knowledge가 허용한 전사 모델 ID·언어·보존 기간과, 회의록이 필요하면 회의록(summary) 모델과 선택적 지시문을 저장한다.
-  Studio Tools의 Agent Knowledge 상세 화면에 설정·이력 링크가 있다. 접수된 작업은 당시 profile snapshot을 사용한다.
-- 녹음은 Chat에 첨부하거나 Agent Knowledge 콘솔에서 올린다. 원본은 최대 512 MiB다.
+  Tools 상세 화면(`/studio/tools/agent-knowledge`)에 설정·이력 화면 링크가 있다. 접수된 작업은 당시 profile snapshot을 사용한다.
+- 녹음은 Chat에 첨부하거나 AgentOps의 녹음 화면(`/knowledge/recordings`)에서 올린다. 원본은 최대 512 MiB다.
 - Plaud 녹음은 MCP `get_file`이 반환한 `file_id`로 Agent Knowledge에 가져온다. `workspace` plugin을 동기화하고
   Plaud MCP를 연결한 뒤 사용자의 OAuth·Cloud Sync 상태를 확인한다.
 - 과거 회의 검색은 Agent Knowledge의 검색 도구를, 요청 시 장기 기억은 `personal-records` skill과 Agent Memory MCP를 같은 Agent에 연결한다.
