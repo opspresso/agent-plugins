@@ -1,6 +1,6 @@
 # Agent Runway
 
-앱의 Project·pipeline·환경·리소스·secret·`application.yaml`·배포를 다루거나 Runway 콘솔을 안내할 때 읽는다.
+앱의 Project·pipeline·환경·리소스·secret·`application.yaml`·배포를 다루거나 Runway 화면을 안내할 때 읽는다.
 앱을 처음부터 배포까지 진행하는 절차는 `app-delivery` Skill이 있으면 그것을 따른다. 실제 도구 schema가 이 문서보다 우선한다.
 
 ## 개념
@@ -8,10 +8,10 @@
 - **환경**: 관리자가 정한 배포 대상이다. 기본은 `dev`·`prod`이고 `staging` 같은 환경이 더 있을 수 있다. 환경마다 cloud 하나와
   제공하는 target type(`eks`: 클러스터, `eb`: Elastic Beanstalk)이 있다. sandbox 환경(기본 `dev`)의 값만 Forge Sandbox에 전달된다.
   `approval: owner` 환경(기본 `prod`)은 Agent의 요청을 소유자가 승인해야 한다. 환경의 규칙은 `approval`과 `sandbox` 두 가지다.
-- **pipeline**(콘솔 표기: 파이프라인): 관리자가 정한 배포 경로다. trigger(`{kind: branch | tag, pattern}`, push 배포를 켠 Project에서 그 pipeline을 시작하는 push)와
+- **pipeline**(화면 표기: 파이프라인): 관리자가 정한 배포 경로다. trigger(`{kind: branch | tag, pattern}`, push 배포를 켠 Project에서 그 pipeline을 시작하는 push)와
   **단계** 목록을 가진다. 단계는 환경과 그 환경의 크기(`small`·`medium`·`large`)이고, 목록 순서가 승격 순서다. cloud·target type·architecture는 갖지 않는다.
   첫 부팅이 `default` pipeline을 만든다. `default`가 `true`인 pipeline은 pipeline을 정하지 않은 새 Project가 모두 쓴다. `pipeline_list`가 설치의 pipeline을 준다.
-  관리자의 pipeline 변경은 Project의 배포된 서비스가 있는 단계를 빼거나(`pipeline_locked`), Project의 다른 pipeline 단계를 더하거나(`pipeline_conflict`),
+  관리자의 pipeline 변경은 Project의 배포된 서비스가 있는 단계를 빼거나(`pipeline_locked`), Project의 다른 pipeline 단계를 더하거나(`pipeline_overlap`),
   Project 런타임이 실행할 수 없는 단계를 더할 때(`pipeline_incompatible`)만 거절된다. 설명·trigger·단계 순서·크기와 새 단계는 언제든 바꿀 수 있다.
 - **Project**: GitHub(github.com·GitHub Enterprise Server), GitLab(GitLab.com·self-managed) 또는 Gitea 저장소 하나다. 저장소는 `<host>/<path>`로 쓴다
   (예: `github.com/owner/app`, `github.example.com/owner/app`, `gitlab.example.com/group/subgroup/app`, `gitea.example.com/owner/app`). host가 없는 `owner/repo`는 github.com만 뜻한다. 저장소의 Project를 처음 만든 Studio 사용자가 소유자다. slug는 전체에서 유일하며 다시 쓰지 않는다.
@@ -23,7 +23,7 @@
   배포된 서비스를 깨뜨리는 변경만 거절된다([런타임과 pipeline 변경](#런타임과-pipeline-변경)). 실제 런타임·pipeline·단계·주소 규칙은 `project_status`가 준다.
 - **저장소 접근**: Runway는 한 사용자의 Git 계정으로 저장소를 읽어 build한다. 요청한 배포는 요청한 사용자의 계정으로,
   push로 시작한 배포는 그 Project의 push 배포를 켠 사용자의 계정으로 읽는다. 공개 저장소와 비공개 저장소가 같다.
-  사용자는 Agent Studio의 프로필 → Git 계정(`/profile/git`)에서 Git 호스트마다 계정을 한 번 연결한다. Runway 콘솔에는 계정 연결과 token 입력이 없고,
+  사용자는 프로필 → Git 계정(`/profile/git`)에서 Git 호스트마다 계정을 한 번 연결한다. Runway 화면에는 계정 연결과 token 입력이 없고,
   Runway는 deploy key를 만들지 않는다. 새 Project를 만드는 `project_ensure`·`project_apply`와 `release` 없이 호출하는 `deploy`에 그 사용자의 Git 계정이 필요하다.
   `ref`를 생략한 `deploy`는 Git 호스트가 알려 주는 저장소의 기본 브랜치(`main`이 아닐 수 있다)를 build한다.
   Release를 지정한 `deploy`, `promote`, `rollback`, 승인에는 필요 없다.
@@ -37,7 +37,7 @@
   `postgres`·`valkey`(환경 namespace의 전용 서버), `rds-postgres`·`s3-bucket`·`dynamodb`(전용 AWS, 비용이 들고 sandbox 환경 불가)다.
   리소스는 환경 하나에 속한다. `application.yaml`에 선언하지 않고, 앱이 실행될 단계마다 `resource_create`로 만든다.
   `resource_create`는 Project pipeline 중 하나의 단계에만, 런타임 type이 `eks`인 Project에서만 된다.
-  `secret`은 템플릿이 아니라 사용자가 콘솔에서 입력하는 값이다.
+  `secret`은 템플릿이 아니라 사용자가 secret 입력 화면에서 입력하는 값이다.
   이름이 Project slug와 같은 리소스는 Variable에 접두어가 없다(`DATABASE_URL`). 다른 이름(`main` 포함)은 대문자 이름이 접두어가 된다.
 - **`application.yaml`**: 저장소 루트의 앱 선언(apiVersion `agent.opspresso.com/v4`). `spec`(이름·저장소·소유자), `runtime`(port·health·command·args),
   `build`, `test`, `secrets`, `env`만 적는다. 환경·리소스·크기·trigger·cloud·target type·architecture는 적지 않는다.
@@ -51,7 +51,7 @@
 - **앱 주소**: Project의 한 단계가 `https://<slug>.<domain>`(환경 이름 없는 주소), 그 밖의 환경이 `https://<slug>-<env>.<domain>`이다.
   `project_status`의 `host`가 규칙을 준다: `bare`(그 단계), `chosenBy`(`auto`·`person`·`agent`), `fixed`, `suggestion`, `moves[]`.
   Project가 정하지 않으면(`auto`) 이름이 `prd`·`prod`·`production`인 마지막 단계, 없으면 `sandbox` 환경이 아닌 마지막 단계(그것도 없으면 없음)이고, 그 주소로 처음 배포할 때 고정된다.
-  사람은 콘솔 설정 탭에서, Agent는 `project_configure`의 `host`(`{bare: <환경> | none | auto}`)로 고른다. 실행 중인 서비스의 그 주소를 다른 환경으로 옮기는 것은 `host_move`이며, Studio가 호출마다 사람의 승인을 받는다. `project_configure`는 그 이동을 `person_approval_required`로 거절한다.
+  사람은 Project 설정 탭(`/runway/projects/<slug>/settings`)에서, Agent는 `project_configure`의 `host`(`{bare: <환경> | none | auto}`)로 고른다. 실행 중인 서비스의 그 주소를 다른 환경으로 옮기는 것은 `host_move`이며, Studio가 호출마다 사람의 승인을 받는다. `project_configure`는 그 이동을 `person_approval_required`로 거절한다.
   실행 중인 서비스는 그 환경의 다음 배포까지 기존 주소를 유지한다. `environments[].host`가 다음 배포의 주소, `runningHost`가 실행 중인 주소다.
 
 ## Helper가 쓸 수 있는 도구
@@ -64,7 +64,7 @@
 | `pipeline_list` | 설치의 pipeline(이름·`default`·`trigger`·`stages`)과 cloud별 target type(`targetTypes`) | 읽기 전용. 새 Project의 pipeline을 고르거나 `project_configure` 전에 읽는다 |
 | `repository_inspect` | 저장소 commit 하나를 사용자의 Git 계정으로 읽어 언어·포트·health·테스트 명령·환경 변수·필요한 리소스를 감지하고 `application.yaml`·Dockerfile 초안과 질문을 준다 | 읽기 전용. `application.yaml`을 쓰거나 바꾸기 전에 호출한다 |
 | `release_list`, `release_get` | Release와 단계별 Deployment 이력 | 읽기 전용. `deployable: false`인 Release는 다시 배포할 수 없다 |
-| `deployment_list`, `deployment_get`, `deployment_logs` | 배포 목록·상태·스텝 로그(마지막 64 KiB) | 읽기 전용. 승인 대기면 `approvalUrl`이 있다. 로그는 workflow 실행 중과 끝난 뒤 하루 동안 있다 |
+| `deployment_list`, `deployment_get`, `deployment_logs` | 배포 목록·상태·스텝 로그(마지막 64 KiB) | 읽기 전용. 승인 대기면 `approvalUrl`(AgentOps 배포 화면)이 있다. 로그는 workflow 실행 중과 끝난 뒤 하루 동안 있다 |
 | `service_logs` | 실행 중인 앱의 Pod 상태와 앱 출력(현재·재시작 전, 합계 64 KiB) | 읽기 전용, `eks`만. 시크릿 값은 `***`로 가린다. 앱이 503·무응답일 때 원인을 읽는다 |
 | `deployment_lookup_request` | 응답 유실 복구 | 같은 `idempotencyKey`로 조회한다 |
 | `application_validate` | `application.yaml` 검사 | 아무것도 만들거나 바꾸지 않는다 |
@@ -74,8 +74,8 @@
 | `resource_create` | 템플릿(`template`)과 `parameters`로 환경 하나에 리소스 생성 | 접수형. `pending → ready | failed`. 단계마다 따로 호출한다 |
 | `deploy`, `promote`, `rollback` | ref를 첫 단계에 배포, 같은 Release를 다음 단계로 승격, 직전 Release로 되돌리기 | 접수형. `idempotencyKey` 필수. 결과는 원래 Chat으로 돌아온다. `approval: owner` 환경은 소유자 승인 대기이고, 결과의 배포 화면에 승인·거절 버튼이 있다. `release` 없는 `deploy`는 응답하기 전에 호출한 사용자의 Git 계정으로 저장소를 읽는다. `ref`를 생략하면 저장소의 기본 브랜치를 build한다 |
 | `push_enable`, `push_disable` | Project의 push 배포 켜기·끄기 | 소유자나 Studio 관리자만. `push_enable`은 사용자가 push 배포를 요청할 때만 호출한다. Studio가 호출마다 사람의 승인을 받고, 승인할 사람이 없는 실행에는 도구가 없다. 승인 표시가 없는 호출은 Runway가 `person_approval_required`로 거절한다. 켜는 사용자의 Git 계정이 저장소의 webhook을 관리하는 역할(GitHub `admin`, GitLab Maintainer 이상, Gitea 관리자 권한)이어야 한다. `push_disable`은 Git 계정 없이 끈다. 응답의 `remoteCleanup`이 `skipped`이면 저장소에 webhook이, `delegationRevoked`가 `false`이면 Studio에 Git 위임이 남았다. `message`가 다음 행동을 알려 주므로 그대로 전한다 |
-| `secret_request` | secret 입력 콘솔 링크 | 읽기 전용이라 승인 없이 실행된다. 링크만 돌려준다. 값은 묻지 않는다 |
-| `variables_set` | 환경 하나에 비밀이 아닌 Variable 값 설정 | 소유자나 Studio 관리자만. 요청마다 새 `idempotencyKey`. 값은 반환하지 않는다. secret 형태의 이름·값은 `variable_is_secret`으로 거절되고 콘솔 링크가 온다. 앱은 다음 배포부터 값을 받는다 |
+| `secret_request` | secret 입력 화면 링크(`request.url`) | 읽기 전용이라 승인 없이 실행된다. 링크만 돌려준다. `variable`을 생략하면 한 화면에서 값 없는 secret을 모두 입력한다. 값은 묻지 않는다 |
+| `variables_set` | 환경 하나에 비밀이 아닌 Variable 값 설정 | 소유자나 Studio 관리자만. 요청마다 새 `idempotencyKey`. 값은 반환하지 않는다. secret 형태의 이름·값은 `variable_is_secret`으로 거절되고 secret 입력 화면 링크가 온다. 앱은 다음 배포부터 값을 받는다 |
 | `service_remove`, `resource_delete`, `project_delete`, `project_deletion_get` | 환경 하나의 서비스 중지, 리소스 하나 삭제, Project 삭제와 그 진행 조회 | `runway:delete` 권한이 있을 때만 보인다. 소유자나 Studio 관리자만. 정확한 `confirmation`(환경 이름·리소스 이름·slug)이 필요하고 Studio가 호출마다 사람의 승인을 받는다. 승인 표시가 없는 호출은 Runway가 `person_approval_required`로 거절한다. 되돌릴 수 없다 |
 
 ## 런타임과 pipeline 변경
@@ -88,7 +88,7 @@
 | pipeline 빼기·바꾸기 | 배포된 서비스가 있는 환경이 어느 pipeline의 단계도 아니게 된다(`pipeline_locked`) |
 | `architecture` | 배포된 서비스가 하나라도 있다(`pipeline_locked`) |
 | `cloud`·`type` | Project가 어느 환경에 서비스·리소스·Variable을 가진다(`project_in_use`). 리소스를 지우면 데이터가 사라지므로 사용자가 요청하지 않으면 지우지 않는다 |
-| pipeline 조합 | 두 pipeline이 같은 환경을 단계로 가진다(`pipeline_conflict`). 단계의 환경이 런타임 type의 target이나 architecture를 제공하지 않는다(`pipeline_incompatible`) |
+| pipeline 조합 | 두 pipeline이 같은 환경을 단계로 가진다(`pipeline_overlap`). 단계의 환경이 런타임 type의 target이나 architecture를 제공하지 않는다(`pipeline_incompatible`) |
 | 주소(`host`) | `project_configure`로 실행 중인 서비스의 환경 이름 없는 주소를 다른 환경으로 옮겼다(`person_approval_required`). `host_move`로 옮긴다 |
 
 pipeline 추가와 순서 변경, 배포된 서비스가 없는 pipeline 빼기, trigger·크기·`installScript`·`host`는 서비스가 있어도 바꿀 수 있다.
@@ -104,42 +104,52 @@ pipeline 추가와 순서 변경, 배포된 서비스가 없는 pipeline 빼기,
 3. 삭제 Deployment의 결과는 Chat으로 돌아온다. 반복 조회하지 않는다. 모든 삭제가 끝나면 `project_status`를 한 번 읽어 그 환경이 `deployedEnvironments`에서 빠졌는지 확인한다.
 4. 빠졌으면 `project_configure`를 다시 호출한다.
 
-콘솔 설정 탭은 배포된 서비스를 단계 밖에 두는 pipeline 빼기와 아키텍처 변경을 막고, 서비스를 삭제할 파이프라인 탭의 환경 카드로 가는 링크를 보여 준다.
+Project 설정 탭(`/runway/projects/<slug>/settings`)은 배포된 서비스를 단계 밖에 두는 pipeline 빼기와 아키텍처 변경을 막고,
+서비스를 삭제할 파이프라인 탭(`/runway/projects/<slug>`)의 단계 카드로 가는 링크를 보여 준다.
 
 ## Secret과 Variable
 
-secret 값은 대화로 받지 않는다. `project_apply` 결과의 링크나 `secret_request`가 돌려준 콘솔 링크를 사용자에게 준다.
-입력 페이지는 `/projects/<slug>/secrets/new?environment=<env>&variable=<NAME>`이다.
-비밀이 아닌 값이 환경마다 다르면 `variables_set`으로 설정하거나 소유자가 `/projects/<slug>/variables`에서 Variable로 입력한다. secret 값을 입력하는 도구는 없다.
+secret 값은 대화로 받지 않는다. `project_apply`·`project_status` 결과의 `secretsUrl`이나 `secret_request`가 돌려준 링크를 사용자에게 준다.
+입력 화면은 `/runway/projects/<slug>/secrets/new?environment=<env>&variable=<NAME>`이다. `environment`를 빼면 모든 단계의 값 없는 secret을,
+`variable`을 빼면 그 환경의 값 없는 secret을 모두 한 화면에서 입력한다. Helper는 이 화면의 입력란을 읽거나 채우지 않는다.
+비밀이 아닌 값이 환경마다 다르면 `variables_set`으로 설정하거나 소유자가 환경 변수 탭(`/runway/projects/<slug>/variables`)에서 Variable로 입력한다. secret 값을 입력하는 도구는 없다.
 적용한 `application.yaml`의 `env`에 있는 이름은 입력할 때 `variable_declared`(409)로 거부되므로, 환경마다 다른 값의 이름은 `env`에 쓰지 않는다.
 sandbox 환경(기본 `dev`) Variable에는 Sandbox 예약 이름을 쓰지 않는다. 예: `OPENAI_API_KEY` 대신 `APP_OPENAI_API_KEY`.
 `application.yaml`의 `secrets`·`env`는 모든 환경에 적용되므로 sandbox 환경이 있는 설치에서는 그 이름에도 예약 이름을 쓸 수 없다.
 
-## 콘솔 페이지 (`agent-runway`)
+## 화면
 
 | 경로 | 용도 |
 |---|---|
-| `/` | Project 목록과 Project별 pipeline 단계 상태, Project 생성 |
-| `/projects/<slug>` | 파이프라인 탭. Project의 pipeline마다 trigger, 최근 Release가 단계를 거친 상태, 단계별 현재 Release. 소유자의 deploy·promote·rollback |
-| `/projects/<slug>/releases` | 히스토리 탭. Release 이력과 단계별 Deployment. 소유자의 Release 배포·승격 |
-| `/projects/<slug>/resources` | 리소스 탭. 환경별 리소스와 템플릿으로 리소스 추가 |
-| `/projects/<slug>/variables` | 환경 변수 탭. 환경별 Variable과 secret. 소유자의 입력·변경·삭제 |
-| `/projects/<slug>/application` | 앱 탭. 적용한 `application.yaml`과 값이 없는 secret |
-| `/projects/<slug>/settings` | 설정 탭. 소유자, 배포 설정(실행 대상: cloud·target type·아키텍처, pipeline 목록과 순서·pipeline별 trigger·단계별 크기, 환경 이름 없는 주소를 받을 단계), push 배포(상태, 켠 사용자, 켜기·끄기), 소유자 이전(Studio 관리자), Project 삭제 |
-| `/projects/<slug>/audit` | 감사 기록 탭 |
-| `/projects/<slug>/deployments/<id>` | Deployment 스텝·로그, 소유자의 승인 |
-| `/projects/<slug>/secrets/new` | secret 값 입력 |
-| `/templates`, `/templates/<name>` | 리소스 템플릿. Studio 관리자가 관리한다 |
-| `/admin/environments`, `/admin/environments/<name>` | 관리 > 환경. 환경의 cloud·규칙·target type. Studio 관리자만 바꾼다 |
-| `/admin/pipelines`, `/admin/pipelines/<name>` | 관리 > 파이프라인. pipeline의 설명·기본 여부·trigger·단계. Studio 관리자만 바꾼다. 편집 화면은 배포된 서비스가 있어 뺄 수 없는 단계의 Project와 환경을 나열한다 |
-| `/profile` | 계정 정보 |
+| `/runway/projects` | Project 목록과 Project별 pipeline 단계 상태(`?q=`). `?create=1`은 새 Project 대화 상자를 연다 |
+| `/runway/projects/<slug>` | 파이프라인 탭. Project의 pipeline마다 trigger, 최근 Release가 단계를 거친 상태, 단계별 현재 Release. 단계 카드의 deploy·promote·rollback·승인·서비스 삭제 |
+| `/runway/projects/<slug>/releases` | 히스토리 탭. Release 이력과 단계별 Deployment. 소유자의 Release 배포·승격 |
+| `/runway/projects/<slug>/resources` | 리소스 탭. 환경별 리소스와 템플릿으로 리소스 추가·재시도·삭제(`?environment=`) |
+| `/runway/projects/<slug>/variables` | 환경 변수 탭. 환경별 Variable과 secret. 소유자의 입력·변경·삭제(`?environment=`) |
+| `/runway/projects/<slug>/application` | 앱 탭. 적용한 `application.yaml`과 값이 없는 secret |
+| `/runway/projects/<slug>/settings` | 설정 탭. 소유자, 배포 설정(실행 대상: cloud·target type·아키텍처, pipeline 목록과 순서·pipeline별 trigger·단계별 크기, 환경 이름 없는 주소를 받을 단계), push 배포(상태, 켠 사용자, 켜기·끄기), 소유자 이전(Studio 관리자), Project 삭제 |
+| `/runway/projects/<slug>/audit` | 감사 기록 탭 |
+| `/runway/projects/<slug>/deployments/<deploymentId>` | Deployment 스텝·로그와 소유자의 승인. 닫힌 화면이다. Helper는 이동하지 않고 `approvalUrl`을 준다 |
+| `/runway/projects/<slug>/secrets/new` | secret 값 입력(`?environment=`, `?variable=`) |
+| `/runway/templates`, `/runway/templates/<name>` | 리소스 템플릿. Studio 관리자가 관리한다 |
+| `/runway/environments`, `/runway/environments/<name>` | 환경의 cloud·규칙·target type. Studio 관리자만 바꾼다 |
+| `/runway/pipelines`, `/runway/pipelines/<name>` | pipeline의 설명·기본 여부·trigger·단계. Studio 관리자만 바꾼다. 편집 화면은 배포된 서비스가 있어 뺄 수 없는 단계의 Project와 환경을 나열한다 |
+| `/runway/accounts` | 클라우드 계정(Studio 관리자) |
 
-콘솔 전용 작업: secret·Variable 값 입력·변경, 값 보기(소유자, 감사 기록), 소유권 이전(Studio 관리자), 환경·pipeline·리소스 템플릿 관리(Studio 관리자).
-Git 호스트와 Git 계정 연결은 Runway 콘솔에 없다. 사용자가 Agent Studio의 프로필 → Git 계정(`/profile/git`)에서 계정을 연결한다.
+사람이 화면에서 하는 작업: secret 값 입력, 값 보기(소유자, 감사 기록), 소유권 이전(Studio 관리자), 환경·pipeline·리소스 템플릿·클라우드 계정 관리(관리자), 소유자의 배포 승인·거절.
+값 보기, 승인·거절과 삭제 확인은 Helper가 읽거나 누를 수 없다.
+Git 호스트와 Git 계정 연결은 Runway 화면에 없다. 사용자가 프로필 → Git 계정(`/profile/git`)에서 계정을 연결한다.
 push 배포는 설정 탭이나 `push_enable`·`push_disable`로 켜고 끈다. 켜면 Runway가 저장소에 push webhook을 만들고 push마다 켠 사용자의 Git 권한으로 저장소를 읽는다.
-이 허용은 push 배포를 끄거나 그 사용자가 Studio의 프로필 → Git 계정에서 위임을 폐기할 때까지 유지된다.
-`approval: owner` 환경의 배포 승인·거절은 소유자만 한다(Studio 관리자도 불가). Studio Chat에서는 `deploy`·`promote`·`rollback` 결과의 배포 화면에서 **승인하고 시작**·**거절**을 누르고 Studio 승인 카드에서 확인한다. 화면이 없는 surface에서는 Runway 콘솔의 승인 링크(`approvalUrl`)에서 결정한다. 소유자가 Studio 승인 카드에서 배포 호출 자체를 승인했거나 콘솔에서 시작한 배포는 기다리지 않는다.
-삭제 도구가 없는 실행에서는 서비스·리소스·Project 삭제도 콘솔에서 한다(이름 재입력).
+이 허용은 push 배포를 끄거나 그 사용자가 프로필 → Git 계정에서 위임을 폐기할 때까지 유지된다.
+
+`approval: owner` 환경의 배포 승인·거절은 소유자만 한다(Studio 관리자도 불가). 모델은 승인하지 않는다.
+
+1. Studio Chat에서는 `deploy`·`promote`·`rollback` 결과의 배포 화면이 보인다. 소유자에게 **승인하고 시작**·**거절**을 누르고 Studio 승인 카드에서 확인하라고 안내한다.
+2. 화면이 없는 surface(Slack·Telegram·Teams·API)에서는 결과의 `approvalUrl`(`/runway/projects/<slug>/deployments/<deploymentId>`)을 준다.
+   소유자는 그 화면에서 **승인**·**거절**을 누르고, 확인 창에서 환경·요청 종류·Release(commit)와 바뀌는 Release를 확인한 뒤 **{환경} 배포 승인**·**배포 거절**을 누른다.
+3. 소유자가 Studio 승인 카드에서 배포 호출 자체를 승인했거나 화면에서 시작한 배포는 기다리지 않는다. 승인 요청은 24시간 뒤 만료된다.
+
+삭제 도구가 없는 실행에서는 서비스 삭제를 파이프라인 탭의 단계 카드에서, 리소스 삭제를 리소스 탭에서, Project 삭제를 설정 탭에서 사용자가 한다(이름 재입력).
 
 ## 오류
 
@@ -151,13 +161,14 @@ push 배포는 설정 탭이나 `push_enable`·`push_disable`로 켜고 끈다. 
 | `pipeline_required` (409), `pipeline_not_found` (404) | 설치에 `default` pipeline이 없는데 `pipelines`를 생략했거나, `project_configure`의 `pipelines`가 비었거나, 이름이 틀렸다. 메시지의 이름이나 `pipeline_list`에서 골라 `pipelines`로 넘긴다 |
 | `pipeline_mismatch` (409) | 기존 Project의 `project_apply`에 다른 `pipelines`를 넘겼다. `pipelines`를 빼고 다시 적용한다. pipeline을 바꾸려면 `project_configure`를 쓴다 |
 | `pipeline_locked` (409) | 변경이 배포된 서비스가 있는 환경을 어느 pipeline의 단계도 아니게 하거나, 배포된 서비스가 있는데 architecture를 바꾼다. 메시지가 그 환경을 나열한다. [런타임과 pipeline 변경](#런타임과-pipeline-변경)의 절차를 따른다. 관리자의 pipeline 편집에서는 그 pipeline을 쓰는 Project의 배포된 서비스가 있는 단계를 빼려 했다는 뜻이다. 메시지가 Project와 환경을 나열하고, 각 Project의 소유자나 관리자가 그 서비스를 삭제한 뒤 바꾼다 |
-| `pipeline_conflict` (409) | 두 pipeline이 Project의 같은 환경을 단계로 가진다. 관리자의 pipeline 편집에서는 더하는 단계가 그 Project의 다른 pipeline 단계라는 뜻이다. 같은 환경을 갖지 않는 조합을 고른다 |
+| `pipeline_overlap` (409) | 두 pipeline이 Project의 같은 환경을 단계로 가진다. 관리자의 pipeline 편집에서는 더하는 단계가 그 Project의 다른 pipeline 단계라는 뜻이다. 같은 환경을 갖지 않는 조합을 고른다 |
+| `pipeline_conflict` (409) | 읽은 뒤 Project의 배포 설정이나 pipeline이 바뀌었다. 아무것도 저장되지 않았다. `project_status`나 `pipeline_list`를 다시 읽고 다시 요청한다 |
 | `pipeline_incompatible` (409) | 단계의 환경이 Project 런타임 type의 target을 갖지 않거나 그 target이 런타임 architecture를 실행하지 않는다. 다른 pipeline이나 런타임을 고르거나, 관리자가 환경에 target을 더한다 |
 | `project_in_use` (409) | Project가 서비스·리소스·Variable을 가진 동안 런타임의 cloud나 target type을 바꾸려 했다. 메시지가 그 환경을 나열한다. 리소스를 지우면 데이터가 사라지므로 사용자가 요청하지 않으면 지우지 않는다 |
 | `invalid_settings` (400) | `project_configure`의 값이 틀렸다(단계가 아닌 환경의 크기나 `host`, 인스턴스가 없는 target type의 install script 등). 메시지가 위반을 모두 나열한다 |
 | `project_changed` (409) | 배포를 요청하는 동안 그 환경의 pipeline·단계 순서·architecture·주소 규칙이 바뀌었다. 아무것도 저장되지 않았다. `project_status`를 다시 읽고 다시 요청한다 |
 | `owner_required` (403) | 소유자나 Studio 관리자만 할 수 있는 작업이다(`project_configure`, 삭제) |
-| `person_approval_required` (403) | 사람이 호출마다 승인하는 도구(`push_enable`·`service_remove`·`resource_delete`·`project_delete`·`host_move`)가 승인 표시 없이 호출됐거나, `project_configure`가 실행 중인 서비스의 환경 이름 없는 주소를 옮기려 했다(`host_move`로 옮긴다). 아무것도 바뀌지 않았다. 같은 호출을 자동으로 반복하지 않는다. Studio Chat에 그 호출의 승인 카드가 뜨면 사용자가 승인해야 한다고 알린다. 사용자가 승인했는데도 이 code가 오면 Studio가 그 호출에 승인 표시를 보내지 않은 것이므로 운영자에게 알리고, 사용자가 Runway 콘솔에서 직접 한다 |
+| `person_approval_required` (403) | 사람이 호출마다 승인하는 도구(`push_enable`·`service_remove`·`resource_delete`·`project_delete`·`host_move`)가 승인 표시 없이 호출됐거나, `project_configure`가 실행 중인 서비스의 환경 이름 없는 주소를 옮기려 했다(`host_move`로 옮긴다). 아무것도 바뀌지 않았다. 같은 호출을 자동으로 반복하지 않는다. Studio Chat에 그 호출의 승인 카드가 뜨면 사용자가 승인해야 한다고 알린다. 사용자가 승인했는데도 이 code가 오면 Studio가 그 호출에 승인 표시를 보내지 않은 것이므로 운영자에게 알리고, 사용자가 Runway 화면(서비스는 파이프라인 탭의 단계 카드, 리소스는 리소스 탭, Project는 설정 탭)에서 직접 한다 |
 | `environment_not_in_pipeline` (409) | 그 환경은 Project pipeline 중 어느 것의 단계도 아니다. 메시지가 Project의 pipeline과 단계를 나열한다. `project_status`의 단계 중에서 고른다. Runway는 이 조건을 target·적용한 선언·Release·준비 상태보다 먼저 확인한다 |
 | `environment_not_ready` (409) | 메시지가 원인을 알려 준다. 값 없는 secret은 링크를 주고, `failed` 리소스는 다시 만든다. 적용한 `application.yaml`이 없으면 `project_apply`를 먼저 한다. 환경에 Project 런타임 type의 target이 없거나 그 target이 런타임 architecture를 실행하지 않거나 계정 접근이 확인되지 않았으면 관리자가 환경을 고치거나 소유자가 런타임을 고친다. `pending` 리소스는 Deployment가 기다리므로 배포를 막지 않는다 |
 | `resource_failed`, `resource_timeout` | Deployment가 `resources` 스텝에서 기다리던 리소스가 실패했거나 2시간 안에 준비되지 않았다. `statusMessage`가 리소스를 알려 준다 |
@@ -165,6 +176,7 @@ push 배포는 설정 탭이나 `push_enable`·`push_disable`로 켜고 끈다. 
 | `release_not_promoted` (409) | 첫 단계가 아닌 단계에 같은 pipeline의 앞 단계에서 성공하지 않은 Release나 ref를 배포하려 했다. 그 pipeline의 첫 단계에 `deploy`한 뒤 `promote`한다. 그 단계에서 실행 중인 Release를 다시 배포하는 재시작은 이 조건을 보지 않는다 |
 | `ref_required` (400), `ref_not_allowed` (409) | tag trigger pipeline의 첫 단계에 `ref` 없이, 또는 trigger와 맞지 않는 ref나 Release를 배포하려 했다. trigger와 맞는 태그를 `ref`로 보낸다. 배포할 태그는 사용자에게 확인한다 |
 | `release_outdated` (409) | Release가 Project 런타임과 다른 architecture로 build됐거나 이전 버전의 `application.yaml`로 build됐다. 첫 단계에 ref를 `deploy`해 새 Release를 만든다 |
+| `release_other_pipeline` (409) | 첫 단계는 자기 pipeline을 위해 build한 Release만 받는다(그 단계에서 실행 중인 Release는 예외). 그 첫 단계에 ref를 `deploy`해 새 Release를 만든다 |
 | `host_conflict` (409) | 요청한 주소를 같은 Project의 다른 환경이 쓰고 있거나(환경 이름 없는 주소를 받을 단계가 바뀐 뒤에 생긴다), 다른 Project의 주소다. 오류 메시지가 조치를 알려 준다: 그 환경에 다시 배포해 자기 주소로 옮기거나, 그 환경의 서비스를 삭제하거나, 진행 중인 배포가 끝나기를 기다린다. `project_status`의 `host.moves`가 옮길 순서를 준다 |
 | `no_rollback_target`, `no_next_environment` (409) | 되돌릴 Release나 승격할 다음 단계가 없다. pipeline의 마지막 단계에서 `promote`하면 `no_next_environment`다. 승격은 다른 pipeline으로 이어지지 않는다. `project_status`의 `rollbackTo`·`next`로 확인한다 |
 | `target_unsupported` (409) | 런타임 type이 `eks`가 아닌 Project에는 리소스 템플릿이 없다. 연결 값을 secret과 Variable로 입력한다 |
@@ -175,7 +187,7 @@ push 배포는 설정 탭이나 `push_enable`·`push_disable`로 켜고 끈다. 
 | `resource_in_use` (409) | 서비스가 실행 중인 환경에서 적용한 `application.yaml`이나 실행 중인 Release가 `secrets`에 쓰는 Variable의 리소스는 지울 수 없다. 서비스를 내리거나 그 이름을 뺀 선언을 적용·배포한 뒤 지운다 |
 | `approval_expired` | 승인이 24시간을 넘었다. 다시 요청한다 |
 | `application_changed` | `repository_inspect`(`ref`: 배포한 revision)가 돌려준 `application`(저장소 파일 원문)을 바꾸지 않고 `project_apply`에 넘긴 뒤 다시 배포한다. 내용을 다시 쓰면 마지막 줄바꿈 하나로도 다시 실패한다 |
-| `git_connection_required` (409, push로 시작한 Deployment의 `errorCode`) | 사용자가 그 Git 호스트를 Studio에서 연결하지 않았거나 다시 연결해야 한다. 오류 메시지의 Studio 연결 링크(`connectUrl`)를 주고, 사용자가 연결한 뒤 다시 요청한다. push로 시작한 Deployment에서는 push 배포를 켠 사용자가 다시 연결해야 하며, 다시 연결하면 다음 push부터 배포된다 |
+| `git_connection_required` (409, push로 시작한 Deployment의 `errorCode`) | 사용자가 그 Git 호스트를 연결하지 않았거나 다시 연결해야 한다. 오류 메시지의 연결 링크(`connectUrl`, 프로필 → Git 계정)를 주고, 사용자가 연결한 뒤 다시 요청한다. push로 시작한 Deployment에서는 push 배포를 켠 사용자가 다시 연결해야 하며, 다시 연결하면 다음 push부터 배포된다 |
 | `repository_access_denied` (403, push로 시작한 Deployment의 `errorCode`) | 그 사용자의 Git 계정이 저장소를 볼 수 없거나, `push_enable`에 필요한 역할(GitHub·Gitea 저장소 `admin`, GitLab Maintainer 이상)이 없다. 다시 연결하게 하지 않는다. 저장소 이름과 그 계정의 권한을 확인한다 |
 | `ref_not_found` (404) | 저장소에 그 branch·tag·commit이 없다. `ref`를 생략했으면 저장소에 기본 브랜치가 없다(커밋 없는 저장소). `ref`를 확인한다 |
 | `invalid_ref` (400) | `ref` 형식이 틀렸거나, `ref`를 생략했는데 저장소의 기본 브랜치 이름이 Runway의 `ref` 규칙에 맞지 않는다. 그때는 tag나 commit SHA를 `ref`로 보낸다 |
@@ -184,10 +196,10 @@ push 배포는 설정 탭이나 `push_enable`·`push_disable`로 켜고 끈다. 
 | `git_host_removed` (409, push로 시작한 Deployment의 `errorCode`) | 저장소의 Git 호스트가 Studio의 Git 호스트 목록에 없다. 운영자가 Studio에 그 호스트를 다시 등록한다. push 배포의 상태와 위임은 그대로이고, 호스트를 되돌리면 다음 push부터 배포된다 |
 | `invalid_repository` (400) | 새 Project의 저장소가 이 설치의 Git 호스트에 있지 않거나 저장소 주소 형식이 틀렸다(GitHub는 정확히 `owner/repo`, port가 있는 주소는 받지 않는다). 메시지가 Git 호스트를 알려 준다 |
 | `push_delegation_invalid` | push로 시작한 Deployment가 `prepare` 스텝에서 실패했다. push 배포를 켠 사용자가 Studio에서 위임을 폐기했거나, 그 호스트의 연결을 해제했거나, 다른 계정을 연결했다. `push.state`가 `delegation_invalid`가 되고 그 뒤의 push도 같은 code로 실패한다. 소유자나 Studio 관리자가 push 배포를 다시 켠다 |
-| `policy_refused` (403) | `push_enable`에서 Studio가 그 사용자에게 Git 위임을 주지 않는다. 사용자 등급이 허용하지 않거나 그 Git 계정의 위임이 한도에 찼다. 한도에 찼으면 사용자가 Studio의 프로필 → Git 계정에서 위임을 폐기한다 |
+| `policy_refused` (403) | `push_enable`에서 Studio가 그 사용자에게 Git 위임을 주지 않는다. 사용자 등급이 허용하지 않거나 그 Git 계정의 위임이 한도에 찼다. 한도에 찼으면 사용자가 프로필 → Git 계정(`/profile/git`)에서 위임을 폐기한다 |
 | `push_busy` (409) | 같은 Project의 push 배포 켜기·끄기는 한 번에 하나만 진행한다. 다른 변경이 진행 중이라 기다리지 않고 거절됐다. 메시지의 시간(5초) 뒤에 다시 호출한다. `push_enable`을 다시 호출하면 승인 카드도 다시 뜬다 |
 | `checkout_failed` | `prepare` 스텝의 실패다. push한 commit이 저장소에 없거나, build가 소스 아카이브를 풀지 못했다 |
 | `test_failed`, `build_failed`, `deploy_failed`, `verify_failed` | `deployment_logs(deploymentId, step)`로 원인을 읽는다. verify는 health 경로가 2xx를 돌려줘야 한다 |
 | `deployment_not_started` (409), `logs_not_found` (404) | 그 스텝에 읽을 출력이 없다. workflow 전에 실패했거나(`application_changed` 등), `resources` 스텝이거나, 성공한 스텝의 Pod가 이미 없다. 실패한 스텝의 출력은 Pod가 없어져도 Runway가 저장해 둔 것을 준다. 다시 호출하지 말고 `deployment_get`의 `errorCode`와 `statusMessage`로 판단한다 |
 | `delivery_unavailable` (502), `provider_unavailable` (503) | 운영 문제다. 다시 시도해도 같은 결과이므로 반복하지 않는다 |
-| 리소스 `failed` | 같은 이름으로 `resource_create`를 다시 하거나 콘솔에서 재시도한다 |
+| 리소스 `failed` | 같은 이름으로 `resource_create`를 다시 하거나 사용자가 리소스 탭(`/runway/projects/<slug>/resources`)에서 재시도한다 |

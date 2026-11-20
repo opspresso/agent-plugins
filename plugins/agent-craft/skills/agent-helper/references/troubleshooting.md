@@ -1,16 +1,16 @@
 # 문제 해결
 
 사용자가 오류·실패·"동작하지 않음"을 말할 때 읽는다. 추측으로 설정을 바꾸지 않는다. 근거를 읽고 원인을 좁힌 뒤,
-고칠 수 있으면 승인 후 고치고, 사용자나 관리자가 해야 하면 정확한 위치와 조치를 알린다.
+고칠 수 있으면 승인 후 고치고, 사용자나 관리자가 해야 하면 정확한 AgentOps 화면과 조치를 알린다.
 
 ## 진단 순서
 
-1. **증상과 위치.** 어느 서비스·페이지·Agent·Chat에서, 어떤 오류 문구와 함께 일어났는지 확인한다.
+1. **증상과 위치.** 어느 서비스·화면·Agent·Chat에서, 어떤 오류 문구와 함께 일어났는지 확인한다.
    화면 자료가 있으면 먼저 읽는다. 오류 코드와 메시지는 그대로 인용한다.
-2. **근거 읽기.** Agent 실행 문제는 Trace(`/agents/<name>/traces`), 설정은 `StudioRead`, 서비스 작업은 해당 서비스의
+2. **근거 읽기.** Agent 실행 문제는 Trace(`/studio/agents/<name>/traces`), 설정은 `StudioRead`, 서비스 작업은 해당 서비스의
    조회 도구(`run_get`·`project_status`·`deployment_get`·`deployment_logs`·`audio_status`·`document_ingest_status`)를 읽는다.
 3. **분류.** 설정 누락, 권한·연결 누락, 사용자 작업 대기(승인·secret·OAuth), 한도, 운영 장애 중 무엇인지 정한다.
-4. **조치.** 설정 문제는 승인 후 변경하고, 대기 작업은 콘솔 페이지를 열어 주고, 운영 장애는 관리자에게 전달할 정보를 정리한다.
+4. **조치.** 설정 문제는 승인 후 변경하고, 대기 작업은 그 화면을 열거나 링크를 주고, 운영 장애는 관리자에게 전달할 정보를 정리한다.
 5. **확인.** 고친 뒤 같은 요청을 다시 시도하게 하거나 상태를 다시 읽는다. 확인하지 못했으면 미확인으로 보고한다.
 
 ## Studio
@@ -18,32 +18,33 @@
 | 증상 | 확인 | 해결 |
 |---|---|---|
 | Agent가 도구·Skill을 안 씀 | `StudioRead(resource="agent")`의 `skillList`·`mcpList`·`tools`, Trace의 도구 호출 | 연결·도구 선택을 고친다. 프롬프트에 사용 조건을 적는다 |
-| 바꾼 설정이 반영 안 됨 | Playground 저장 여부, `updatedAt` | 초안은 저장해야 실행에 쓰인다. 진행 중 실행은 시작 시점 설정을 쓴다 |
-| MCP 도구 호출이 인증 오류 | `/tools/<name>`의 OAuth 연결 상태, Agent의 MCP header 설정 | `StudioRequestCredential(kind="mcpOAuth"|"mcpHeader")` |
-| 모델을 선택할 수 없음 | `StudioRead(resource="models")` | 목록에 없으면 Agent Models 관리자가 모델을 선택해야 한다 |
-| "cost limit"·실행 차단 | Agent `costLimits`, 사용자 tier 한도(`/profile`) | Agent 한도는 소유자가 바꾼다. tier 한도는 관리자(`/settings/access`)가 바꾼다 |
+| 바꾼 설정이 반영 안 됨 | Playground 저장 여부, `revision` | 초안은 저장해야 실행에 쓰인다. 진행 중 실행은 시작 시점 설정을 쓴다 |
+| MCP 도구 호출이 인증 오류 | 프로필 → 서비스(`/profile/connections`)나 `/studio/tools/<name>`의 OAuth 연결 상태, Agent의 MCP header 설정 | `StudioRequestCredential(kind="mcpOAuth"|"mcpHeader")` |
+| 모델을 선택할 수 없음 | `StudioRead(resource="models")` | 목록에 없으면 모델 관리자가 `/models/providers`·`/models`에서 모델을 선택해야 한다 |
+| "cost limit"·실행 차단 | Agent `costLimits`, 사용자 등급 한도(`/profile/usage`) | Agent 한도는 소유자가 바꾼다. 등급 한도는 관리자가 `/settings/studio/access`에서 바꾼다 |
 | 턴·출력 제한으로 답이 끊김 | Trace의 종료 이유 | `maxTurn`·`maxTokens`를 늘리거나 작업을 나눈다 |
 | Slack·Telegram·Teams 무응답 | `StudioRead(resource="integrations")`의 활성화·credential 상태, Trace | credential을 다시 받고 활성화한다. Slack은 이벤트 URL, Teams는 messaging URL 설정을 확인하게 한다 |
 | schedule이 실행 안 됨 | `StudioRead(resource="triggers")`의 `enabled`·cron·timezone | 외부 schedule ticker가 동작해야 한다. 없으면 운영자 문제다 |
 | 서비스 작업 결과가 Chat에 안 옴 | 해당 서비스의 상태 도구 | 결과 전달도 schedule tick이 한다. 서비스에서 끝났는데 안 오면 운영자에게 알린다 |
-| 승인 카드가 안 보임·거절됨 | Chat의 승인 대기 | 승인은 사용자만 한다. 거절된 변경은 반복하지 않는다 |
-| Helper 화면 조작 실패 | 화면 공유 켜짐 여부, 같은 탭 여부 | 다시 inspect한다. 다른 탭·만료된 요청은 새 요청이 필요하다 |
+| 승인 카드가 안 보임·거절됨 | Chat의 승인 대기, 받은 일(`/inbox`) | 승인은 사용자만 한다. 거절된 변경은 반복하지 않는다 |
+| Helper 화면 조작 실패 | 화면 공유 켜짐 여부, 같은 탭 여부, 닫힌 화면 여부 | 다시 inspect한다. 닫힌 화면(승인 상세·배포·로그인 등)과 확인 대화 상자는 Helper가 읽거나 조작할 수 없으므로 사용자가 직접 한다. 다른 탭·만료된 요청은 새 요청이 필요하다 |
+| 페이지로 이동이 거절됨 | 경로가 콘솔 페이지 지도에 있는지 | 지도에 없는 경로·닫힌 화면·API 경로는 거절된다. 지도의 경로를 쓰거나 링크를 준다 |
 
 ## 서비스
 
 | 증상 | 서비스 | 확인과 해결 |
 |---|---|---|
-| 서비스 도구가 없음 | 전체 | 배포에 연결되지 않았거나 사용자가 쓸 수 없다. `/tools`에 항목이 있는지 확인한다. guest는 쓰기 도구를 쓸 수 없다 |
+| 서비스 도구가 없음 | 전체 | 배포에 연결되지 않았거나 사용자가 쓸 수 없다. `/studio/tools`에 항목이 있는지 확인한다. guest는 쓰기 도구를 쓸 수 없다 |
 | `403 Studio policy refused this request` | 전체 | guest·계정 없음·비용 한도 등 Studio 정책 거절이다. 재시도로 해결되지 않는다. 비용 한도는 `StudioRead(resource="usage", name=...)`의 `limits`·`spend`로 확인한다 |
-| 401 (`Studio authorization required` 등) | 전체 | 다시 로그인하고 요청을 다시 시도한다 |
+| 401 (`Studio authorization required` 등), 다시 로그인 요청 | 전체 | 사용자가 AgentOps에 다시 로그인하고 요청을 다시 시도한다 |
 | `reauthorization_required` (403) | Forge | 이전 위임으로 접수된 Run은 계속할 수 없다. 새 Run을 제출한다 |
-| Git 연결·저장소 오류(`git_connection_required`, `git_repository_not_found`, `git_account_changed` 등) | Forge | [forge](forge.md#오류) — 계정 연결은 Studio의 프로필 → Git 계정에서 한다. 저장소는 등록하지 않는다 |
-| Git merge 승인 대기·만료 | Forge | [forge](forge.md#오류) — 승인 기한은 Run 접수 후 24시간이다 |
-| Git 계정·저장소 오류(`git_connection_required`, `repository_access_denied`, `ref_not_found`, `push_delegation_invalid` 등) | Runway | [delivery](delivery.md#오류) — Runway는 요청한 사용자(push 배포는 켠 사용자)의 Git 계정으로 저장소를 읽는다. 계정 연결은 Studio의 프로필 → Git 계정에서 한다 |
+| Git 연결·저장소 오류(`git_connection_required`, `git_repository_not_found`, `git_account_changed` 등) | Forge | [forge](forge.md#오류) — 계정 연결은 프로필 → Git 계정(`/profile/git`)에서 한다. 저장소는 등록하지 않는다 |
+| Git merge 승인 대기·만료 | Forge | [forge](forge.md#보호된-git-작업-승인) — 승인 기한은 Run 접수 후 24시간이다 |
+| Git 계정·저장소 오류(`git_connection_required`, `repository_access_denied`, `ref_not_found`, `push_delegation_invalid` 등) | Runway | [delivery](delivery.md#오류) — Runway는 요청한 사용자(push 배포는 켠 사용자)의 Git 계정으로 저장소를 읽는다. 계정 연결은 프로필 → Git 계정에서 한다 |
 | 배포 실패 | Runway | `deployment_get`의 `errorCode`와 `deployment_logs`. [delivery](delivery.md#오류) |
 | 배포한 앱이 503·무응답 | Runway | `service_logs`로 Pod 상태(재시작, 종료 원인)와 앱 출력을 읽는다. [delivery](delivery.md#오류) |
-| `environment_not_ready` | Runway | 오류 메시지의 원인을 따른다. 값 없는 secret은 입력 링크를 주고, `failed` 리소스는 다시 만든다. [delivery](delivery.md#오류) |
-| `pipeline_required`, `environment_not_in_pipeline`, `release_outdated`, `ref_not_allowed` | Runway | pipeline을 고르지 않았거나 Project의 런타임·pipeline과 맞지 않는 요청이다. `pipeline_list`와 `project_status`의 `runtime`·`pipelines`를 확인한다. [delivery](delivery.md#오류) |
+| `environment_not_ready` | Runway | 오류 메시지의 원인을 따른다. 값 없는 secret은 `secretsUrl`을 주고, `failed` 리소스는 다시 만든다. [delivery](delivery.md#오류) |
+| `pipeline_required`, `environment_not_in_pipeline`, `release_outdated`, `release_other_pipeline`, `ref_not_allowed` | Runway | pipeline을 고르지 않았거나 Project의 런타임·pipeline과 맞지 않는 요청이다. `pipeline_list`와 `project_status`의 `runtime`·`pipelines`를 확인한다. [delivery](delivery.md#오류) |
 | 런타임이나 pipeline을 바꿀 수 없음(`pipeline_locked`, `project_in_use`) | Runway | 배포된 서비스나 리소스가 그 변경을 막는다. `project_status`의 `deployedEnvironments`를 확인하고 [delivery](delivery.md#런타임과-pipeline-변경)의 절차를 따른다 |
 | `person_approval_required` (403) | Runway | 사람이 승인해야 하는 호출이 승인 표시 없이 왔다. 반복하지 않는다. [delivery](delivery.md#오류) |
 | 문서 처리 멈춤·실패 | Knowledge | [knowledge](knowledge.md#오류) |
@@ -52,7 +53,7 @@
 
 ## 응답이 유실됐거나 결과가 불확실할 때
 
-- 같은 요청을 새로 보내지 않는다. 같은 키로 조회한다: `run_lookup_request`·`workspace_lookup_request`·`repository_lookup_request`(Forge),
+- 같은 요청을 새로 보내지 않는다. 같은 키로 조회한다: `run_lookup_request`·`workspace_lookup_request`·`repository_lookup_request`·`desktop_lookup_request`(Forge),
   `deployment_lookup_request`(Runway), `audio_request_status`·`recording_delete_status`(Knowledge), `remember`·`handoff_create`의 같은 `idempotencyKey`(Memory).
 - Studio 변경 도구가 실패하거나 시간 초과되면 `StudioRead`로 저장 상태를 먼저 확인한다.
 - Forge `interrupted` Run은 자동으로 다시 실행하지 않는다. 결과를 확인하고 사용자에게 다음 행동을 묻는다.

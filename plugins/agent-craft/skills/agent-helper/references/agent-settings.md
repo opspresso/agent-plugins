@@ -1,24 +1,27 @@
 # Agent 설정
 
 Studio의 Agent·Skill·trigger·메신저 연동을 만들거나 고칠 때 읽는다. 도구 계약은 실행마다 Studio가 붙이는
-규칙과 도구 schema가 우선한다.
+규칙과 도구 schema가 우선한다. 화면 경로는 모두 AgentOps 콘솔의 경로다.
 
 ## Studio 단위
 
-| 단위 | 뜻 | 페이지 |
+| 단위 | 뜻 | 화면 |
 |---|---|---|
-| Agent | 모델·프롬프트·Skill·MCP 도구·하위 Agent·정책·한도를 저장한 실행 단위. private은 소유자만, public은 조직 전체가 쓴다 | `/agents`, `/agents/<name>` |
-| Skill | 모델이 이름·설명으로 고른 뒤 본문을 읽는 작업 지침. 공유·Plugin·Agent 전용으로 나뉜다 | `/skills` |
-| Tools | MCP 서버 레지스트리. 연결된 Memory·Knowledge·Forge·Runway가 각각 항목 하나(`agent-memory` 등)로 보인다 | `/tools`, `/tools/<name>` |
-| Plugin | Skill·MCP 정의의 원본 묶음. 관리자가 동기화한다 | `/plugins` |
-| Chat·Artifact | 개인 대화와 첨부·생성 파일 | `/chats`, `/artifacts` |
+| Agent | 모델·프롬프트·Skill·MCP 도구·하위 Agent·정책·한도를 저장한 실행 단위. private은 소유자만, public은 조직 전체가 쓴다 | `/studio/agents`, `/studio/agents/<name>` |
+| Skill | 모델이 이름·설명으로 고른 뒤 본문을 읽는 작업 지침. 공유·Plugin·Agent 전용으로 나뉜다 | `/studio/skills`, `/studio/skills/<name>` |
+| Tools | MCP 서버 레지스트리. 연결된 Memory·Knowledge·Forge·Runway가 각각 항목 하나(`agent-memory` 등)로 보인다 | `/studio/tools`, `/studio/tools/<name>` |
+| Plugin | Skill·MCP 정의의 원본 묶음. 관리자가 동기화한다 | `/studio/plugins` |
+| Chat·파일 | 개인 대화와 첨부·생성 파일 | `/studio/chats`, `/studio/artifacts` |
 
-Playground(`/agents/<name>`)는 하나의 현재 설정을 저장한다. 실행은 저장된 설정을 쓰므로 초안은 저장해야 반영된다.
-독립 실험은 Agent 복제본으로 한다.
+Agent 화면의 탭은 Playground(`/studio/agents/<name>`), 설정(`/settings`), 연동(`/integrations`), API(`/api`), 파일(`/artifacts`),
+Trace(`/traces`), 사용량(`/usage`)이다. 탭 경로는 `/studio/agents/<name>/<tab>`이다.
+Playground는 하나의 현재 설정을 저장한다. 실행은 저장된 설정을 쓰므로 초안은 저장해야 반영된다.
+독립 실험은 Agent 복제본으로 한다. Agent 화면 머리글에 **복제**가 있다.
 
 ## 설정 선택
 
 `StudioCreateAgent`와 `StudioUpdateAgent`는 다음 설정을 받는다. 요청 목적과 근거가 있는 항목만 바꾼다.
+`StudioUpdateAgent`에는 `StudioRead(resource="agent")`로 읽은 `revision`을 함께 보낸다. 쓰기마다 `revision`이 바뀌므로 다음 쓰기에는 결과의 새 값을 쓴다.
 
 | 설정 | 선택 기준 |
 |---|---|
@@ -28,7 +31,7 @@ Playground(`/agents/<name>`)는 하나의 현재 설정을 저장한다. 실행�
 | `subagentList` | 독립된 전문 작업을 다른 접근 가능한 Agent에 위임할 때만 연결한다 |
 | `parameters` | 바꿀 키만 보내고 `null`은 기본값으로 되돌린다. 주요 키는 아래 표 |
 | `maxTurn` | 도구 호출이 많은 작업만 늘린다. `null`은 기본값(50)으로 되돌린다 |
-| `costLimits` | 일(UTC)·월(UTC) 알림과 차단 기준(USD). 바꿀 값만 보내고 `null`은 그 기준을 제거한다. `costLimits: null`은 모든 기준을 제거한다. 알림 기준은 차단 기준 이하로 둔다. 알림 대상(`alertDestinations`)은 읽기만 되며 Agent 설정 화면(`/agents/<name>/settings`)에서 바꾼다 |
+| `costLimits` | 일(UTC)·월(UTC) 알림과 차단 기준(USD). 바꿀 값만 보내고 `null`은 그 기준을 제거한다. `costLimits: null`은 모든 기준을 제거한다. 알림 기준은 차단 기준 이하로 둔다. 알림 대상(`alertDestinations`)은 읽기만 되며 Agent 설정 탭(`/studio/agents/<name>/settings`)에서 바꾼다 |
 | `displayName`, `description` | 목록·검색에 보인다 |
 | `departmentCode` | 조직 부서 코드. Agent Models가 이 Agent의 모델 사용량을 부서별로 집계한다 |
 | `visibility` | 새 Agent는 항상 private이다. `public` 전환은 `StudioUpdateAgent`로 하며 조직 전체에 Agent와 프롬프트를 공개하므로 사용자가 요청할 때만 바꾼다. Helper로 지정된 Agent는 public으로 바꿀 수 없다 |
@@ -51,7 +54,7 @@ Playground(`/agents/<name>`)는 하나의 현재 설정을 저장한다. 실행�
 
 `policy.guardrails`는 판정 모델이 입력(`input`)이나 출력(`output`)을 검사해 일치하면 실행을 막는 규칙이다. 각 규칙은
 `name`, `criteria`(위반을 평이하게 설명), `stages`, 선택적 `message`를 가진다. Helper는 규칙을 시험하지 못하므로 저장 뒤
-Agent 화면의 guardrail 시험으로 확인하도록 안내한다.
+Playground(`/studio/agents/<name>`)의 guardrail 시험으로 확인하도록 안내한다.
 
 ## 서비스 연결
 
@@ -66,22 +69,32 @@ Agent 화면의 guardrail 시험으로 확인하도록 안내한다.
 | 앱 리소스·배포 | `agent-runway`와 `agent-forge` | `app-delivery` |
 
 연결은 접근을 열 뿐 권한을 만들지 않는다. 서비스 도구는 호출한 사용자의 권한으로 실행되며, 사용자는 각 서비스에서
-필요한 준비(예: Studio의 Git 호스트 계정 연결과 Forge의 Workspace profile)를 마쳐야 한다. 준비 절차는 [journeys](journeys.md)를 따른다.
+필요한 준비(예: Git 호스트 계정 연결과 Forge의 Workspace profile)를 마쳐야 한다. 준비 절차는 [journeys](journeys.md)를 따른다.
+Tools 상세 화면(`/studio/tools/<name>`)은 서비스가 알려 준 설정·이력 화면 링크를 보여 준다.
 
 ## 모델
 
-Agent Models가 공급자 연결·승인된 모델 선택·라우팅·사용량을 소유한다. Studio는 승인된 목록을 읽기만 한다.
+Agent Models가 공급자 연결·승인된 모델 선택·라우팅·사용량을 소유한다. Agent Models에는 MCP 도구가 없다. Studio는 승인된 목록을 읽기만 한다.
 
-- 새 모델이 필요하면 Agent Models 관리자가 공급자를 등록하고 모델을 선택해야 한다. Helper는 이 작업을 할 수 없다.
-- `/models`는 모든 사용자가 등록된 모델의 기능·문맥·가격을 보는 페이지다. `/settings/models`는 관리자에게 Agent Models
-  콘솔 링크를, `/settings/model-usage`는 기본·결정·Embedding·Rerank 역할과 라우팅 정책을 보여 준다.
-- 설정에는 모델 `id`를 쓴다. 가격이 비어 있으면 미지정이며 무료라는 뜻이 아니다.
+| 화면 | 내용 | 권한 |
+|---|---|---|
+| `/models` | 선택된 모델의 기능·문맥·가격. `?tab=discovered`는 공급자에서 찾은 모델 | 로그인. `discovered`는 모델 관리자 |
+| `/models/usage` | Agent·모델·사용자·부서·서비스·일자별 사용량(`?period=`, `?groupBy=`) | 로그인 |
+| `/models/providers` | 모델 공급자 연결 | 모델 관리자 |
+| `/settings/studio/models` | Agent Models로 가는 링크 | Studio 관리자 |
+| `/settings/studio/model-usage` | 기본·결정·Embedding·Rerank 역할과 라우팅 정책 | Studio 관리자 |
+
+- Agent에 고를 수 있는 모델은 `StudioRead(resource="models")`로 읽는다. 설정에는 모델 `id`를 쓴다.
+- 새 모델이 필요하면 모델 관리자가 `/models/providers`에서 공급자를 연결하고 `/models?tab=discovered`에서 모델을 선택해야 한다.
+  Helper는 이 작업을 할 수 없다. 사용자에게 그 화면과 필요한 권한을 알려 준다.
+- 가격이 비어 있으면 미지정이며 무료라는 뜻이 아니다.
 
 ## Trigger와 메신저 연동
 
 - 정기 실행은 `StudioSaveTrigger(mode="create", kind="schedule", cron, timezone, message)`로 만든다. cron은 다섯 필드,
   timezone은 IANA 이름(예: `Asia/Seoul`)이다. 결과를 메신저로 보내려면 `deliveries`에 플랫폼별 대상 하나씩을 넣는다.
 - 기존 trigger는 `StudioRead(resource="triggers", name=...)`로 읽고 `mode="update"`로 바꿀 필드만 보낸다.
+  쓰지 않는 trigger는 `StudioDeleteTrigger(agentName, triggerId)`로 지운다.
 - webhook trigger 호출 권한은 사용자의 개인 webhook token이 정한다.
 - GitHub PR 리뷰는 webhook trigger의 `githubReview`로 켠다. `{ scope: "accessible" }`는 호출자의 GitHub 권한이 닿는 모든
   저장소, `{ scope: "repositories", repositories: ["owner/repo"] }`는 지정한 저장소만 리뷰한다. `null`은 리뷰를 끈다.
@@ -97,7 +110,8 @@ Agent Models가 공급자 연결·승인된 모델 선택·라우팅·사용량�
 - Slack·Telegram·Teams의 활성화, Slack 추천 프롬프트·채널 키워드, Teams tenant는 `StudioUpdateIntegration`으로 바꾼다.
   현재 상태는 `StudioRead(resource="integrations", name=...)`로 읽는다. 활성화에는 저장된 credential이 필요하다.
   Telegram 활성화에는 배포의 공개 기본 URL이 필요하다.
-- 일정 실행 성공과 메신저 전달 성공은 다르다. 결과는 Trace와 대상 채널에서 확인한다.
+- 사용자 개인의 메신저 계정 연결은 프로필 → 메신저(`/profile/messaging`)에서 사용자가 한다.
+- 일정 실행 성공과 메신저 전달 성공은 다르다. 결과는 Trace(`/studio/agents/<name>/traces`)와 대상 채널에서 확인한다.
 
 ## 비밀 값
 
@@ -107,13 +121,14 @@ bot token, signing secret, app password, MCP header 값, MCP OAuth 연결, 개�
    `mcpOAuth`(`server` 필요)·`apiToken`·`webhookToken` 중 하나다. 사용자가 승인 카드에서 입력하거나 연결·발급한다.
 2. 결과의 `completed`가 false이면 저장되지 않았다고 알린다. 값은 결과에 없으며 묻지 않는다.
 3. 이미 설정된 값을 교체하거나 token을 다시 발급하면 기존 값이 폐기되어 기존 연동이 끊긴다. 호출 전에 이 영향을 설명한다.
-4. 도구가 없으면 입력 화면을 안내한다.
+4. 도구가 없으면 입력 화면을 안내한다. Helper는 비밀 입력란을 읽거나 채우지 않는다.
 
 | 비밀 값 | 입력 화면 |
 |---|---|
-| MCP header 값 | Agent 화면(`/agents/<name>`)의 MCP 서버 설정 |
-| MCP OAuth 연결, Slack·Telegram·Teams credential, 개인 API·webhook token | 연동 화면(`/agents/<name>/integrations`) |
-| Runway 앱 secret | Runway 콘솔. [delivery](delivery.md#secret과-variable) |
+| MCP header 값 | Playground(`/studio/agents/<name>`)의 MCP 서버 설정 |
+| Slack·Telegram·Teams credential, 개인 API·webhook token | 연동 탭(`/studio/agents/<name>/integrations`) |
+| MCP OAuth 연결 | 프로필 → 서비스(`/profile/connections`) 또는 Tools 상세(`/studio/tools/<name>`) |
+| Runway 앱 secret | `/runway/projects/<slug>/secrets/new`. [delivery](delivery.md#secret과-variable) |
 
 MCP OAuth 연결은 사용자·MCP 서버 단위이며 여러 Agent가 함께 쓴다. Agent 서비스(`agent-*` Tools)는 OAuth 연결 없이
 Studio 로그인으로 위임된다.
@@ -127,14 +142,14 @@ Studio 로그인으로 위임된다.
    `StudioRead(resource="skills")`로 비슷한 공유 Skill이 있는지 확인한다.
 2. `skill-writer`가 연결돼 있으면 읽고 description과 본문을 작성한다.
 3. 이름은 `<agentName>--<용도>`다. `<용도>`는 `--`가 없는 slug다. 예: `review-agent--checklist`.
-4. `StudioSaveSkill(agentName, name, description, content, expectedUpdatedAt=null)`을 호출한다. 새 Agent의 Skill은
+4. `StudioSaveSkill(agentName, name, description, content, revision=null)`을 호출한다. 새 Agent의 Skill은
    `StudioCreateAgent` 결과를 받은 다음 턴에 저장한다. 긴 표·템플릿은 `files`의 참고 파일로 나눈다.
    새 Skill은 해당 Agent에 자동으로 연결된다.
-5. 고칠 때는 `StudioRead(resource="skill", name=...)`로 본문과 `updatedAt`을 읽고 `expectedUpdatedAt`과 함께 저장한다.
+5. 고칠 때는 `StudioRead(resource="skill", name=...)`로 본문과 `revision`을 읽고 그 `revision`과 함께 저장한다.
    `files`를 생략하면 기존 참고 파일을 유지한다. `icon`(Tabler 아이콘 이름, 예: `pencil`)은 콘솔 표시용이며 `null`은 제거한다.
-6. 쓰지 않는 전용 Skill은 `StudioDeleteSkill`로 연결 해제와 삭제를 함께 한다.
+6. 쓰지 않는 전용 Skill은 읽은 `revision`과 함께 `StudioDeleteSkill`로 연결 해제와 삭제를 함께 한다.
 
-소유자는 Agent 화면(`/agents/<name>`)의 "전용 Skill"에서 직접 만들고 편집할 수도 있다. 승인된 Helper 변경은 열린 Agent 화면에
+소유자는 Playground(`/studio/agents/<name>`)의 "전용 Skill"에서 직접 만들고 편집할 수도 있다. 승인된 Helper 변경은 열린 Agent 화면에
 바로 반영되며, 사용자가 편집 중이면 화면이 다시 불러오기를 안내한다.
 
 전용 Skill은 소유 Agent에만 연결되고 그 Agent에 접근할 수 있는 사용자만 읽는다. 다른 Agent의 전용 Skill은
